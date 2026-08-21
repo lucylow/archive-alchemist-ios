@@ -126,15 +126,41 @@ export default function HomeScreen() {
           setTimeout(() => resolve([null, null]), 1500);
         });
         const [memoryValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
-        if (memoryValue) setMemory(JSON.parse(memoryValue) as Memory);
+        if (memoryValue) {
+          try {
+            const restoredMemory = JSON.parse(memoryValue) as Memory;
+            if (
+              restoredMemory &&
+              typeof restoredMemory === "object" &&
+              typeof restoredMemory.title === "string" &&
+              Array.isArray(restoredMemory.platforms) &&
+              restoredMemory.platforms.length > 0 &&
+              restoredMemory.platforms.every((item) => platforms.includes(item)) &&
+              typeof restoredMemory.savedAt === "string" &&
+              typeof restoredMemory.followUp === "string"
+            ) {
+              setMemory(restoredMemory);
+            } else {
+              await AsyncStorage.removeItem(MEMORY_KEY);
+            }
+          } catch {
+            await AsyncStorage.removeItem(MEMORY_KEY);
+          }
+        }
         if (platformsValue) {
-          const restored = JSON.parse(platformsValue) as Platform[];
-          if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
-            setSelectedPlatforms(restored);
+          try {
+            const restored = JSON.parse(platformsValue) as Platform[];
+            if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
+              setSelectedPlatforms(restored);
+            } else {
+              await AsyncStorage.removeItem(PLATFORMS_KEY);
+            }
+          } catch {
+            await AsyncStorage.removeItem(PLATFORMS_KEY);
           }
         }
       } catch {
-        await Promise.all([AsyncStorage.removeItem(MEMORY_KEY), AsyncStorage.removeItem(PLATFORMS_KEY)]);
+        setNotice("Saved local preferences could not be read. Your current session is still available.");
       } finally {
         if (active) setIsHydrated(true);
       }

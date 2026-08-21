@@ -36,3 +36,4 @@
 - [x] Respect iOS Reduce Motion settings in the startup animation
 - [x] Add VoiceOver hints to resume and destructive memory actions
 - [x] Add VoiceOver labels and hints to platform selection and output approval controls
+- [x] Harden local hydration so malformed Mind memory is discarded without deleting valid platform preferences
