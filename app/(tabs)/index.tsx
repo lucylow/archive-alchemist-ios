@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
@@ -150,10 +150,25 @@ export default function HomeScreen() {
   };
 
   const resetMemory = async () => {
-    await AsyncStorage.removeItem(MEMORY_KEY);
-    setMemory(null);
-    setPhase("home");
-    setNotice("Mind memory cleared. Your next dig starts fresh.");
+    try {
+      await AsyncStorage.removeItem(MEMORY_KEY);
+      setMemory(null);
+      setPhase("home");
+      setNotice("Mind memory cleared. Your next dig starts fresh.");
+    } catch {
+      setNotice("Mind memory could not be cleared. Try again from this device.");
+    }
+  };
+
+  const confirmResetMemory = () => {
+    Alert.alert(
+      "Clear local Mind memory?",
+      "This removes the saved workflow from this device. Your source-platform preferences will remain.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Clear memory", style: "destructive", onPress: resetMemory },
+      ],
+    );
   };
 
   const togglePlatform = (platform: Platform) => {
@@ -266,7 +281,7 @@ export default function HomeScreen() {
                   : "Your first workflow will be remembered locally on this device."}
               </Text>
               {memory && <Text style={styles.goldText}>Saved {formatSavedAt(memory.savedAt)} · {memory.followUp}</Text>}
-              {memory && <SecondaryButton label="Clear local memory" onPress={resetMemory} />}
+              {memory && <SecondaryButton label="Clear local memory" onPress={confirmResetMemory} />}
             </View>
             <View style={styles.panel}>
               <Text style={styles.sectionTitle}>Active Minds</Text>

@@ -22,3 +22,4 @@
 - [x] VoiceOver labels for overview metrics and discovery cards
 - [x] Hydration gate to prevent first-launch state flicker
 - [x] Human-readable Mind-memory timestamp on the overview
+- [x] Confirmed destructive reset for local Mind memory
