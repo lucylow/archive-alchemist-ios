@@ -33,3 +33,4 @@
 - [x] Polished native splash fade and branded hydration loading animation
 - [x] Resume the last saved Mind workflow from the home overview
 - [x] Show the saved source-platform mix in the home Mind-memory summary
+- [x] Respect iOS Reduce Motion settings in the startup animation

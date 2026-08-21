@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
@@ -82,9 +82,27 @@ export default function HomeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (mounted) setReduceMotion(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      loadingPulse.stopAnimation();
+      loadingPulse.setValue(0);
+      return;
+    }
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(loadingPulse, { toValue: 1, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
@@ -93,7 +111,7 @@ export default function HomeScreen() {
     );
     animation.start();
     return () => animation.stop();
-  }, [loadingPulse]);
+  }, [loadingPulse, reduceMotion]);
 
   useEffect(() => {
     let active = true;
@@ -258,8 +276,8 @@ export default function HomeScreen() {
               style={[
                 styles.loadingPulseRing,
                 {
-                  opacity: loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.85] }),
-                  transform: [{ scale: loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.12] }) }],
+                  opacity: reduceMotion ? 0.55 : loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.85] }),
+                  transform: [{ scale: reduceMotion ? 1 : loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.12] }) }],
                 },
               ]}
             />
