@@ -17,3 +17,4 @@
 - [x] App Store listing copy, privacy notes, and screenshot checklist
 - [x] Apple Developer signing and App Store Connect handoff instructions
 - [x] Resilient Mind-memory save flow with duplicate-tap protection and fresh review state
+- [x] One-handed back navigation across every workflow phase

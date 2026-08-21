@@ -137,11 +137,44 @@ export default function HomeScreen() {
     );
   };
 
+  const goBack = () => {
+    haptic.light();
+    const previous: Record<Exclude<Phase, "home">, Phase> = {
+      connect: "home",
+      scan: "connect",
+      discoveries: "scan",
+      repurpose: "discoveries",
+      results: "repurpose",
+    };
+    setPhase(previous[phase as Exclude<Phase, "home">]);
+  };
+
+  const phaseTitle: Record<Phase, string> = {
+    home: "Overview",
+    connect: "Connect sources",
+    scan: "Archive scan",
+    discoveries: "Discoveries",
+    repurpose: "Review outputs",
+    results: "Follow-up",
+  };
+
   const header = (
     <View style={styles.header}>
-      <View>
-        <Text style={styles.eyebrow}>ARCHIVE ALCHEMIST</Text>
-        <Text style={styles.headerTitle}>Creator memory, activated.</Text>
+      <View style={styles.headerLeft}>
+        {phase !== "home" && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Back from ${phaseTitle[phase]}`}
+            onPress={goBack}
+            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.backButtonText}>‹</Text>
+          </Pressable>
+        )}
+        <View>
+          <Text style={styles.eyebrow}>ARCHIVE ALCHEMIST · {phaseTitle[phase].toUpperCase()}</Text>
+          <Text style={styles.headerTitle}>Creator memory, activated.</Text>
+        </View>
       </View>
       <View style={styles.mindBadge}>
         <Text style={styles.mindBadgeText}>MIND</Text>
@@ -401,6 +434,9 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 40, gap: 18 },
   stack: { gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#261B4B", borderWidth: 1, borderColor: "#6C5B9D", alignItems: "center", justifyContent: "center" },
+  backButtonText: { color: "#F8F4FF", fontSize: 30, lineHeight: 32, marginTop: -3 },
   eyebrow: { color: "#F4C95D", fontSize: 11, fontWeight: "800", letterSpacing: 2 },
   headerTitle: { color: "#F8F4FF", fontSize: 22, fontWeight: "800", marginTop: 4 },
   mindBadge: { borderColor: "#F4C95D", borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, paddingVertical: 7 },
