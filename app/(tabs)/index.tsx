@@ -29,6 +29,15 @@ const formatSavedAt = (value: string) => {
   return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 };
 
+const phaseTitle: Record<Phase, string> = {
+  home: "Overview",
+  connect: "Connect sources",
+  scan: "Archive scan",
+  discoveries: "Discoveries",
+  repurpose: "Review outputs",
+  results: "Follow-up",
+};
+
 const outputs = [
   ["TikTok", "TikTok / Reels Clip (0:58)"],
   ["Instagram", "Instagram Reel (0:30)"],
@@ -256,14 +265,11 @@ export default function HomeScreen() {
     setPhase(previous[phase as Exclude<Phase, "home">]);
   };
 
-  const phaseTitle: Record<Phase, string> = {
-    home: "Overview",
-    connect: "Connect sources",
-    scan: "Archive scan",
-    discoveries: "Discoveries",
-    repurpose: "Review outputs",
-    results: "Follow-up",
-  };
+  useEffect(() => {
+    if (isHydrated) {
+      AccessibilityInfo.announceForAccessibility(`${phaseTitle[phase]} screen`);
+    }
+  }, [isHydrated, phase]);
 
   const header = (
     <View style={styles.header}>

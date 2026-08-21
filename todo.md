@@ -40,3 +40,4 @@
 - [x] Expose archive scan progress and per-platform scan status clearly to VoiceOver
 - [x] Explain why disabled primary workflow actions are unavailable to VoiceOver users
 - [x] Make workflow status notices announce their message and dismissal action clearly
+- [x] Announce each workflow phase transition to VoiceOver after hydration
