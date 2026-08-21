@@ -330,7 +330,15 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {header}
         {notice && (
-          <Pressable accessibilityRole="alert" onPress={() => setNotice(null)} style={styles.notice}>
+          <Pressable
+            accessible
+            accessibilityRole="alert"
+            accessibilityLabel={`${notice}. Double tap to dismiss.`}
+            accessibilityHint="Dismisses this workflow status message."
+            accessibilityLiveRegion="polite"
+            onPress={() => setNotice(null)}
+            style={styles.notice}
+          >
             <Text style={styles.noticeText}>{notice}</Text>
           </Pressable>
         )}

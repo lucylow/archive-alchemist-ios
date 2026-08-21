@@ -39,3 +39,4 @@
 - [x] Harden local hydration so malformed Mind memory is discarded without deleting valid platform preferences
 - [x] Expose archive scan progress and per-platform scan status clearly to VoiceOver
 - [x] Explain why disabled primary workflow actions are unavailable to VoiceOver users
+- [x] Make workflow status notices announce their message and dismissal action clearly
