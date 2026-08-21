@@ -411,6 +411,8 @@ export default function HomeScreen() {
                   <Pressable
                     key={platform}
                     accessibilityRole="checkbox"
+                    accessibilityLabel={`${platform}, ${selected ? "selected" : "not selected"}`}
+                    accessibilityHint="Double tap to change whether this platform is included in the archive scan."
                     accessibilityState={{ checked: selected }}
                     onPress={() => togglePlatform(platform)}
                     style={({ pressed }) => [styles.platformCard, selected && styles.platformSelected, pressed && styles.pressed]}
@@ -511,6 +513,8 @@ export default function HomeScreen() {
                   {reviewMode && (
                     <Pressable
                       accessibilityRole="checkbox"
+                      accessibilityLabel={`${platform} output, ${approved ? "approved" : "not approved"}`}
+                      accessibilityHint="Double tap to toggle approval before Auto-Post."
                       accessibilityState={{ checked: approved }}
                       onPress={() => {
                         haptic.selection();
@@ -537,9 +541,17 @@ export default function HomeScreen() {
               }}
             />
             <View style={styles.buttonRow}>
-              <SecondaryButton label="Review First" onPress={() => { setReviewMode(true); setApprovedOutputs([]); setNotice("Review mode enabled. Approve each output before publishing."); }} />
+              <SecondaryButton
+                label="Review First"
+                accessibilityHint="Enables individual approval for each generated output before Auto-Post."
+                onPress={() => { setReviewMode(true); setApprovedOutputs([]); setNotice("Review mode enabled. Approve each output before publishing."); }}
+              />
               {reviewMode && approvedOutputs.length < selectedOutputs.length && (
-                <SecondaryButton label="Approve All" onPress={() => { setApprovedOutputs(selectedOutputs.map(([, output]) => output)); setNotice("All outputs approved. Ready to auto-post."); }} />
+                <SecondaryButton
+                  label="Approve All"
+                  accessibilityHint="Approves every generated output so the batch can be auto-posted."
+                  onPress={() => { setApprovedOutputs(selectedOutputs.map(([, output]) => output)); setNotice("All outputs approved. Ready to auto-post."); }}
+                />
               )}
             </View>
           </View>

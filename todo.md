@@ -35,3 +35,4 @@
 - [x] Show the saved source-platform mix in the home Mind-memory summary
 - [x] Respect iOS Reduce Motion settings in the startup animation
 - [x] Add VoiceOver hints to resume and destructive memory actions
+- [x] Add VoiceOver labels and hints to platform selection and output approval controls
