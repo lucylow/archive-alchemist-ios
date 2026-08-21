@@ -289,7 +289,13 @@ export default function HomeScreen() {
   );
 
   const progressBar = phase === "scan" ? (
-    <View style={styles.progressWrap}>
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel="Archive scan progress"
+      accessibilityValue={{ min: 0, max: 100, now: progress }}
+      style={styles.progressWrap}
+    >
       <View style={[styles.progressFill, { width: `${progress}%` }]} />
     </View>
   ) : null;
@@ -473,7 +479,12 @@ export default function HomeScreen() {
             <Text style={styles.progressLabel}>{progress}% · Archaeologist is looking for dormant gold</Text>
             <View style={styles.panel}>
               {selectedPlatforms.map((platform) => (
-                <View key={platform} style={styles.mindRow}>
+                <View
+                  key={platform}
+                  accessible
+                  accessibilityLabel={`${platform}, ${progress === 100 ? "indexed" : `scanning, ${progress}% complete`}`}
+                  style={styles.mindRow}
+                >
                   <Text style={styles.platformName}>{platform}</Text>
                   <Text style={progress === 100 ? styles.successText : styles.mutedText}>
                     {progress === 100 ? "Indexed" : "Scanning…"}
