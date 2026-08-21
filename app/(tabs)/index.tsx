@@ -142,6 +142,8 @@ export default function HomeScreen() {
       setNotice("Minds returned a structured follow-up plan for this archive item.");
     },
     onError: () => setNotice("Minds could not analyze this item right now. Your local workflow is still available."),
+    retry: 1,
+    retryDelay: 800,
   });
 
   useEffect(() => {
