@@ -57,10 +57,11 @@ function PrimaryButton({ label, onPress, disabled = false }: { label: string; on
   );
 }
 
-function SecondaryButton({ label, onPress }: { label: string; onPress: () => void }) {
+function SecondaryButton({ label, onPress, accessibilityHint }: { label: string; onPress: () => void; accessibilityHint?: string }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityHint={accessibilityHint}
       onPress={() => {
         haptic.light();
         onPress();
@@ -330,8 +331,16 @@ export default function HomeScreen() {
               {memory && <Text style={styles.sourceSummary}>Sources: {memory.platforms.join(", ")}</Text>}
               {memory && (
                 <View style={styles.actionRow}>
-                  <SecondaryButton label="Resume last follow-up" onPress={() => setPhase("results")} />
-                  <SecondaryButton label="Clear local memory" onPress={confirmResetMemory} />
+                  <SecondaryButton
+                    label="Resume last follow-up"
+                    accessibilityHint="Opens the saved results state so you can continue reviewing your last workflow."
+                    onPress={() => setPhase("results")}
+                  />
+                  <SecondaryButton
+                    label="Clear local memory"
+                    accessibilityHint="Opens a confirmation dialog before removing the saved workflow from this device."
+                    onPress={confirmResetMemory}
+                  />
                 </View>
               )}
             </View>
