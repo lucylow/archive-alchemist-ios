@@ -309,6 +309,7 @@ export default function HomeScreen() {
                   : "Your first workflow will be remembered locally on this device."}
               </Text>
               {memory && <Text style={styles.goldText}>Saved {formatSavedAt(memory.savedAt)} · {memory.followUp}</Text>}
+              {memory && <Text style={styles.sourceSummary}>Sources: {memory.platforms.join(", ")}</Text>}
               {memory && (
                 <View style={styles.actionRow}>
                   <SecondaryButton label="Resume last follow-up" onPress={() => setPhase("results")} />
@@ -587,6 +588,7 @@ const styles = StyleSheet.create({
   screenTitle: { color: "#F8F4FF", fontSize: 28, lineHeight: 34, fontWeight: "800" },
   bodyText: { color: "#AAA0C7", fontSize: 15, lineHeight: 22 },
   goldText: { color: "#F4C95D", fontSize: 14, lineHeight: 20, fontWeight: "700" },
+  sourceSummary: { color: "#D8D0EA", fontSize: 12, lineHeight: 18, fontWeight: "700" },
   panel: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderRadius: 18, padding: 16, gap: 12 },
   sectionTitle: { color: "#F8F4FF", fontSize: 17, fontWeight: "800" },
   livePill: { color: "#63D79A", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
