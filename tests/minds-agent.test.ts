@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mindsDiscoveryInput } from "../server/minds-agent";
+import { mindsDiscoveryInput, parseMindsDiscoveryResponse } from "../server/minds-agent";
 
 describe("Minds discovery input", () => {
   it("accepts a bounded archive request", () => {
@@ -34,5 +34,25 @@ describe("Minds discovery input", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("normalizes fenced JSON responses", () => {
+    const payload = JSON.stringify({
+      summary: "Reuse the lesson",
+      recommendations: [{
+        title: "Short lesson",
+        rationale: "Clear hook",
+        formats: ["Short"],
+        confidence: 0.9,
+      }],
+    });
+    const result = parseMindsDiscoveryResponse(`\`\`\`json\n${payload}\n\`\`\``);
+
+    expect(result.recommendations[0]?.confidence).toBe(0.9);
+  });
+
+  it("rejects empty or schema-invalid model responses", () => {
+    expect(() => parseMindsDiscoveryResponse("   ")).toThrow("empty response");
+    expect(() => parseMindsDiscoveryResponse(JSON.stringify({ summary: "Missing recommendations" }))).toThrow();
   });
 });

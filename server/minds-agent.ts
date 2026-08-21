@@ -32,6 +32,28 @@ const getTextContent = (content: unknown) => {
     .join("\n");
 };
 
+const normalizeJsonText = (content: string) => {
+  const trimmed = content.trim();
+  const withoutFence = trimmed.replace(/^```(?:json)?\\s*/i, "").replace(/\\s*```$/i, "").trim();
+  const firstBrace = withoutFence.indexOf("{");
+  const lastBrace = withoutFence.lastIndexOf("}");
+  return firstBrace >= 0 && lastBrace > firstBrace ? withoutFence.slice(firstBrace, lastBrace + 1) : withoutFence;
+};
+
+export function parseMindsDiscoveryResponse(content: unknown): MindsDiscoveryResponse {
+  const text = normalizeJsonText(getTextContent(content));
+  if (!text) throw new Error("Minds returned an empty response");
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text) as unknown;
+  } catch {
+    throw new Error("Minds returned an invalid structured response");
+  }
+
+  return mindsDiscoveryOutput.parse(parsed);
+}
+
 export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<MindsDiscoveryResponse> {
   const validatedInput = mindsDiscoveryInput.parse(input);
   const response = await invokeLLM({
@@ -54,7 +76,5 @@ export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<M
     response_format: { type: "json_object" },
   });
 
-  const content = getTextContent(response.choices[0]?.message.content);
-  const parsed = JSON.parse(content) as unknown;
-  return mindsDiscoveryOutput.parse(parsed);
+  return parseMindsDiscoveryResponse(response.choices[0]?.message.content);
 }
