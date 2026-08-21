@@ -17,6 +17,7 @@ type Memory = {
 };
 
 const MEMORY_KEY = "archive-alchemist-mind-memory";
+const PLATFORMS_KEY = "archive-alchemist-selected-platforms";
 const platforms: Platform[] = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"];
 const discoveries = [
   { title: "How to Edit Like a Pro", year: 2023, score: 94, views: "12.4K", icon: "🎬" },
@@ -82,6 +83,16 @@ export default function HomeScreen() {
         if (value) setMemory(JSON.parse(value) as Memory);
       })
       .catch(() => AsyncStorage.removeItem(MEMORY_KEY));
+
+    AsyncStorage.getItem(PLATFORMS_KEY)
+      .then((value) => {
+        if (!value) return;
+        const restored = JSON.parse(value) as Platform[];
+        if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
+          setSelectedPlatforms(restored);
+        }
+      })
+      .catch(() => AsyncStorage.removeItem(PLATFORMS_KEY));
   }, []);
 
   useEffect(() => {
@@ -132,9 +143,13 @@ export default function HomeScreen() {
 
   const togglePlatform = (platform: Platform) => {
     haptic.selection();
-    setSelectedPlatforms((current) =>
-      current.includes(platform) ? current.filter((item) => item !== platform) : [...current, platform],
-    );
+    setSelectedPlatforms((current) => {
+      const next = current.includes(platform) ? current.filter((item) => item !== platform) : [...current, platform];
+      AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(next)).catch(() =>
+        setNotice("Platform preference could not be saved, but this session is still available."),
+      );
+      return next;
+    });
   };
 
   const goBack = () => {
