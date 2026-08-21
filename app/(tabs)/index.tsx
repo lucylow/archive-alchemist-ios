@@ -5,6 +5,8 @@ import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressabl
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
 import { canAutoPost } from "@/lib/workflow";
+import { trpc } from "@/lib/trpc";
+import type { MindsDiscoveryResponse } from "@/shared/minds";
 
 type Phase = "home" | "connect" | "scan" | "discoveries" | "repurpose" | "results";
 type Platform = "YouTube" | "Spotify" | "Substack" | "Twitter" | "Instagram" | "TikTok";
@@ -108,8 +110,16 @@ export default function HomeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
+  const mindsDiscovery = trpc.minds.discover.useMutation({
+    onSuccess: (data) => {
+      setMindsInsight(data);
+      setNotice("Minds returned a structured follow-up plan for this archive item.");
+    },
+    onError: () => setNotice("Minds could not analyze this item right now. Your local workflow is still available."),
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -585,6 +595,32 @@ export default function HomeScreen() {
                 </View>
               </View>
             ))}
+            <PrimaryButton
+              label={mindsDiscovery.isPending ? "Minds is thinking…" : "Ask Minds for a smarter follow-up"}
+              accessibilityHint="Sends the selected archive item to the server-side Minds strategist for a structured recommendation."
+              disabled={mindsDiscovery.isPending}
+              onPress={() => mindsDiscovery.mutate({
+                platforms: selectedPlatforms,
+                archiveTitle: discoveries[0].title,
+                sourceYear: discoveries[0].year,
+                sourceViews: discoveries[0].views,
+              })}
+            />
+            {mindsInsight && (
+              <View accessible accessibilityLabel={`Minds insight: ${mindsInsight.summary}`} style={styles.followUpCard}>
+                <Text style={styles.heroKicker}>MINDS AGENT INSIGHT</Text>
+                <Text style={styles.sectionTitle}>{mindsInsight.summary}</Text>
+                {mindsInsight.recommendations.map((recommendation) => (
+                  <View key={recommendation.title} style={styles.mindRow}>
+                    <View style={styles.flexOne}>
+                      <Text style={styles.mindName}>{recommendation.title}</Text>
+                      <Text style={styles.mindDescription}>{recommendation.rationale} · {recommendation.formats.join(", ")}</Text>
+                    </View>
+                    <Text style={styles.activeText}>{Math.round(recommendation.confidence * 100)}%</Text>
+                  </View>
+                ))}
+              </View>
+            )}
             <PrimaryButton
               label="Repurpose top discovery"
               onPress={() => {
