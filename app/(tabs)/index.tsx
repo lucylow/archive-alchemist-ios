@@ -136,10 +136,26 @@ export default function HomeScreen() {
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
+  const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
+    if (!memory) return;
+    const updatedMemory = { ...memory, mindsInsight: insight };
+    const nextHistory = [updatedMemory, ...history.filter((item) => item.savedAt !== updatedMemory.savedAt)].slice(0, 5);
+    try {
+      await Promise.all([
+        AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(updatedMemory)),
+        AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory)),
+      ]);
+      setMemory(updatedMemory);
+      setHistory(nextHistory);
+    } catch {
+      setNotice("Minds returned an insight, but it could not be saved to local memory.");
+    }
+  };
   const mindsDiscovery = trpc.minds.discover.useMutation({
     onSuccess: (data) => {
       setMindsInsight(data);
       setNotice("Minds returned a structured follow-up plan for this archive item.");
+      void persistInsightToMemory(data);
     },
     onError: () => setNotice("Minds could not analyze this item right now. Your local workflow is still available."),
     retry: 1,
