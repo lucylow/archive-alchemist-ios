@@ -41,3 +41,4 @@
 - [x] Explain why disabled primary workflow actions are unavailable to VoiceOver users
 - [x] Make workflow status notices announce their message and dismissal action clearly
 - [x] Announce each workflow phase transition to VoiceOver after hydration
+- [x] Persist and display a compact local history of recent Mind workflows

@@ -17,6 +17,7 @@ type Memory = {
 };
 
 const MEMORY_KEY = "archive-alchemist-mind-memory";
+const HISTORY_KEY = "archive-alchemist-mind-history";
 const PLATFORMS_KEY = "archive-alchemist-selected-platforms";
 const platforms: Platform[] = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"];
 const discoveries = [
@@ -27,6 +28,19 @@ const discoveries = [
 const formatSavedAt = (value: string) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+};
+
+const isValidMemory = (value: unknown): value is Memory => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<Memory>;
+  return (
+    typeof candidate.title === "string" &&
+    Array.isArray(candidate.platforms) &&
+    candidate.platforms.length > 0 &&
+    candidate.platforms.every((item) => platforms.includes(item as Platform)) &&
+    typeof candidate.savedAt === "string" &&
+    typeof candidate.followUp === "string"
+  );
 };
 
 const phaseTitle: Record<Phase, string> = {
@@ -88,6 +102,7 @@ export default function HomeScreen() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["YouTube", "Instagram", "TikTok"]);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
+  const [history, setHistory] = useState<Memory[]>([]);
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -130,31 +145,35 @@ export default function HomeScreen() {
       try {
         const storageRead = Promise.all([
           AsyncStorage.getItem(MEMORY_KEY),
+          AsyncStorage.getItem(HISTORY_KEY),
           AsyncStorage.getItem(PLATFORMS_KEY),
         ]);
-        const storageTimeout = new Promise<[string | null, string | null]>((resolve) => {
-          setTimeout(() => resolve([null, null]), 1500);
+        const storageTimeout = new Promise<[string | null, string | null, string | null]>((resolve) => {
+          setTimeout(() => resolve([null, null, null]), 1500);
         });
-        const [memoryValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
+        const [memoryValue, historyValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
-            if (
-              restoredMemory &&
-              typeof restoredMemory === "object" &&
-              typeof restoredMemory.title === "string" &&
-              Array.isArray(restoredMemory.platforms) &&
-              restoredMemory.platforms.length > 0 &&
-              restoredMemory.platforms.every((item) => platforms.includes(item)) &&
-              typeof restoredMemory.savedAt === "string" &&
-              typeof restoredMemory.followUp === "string"
-            ) {
+            if (isValidMemory(restoredMemory)) {
               setMemory(restoredMemory);
             } else {
               await AsyncStorage.removeItem(MEMORY_KEY);
             }
           } catch {
             await AsyncStorage.removeItem(MEMORY_KEY);
+          }
+        }
+        if (historyValue) {
+          try {
+            const restoredHistory = JSON.parse(historyValue) as Memory[];
+            if (Array.isArray(restoredHistory) && restoredHistory.every(isValidMemory)) {
+              setHistory(restoredHistory.slice(0, 5));
+            } else {
+              await AsyncStorage.removeItem(HISTORY_KEY);
+            }
+          } catch {
+            await AsyncStorage.removeItem(HISTORY_KEY);
           }
         }
         if (platformsValue) {
@@ -210,6 +229,13 @@ export default function HomeScreen() {
       setIsSaving(true);
       await AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(record));
       setMemory(record);
+      setHistory((current) => {
+        const next = [record, ...current.filter((item) => item.savedAt !== record.savedAt)].slice(0, 5);
+        AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(next)).catch(() =>
+          setNotice("Mind memory was saved, but the recent-workflow history could not be updated."),
+        );
+        return next;
+      });
       haptic.success();
       return true;
     } catch {
@@ -222,8 +248,9 @@ export default function HomeScreen() {
 
   const resetMemory = async () => {
     try {
-      await AsyncStorage.removeItem(MEMORY_KEY);
+      await Promise.all([AsyncStorage.removeItem(MEMORY_KEY), AsyncStorage.removeItem(HISTORY_KEY)]);
       setMemory(null);
+      setHistory([]);
       setPhase("home");
       setNotice("Mind memory cleared. Your next dig starts fresh.");
     } catch {
@@ -234,7 +261,7 @@ export default function HomeScreen() {
   const confirmResetMemory = () => {
     Alert.alert(
       "Clear local Mind memory?",
-      "This removes the saved workflow from this device. Your source-platform preferences will remain.",
+      "This removes saved Mind workflows from this device. Your source-platform preferences will remain.",
       [
         { text: "Cancel", style: "cancel" },
         { text: "Clear memory", style: "destructive", onPress: resetMemory },
@@ -391,6 +418,24 @@ export default function HomeScreen() {
                 </View>
               )}
             </View>
+            {history.length > 0 && (
+              <View style={styles.panel}>
+                <Text style={styles.sectionTitle}>Recent workflows</Text>
+                {history.map((item) => (
+                  <View
+                    key={item.savedAt}
+                    accessible
+                    accessibilityLabel={`${item.title}, ${item.platforms.length} platform${item.platforms.length === 1 ? "" : "s"}, saved ${formatSavedAt(item.savedAt)}`}
+                    style={styles.mindRow}
+                  >
+                    <View style={styles.flexOne}>
+                      <Text style={styles.mindName}>{item.title}</Text>
+                      <Text style={styles.mindDescription}>{item.platforms.join(", ")} · Saved {formatSavedAt(item.savedAt)}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
             <View style={styles.panel}>
               <Text style={styles.sectionTitle}>Active Minds</Text>
               {[
