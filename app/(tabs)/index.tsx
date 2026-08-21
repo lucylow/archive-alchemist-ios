@@ -73,6 +73,7 @@ export default function HomeScreen() {
   const [memory, setMemory] = useState<Memory | null>(null);
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,9 +109,18 @@ export default function HomeScreen() {
       savedAt: new Date().toISOString(),
       followUp: "The 60-second editing clip performed 3.2× better than average.",
     };
-    setMemory(record);
-    await AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(record));
-    haptic.success();
+    try {
+      setIsSaving(true);
+      await AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(record));
+      setMemory(record);
+      haptic.success();
+      return true;
+    } catch {
+      setNotice("Mind memory could not be saved. Your workflow is still available for this session.");
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const resetMemory = async () => {
@@ -278,7 +288,14 @@ export default function HomeScreen() {
                 </View>
               </View>
             ))}
-            <PrimaryButton label="Repurpose top discovery" onPress={() => setPhase("repurpose")} />
+            <PrimaryButton
+              label="Repurpose top discovery"
+              onPress={() => {
+                setReviewMode(false);
+                setApprovedOutputs([]);
+                setPhase("repurpose");
+              }}
+            />
             <SecondaryButton label="Start over" onPress={() => setPhase("connect")} />
           </View>
         )}
@@ -318,10 +335,11 @@ export default function HomeScreen() {
             <Text style={styles.goldText}>Estimated time saved: 4 hours 23 minutes</Text>
             {reviewMode && <Text style={styles.reviewHint}>{approvedOutputs.length} of {selectedOutputs.length} outputs approved</Text>}
             <PrimaryButton
-              label={reviewMode && approvedOutputs.length < selectedOutputs.length ? `Approve ${selectedOutputs.length - approvedOutputs.length} more` : "Auto-Post"}
-              disabled={!canAutoPost(reviewMode, approvedOutputs, selectedOutputs.map(([, output]) => output))}
+              label={isSaving ? "Saving Mind memory…" : reviewMode && approvedOutputs.length < selectedOutputs.length ? `Approve ${selectedOutputs.length - approvedOutputs.length} more` : "Auto-Post"}
+              disabled={isSaving || !canAutoPost(reviewMode, approvedOutputs, selectedOutputs.map(([, output]) => output))}
               onPress={async () => {
-                await saveMemory();
+                const saved = await saveMemory();
+                if (!saved) return;
                 setNotice("The Conductor scheduled the approved content batch and stored the workflow in Mind memory.");
                 setPhase("results");
               }}
