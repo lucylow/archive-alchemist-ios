@@ -310,9 +310,25 @@ export default function HomeScreen() {
             <Text style={styles.bodyText}>Select the channels the Archaeologist should scan for dormant gold.</Text>
             <View style={styles.rowBetween}>
               <Text style={styles.selectionSummary}>{selectedPlatforms.length} selected</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={selectedPlatforms.length === platforms.length ? "Clear all platforms" : "Select all platforms"}
+              <View style={styles.actionGroup}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Use recommended creator platform mix"
+                  onPress={() => {
+                    haptic.selection();
+                    const recommended: Platform[] = ["YouTube", "Instagram", "TikTok"];
+                    setSelectedPlatforms(recommended);
+                    AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(recommended)).catch(() =>
+                      setNotice("Platform preference could not be saved, but this session is still available."),
+                    );
+                  }}
+                  style={({ pressed }) => [styles.inlineAction, pressed && styles.pressed]}
+                >
+                  <Text style={styles.inlineActionText}>Recommended</Text>
+                </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={selectedPlatforms.length === platforms.length ? "Clear all platforms" : "Select all platforms"}
                 onPress={() => {
                   haptic.medium();
                   const next = selectedPlatforms.length === platforms.length ? [] : platforms;
@@ -323,8 +339,9 @@ export default function HomeScreen() {
                 }}
                 style={({ pressed }) => [styles.inlineAction, pressed && styles.pressed]}
               >
-                <Text style={styles.inlineActionText}>{selectedPlatforms.length === platforms.length ? "Clear all" : "Select all"}</Text>
-              </Pressable>
+                  <Text style={styles.inlineActionText}>{selectedPlatforms.length === platforms.length ? "Clear all" : "Select all"}</Text>
+                </Pressable>
+              </View>
             </View>
             <View style={styles.platformGrid}>
               {platforms.map((platform) => {
@@ -517,6 +534,8 @@ const styles = StyleSheet.create({
   loadingTitle: { color: "#F8F4FF", fontSize: 18, fontWeight: "800" },
   stack: { gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  actionGroup: { flexDirection: "row", alignItems: "center", gap: 2 },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#261B4B", borderWidth: 1, borderColor: "#6C5B9D", alignItems: "center", justifyContent: "center" },
   backButtonText: { color: "#F8F4FF", fontSize: 30, lineHeight: 32, marginTop: -3 },
@@ -532,7 +551,6 @@ const styles = StyleSheet.create({
   goldText: { color: "#F4C95D", fontSize: 14, lineHeight: 20, fontWeight: "700" },
   panel: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderRadius: 18, padding: 16, gap: 12 },
   sectionTitle: { color: "#F8F4FF", fontSize: 17, fontWeight: "800" },
-  rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   livePill: { color: "#63D79A", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
   statsRow: { flexDirection: "row", gap: 10 },
   stat: { flex: 1, backgroundColor: "#261B4B", borderRadius: 16, padding: 13, borderWidth: 1, borderColor: "#3B2C62" },
