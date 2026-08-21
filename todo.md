@@ -44,3 +44,4 @@
 - [x] Persist and display a compact local history of recent Mind workflows
 - [x] Add a typed server-side Minds agent endpoint with structured discovery recommendations
 - [x] Harden Minds response parsing for fenced JSON, empty content, and structured validation failures
+- [x] Persist validated Minds recommendations with the saved workflow and recent history

@@ -16,6 +16,7 @@ type Memory = {
   platforms: Platform[];
   savedAt: string;
   followUp: string;
+  mindsInsight?: MindsDiscoveryResponse;
 };
 
 const MEMORY_KEY = "archive-alchemist-mind-memory";
@@ -32,6 +33,27 @@ const formatSavedAt = (value: string) => {
   return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 };
 
+const isValidMindsInsight = (value: unknown): value is MindsDiscoveryResponse => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<MindsDiscoveryResponse>;
+  return (
+    typeof candidate.summary === "string" &&
+    candidate.summary.length > 0 &&
+    Array.isArray(candidate.recommendations) &&
+    candidate.recommendations.length > 0 &&
+    candidate.recommendations.every((recommendation) => (
+      Boolean(recommendation) &&
+      typeof recommendation.title === "string" &&
+      typeof recommendation.rationale === "string" &&
+      Array.isArray(recommendation.formats) &&
+      recommendation.formats.length > 0 &&
+      typeof recommendation.confidence === "number" &&
+      recommendation.confidence >= 0 &&
+      recommendation.confidence <= 1
+    ))
+  );
+};
+
 const isValidMemory = (value: unknown): value is Memory => {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<Memory>;
@@ -41,7 +63,8 @@ const isValidMemory = (value: unknown): value is Memory => {
     candidate.platforms.length > 0 &&
     candidate.platforms.every((item) => platforms.includes(item as Platform)) &&
     typeof candidate.savedAt === "string" &&
-    typeof candidate.followUp === "string"
+    typeof candidate.followUp === "string" &&
+    (candidate.mindsInsight === undefined || isValidMindsInsight(candidate.mindsInsight))
   );
 };
 
@@ -167,6 +190,7 @@ export default function HomeScreen() {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
             if (isValidMemory(restoredMemory)) {
               setMemory(restoredMemory);
+              setMindsInsight(restoredMemory.mindsInsight ?? null);
             } else {
               await AsyncStorage.removeItem(MEMORY_KEY);
             }
@@ -234,6 +258,7 @@ export default function HomeScreen() {
       platforms: selectedPlatforms,
       savedAt: new Date().toISOString(),
       followUp: "The 60-second editing clip performed 3.2× better than average.",
+      mindsInsight: mindsInsight ?? undefined,
     };
     try {
       setIsSaving(true);
@@ -261,6 +286,7 @@ export default function HomeScreen() {
       await Promise.all([AsyncStorage.removeItem(MEMORY_KEY), AsyncStorage.removeItem(HISTORY_KEY)]);
       setMemory(null);
       setHistory([]);
+      setMindsInsight(null);
       setPhase("home");
       setNotice("Mind memory cleared. Your next dig starts fresh.");
     } catch {
@@ -394,7 +420,7 @@ export default function HomeScreen() {
               <Text style={styles.bodyText}>
                 The Minds index dormant work, match it to current signals, and keep the follow-up alive after you leave.
               </Text>
-              <PrimaryButton label="Start a new dig" onPress={() => setPhase("connect")} />
+              <PrimaryButton label="Start a new dig" onPress={() => { setMindsInsight(null); setPhase("connect"); }} />
             </View>
             <View style={styles.statsRow}>
               <Stat label="Archive items" value="412" />
@@ -440,7 +466,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.flexOne}>
                       <Text style={styles.mindName}>{item.title}</Text>
-                      <Text style={styles.mindDescription}>{item.platforms.join(", ")} · Saved {formatSavedAt(item.savedAt)}</Text>
+                      <Text style={styles.mindDescription}>{item.platforms.join(", ")} · Saved {formatSavedAt(item.savedAt)}{item.mindsInsight ? " · Minds insight saved" : ""}</Text>
                     </View>
                   </View>
                 ))}
