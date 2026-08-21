@@ -46,3 +46,4 @@
 - [x] Harden Minds response parsing for fenced JSON, empty content, and structured validation failures
 - [x] Persist validated Minds recommendations with the saved workflow and recent history
 - [x] Add an accessible action to reopen a saved workflow and its Minds insight
+- [x] Add an accessible retry action after a Minds analysis failure

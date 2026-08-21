@@ -252,6 +252,13 @@ export default function HomeScreen() {
     [selectedPlatforms],
   );
 
+  const requestMindsInsight = () => mindsDiscovery.mutate({
+    platforms: selectedPlatforms,
+    archiveTitle: discoveries[0].title,
+    sourceYear: discoveries[0].year,
+    sourceViews: discoveries[0].views,
+  });
+
   const saveMemory = async () => {
     const record: Memory = {
       title: "How to Edit Like a Pro",
@@ -420,7 +427,7 @@ export default function HomeScreen() {
               <Text style={styles.bodyText}>
                 The Minds index dormant work, match it to current signals, and keep the follow-up alive after you leave.
               </Text>
-              <PrimaryButton label="Start a new dig" onPress={() => { setMindsInsight(null); setPhase("connect"); }} />
+              <PrimaryButton label="Start a new dig" onPress={() => { mindsDiscovery.reset(); setMindsInsight(null); setPhase("connect"); }} />
             </View>
             <View style={styles.statsRow}>
               <Stat label="Archive items" value="412" />
@@ -630,13 +637,15 @@ export default function HomeScreen() {
               label={mindsDiscovery.isPending ? "Minds is thinking…" : "Ask Minds for a smarter follow-up"}
               accessibilityHint="Sends the selected archive item to the server-side Minds strategist for a structured recommendation."
               disabled={mindsDiscovery.isPending}
-              onPress={() => mindsDiscovery.mutate({
-                platforms: selectedPlatforms,
-                archiveTitle: discoveries[0].title,
-                sourceYear: discoveries[0].year,
-                sourceViews: discoveries[0].views,
-              })}
+              onPress={requestMindsInsight}
             />
+            {mindsDiscovery.isError && !mindsInsight && (
+              <SecondaryButton
+                label="Try Minds again"
+                accessibilityHint="Retries the server-side Minds analysis for this archive item."
+                onPress={requestMindsInsight}
+              />
+            )}
             {mindsInsight && (
               <View accessible accessibilityLabel={`Minds insight: ${mindsInsight.summary}`} style={styles.followUpCard}>
                 <Text style={styles.heroKicker}>MINDS AGENT INSIGHT</Text>
