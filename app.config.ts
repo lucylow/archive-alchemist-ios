@@ -42,6 +42,8 @@ const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
   version: "1.0.0",
+  description: "Find dormant creative work, turn it into platform-ready outputs, and keep the follow-up alive.",
+  primaryColor: "#F4C95D",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,

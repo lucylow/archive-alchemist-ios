@@ -25,3 +25,7 @@
 - [x] Confirmed destructive reset for local Mind memory
 - [x] Select All and Clear All controls for source onboarding
 - [x] Bounded hydration timeout to avoid an indefinite startup screen
+- [x] Final App Store release configuration audit
+- [x] Final iOS metadata and EAS handoff hardening
+- [x] Final Expo release verification after handoff updates
+- [x] Final Apple submission checkpoint

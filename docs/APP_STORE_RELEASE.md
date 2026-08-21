@@ -14,25 +14,32 @@ The app currently does not request camera, microphone, contacts, location, photo
 
 ## EAS commands
 
-Run these commands from the project root after installing or authenticating the EAS CLI:
+The code and Expo configuration are complete, but Apple signing and upload are account-owned steps that must be performed with the owner’s Apple Developer and App Store Connect sessions. Run these commands from the project root after installing the EAS CLI:
 
 ```bash
 npx eas login
 npx eas project:init
 npx eas build:configure
 npx eas build --platform ios --profile preview
-npx eas submit --platform ios --profile production
 ```
 
-For a production archive intended for the App Store, use:
+Install the preview build through TestFlight or an internal distribution link and complete the smoke test. Then create the production archive:
 
 ```bash
 npx eas build --platform ios --profile production
 ```
 
-When EAS prompts for credentials, allow EAS to manage distribution certificates and provisioning profiles unless the organization requires manually managed credentials. The first build will create or link the iOS application using the configured bundle identifier.
+After the App Store Connect app record exists, replace `ascAppId` in `eas.json` with its numeric App Store Connect ID and submit:
 
-Update `ascAppId` in `eas.json` with the numeric App Store Connect app ID before using the automated submit profile. If it is not available yet, upload the generated `.ipa` through Transporter or the App Store Connect web interface.
+```bash
+npx eas submit --platform ios --profile production
+```
+
+When EAS prompts for credentials, allow it to manage distribution certificates and provisioning profiles unless the organization requires manually managed credentials. The first production build creates or links the iOS application using the stable bundle identifier `com.archivealchemist.mobile`. If automated submit is not configured yet, upload the generated `.ipa` through Transporter or the App Store Connect web interface.
+
+### Final owner actions
+
+The owner must create the App Store Connect record with bundle ID `com.archivealchemist.mobile`, complete Apple signing during the first EAS build, replace the `ascAppId` placeholder, test the production build in TestFlight, capture the required portrait screenshots, and submit the review metadata. The current build uses deterministic demo content and simulated Auto-Post behavior; App Review notes should state that no third-party account is connected and no user content leaves the device in this release.
 
 ## Suggested App Store listing copy
 
