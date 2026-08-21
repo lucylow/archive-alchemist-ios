@@ -324,7 +324,13 @@ export default function HomeScreen() {
             <Text style={styles.screenTitle}>Dormant gold</Text>
             <Text style={styles.bodyText}>The Strategist found three archive items worth another life.</Text>
             {discoveries.map((item) => (
-              <View key={item.title} style={styles.discoveryCard}>
+              <View
+                key={item.title}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={`${item.title}, ${item.year}, Evergreen Score ${item.score}, ${item.views} source views`}
+                style={styles.discoveryCard}
+              >
                 <Text style={styles.discoveryIcon}>{item.icon}</Text>
                 <View style={styles.flexOne}>
                   <Text style={styles.discoveryTitle}>{item.title}</Text>
@@ -438,7 +444,7 @@ export default function HomeScreen() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.stat}>
+    <View accessible accessibilityLabel={`${label}: ${value}`} style={styles.stat}>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
     </View>
