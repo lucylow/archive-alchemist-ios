@@ -458,16 +458,21 @@ export default function HomeScreen() {
               <View style={styles.panel}>
                 <Text style={styles.sectionTitle}>Recent workflows</Text>
                 {history.map((item) => (
-                  <View
-                    key={item.savedAt}
-                    accessible
-                    accessibilityLabel={`${item.title}, ${item.platforms.length} platform${item.platforms.length === 1 ? "" : "s"}, saved ${formatSavedAt(item.savedAt)}`}
-                    style={styles.mindRow}
-                  >
+                  <View key={item.savedAt} style={styles.mindRow}>
                     <View style={styles.flexOne}>
                       <Text style={styles.mindName}>{item.title}</Text>
                       <Text style={styles.mindDescription}>{item.platforms.join(", ")} · Saved {formatSavedAt(item.savedAt)}{item.mindsInsight ? " · Minds insight saved" : ""}</Text>
                     </View>
+                    <SecondaryButton
+                      label={item.mindsInsight ? "View insight" : "Resume"}
+                      accessibilityHint="Reopens this saved workflow and restores its Minds insight when available."
+                      onPress={() => {
+                        setMemory(item);
+                        setMindsInsight(item.mindsInsight ?? null);
+                        setPhase("results");
+                        setNotice("Saved workflow reopened.");
+                      }}
+                    />
                   </View>
                 ))}
               </View>
