@@ -21,3 +21,4 @@
 - [x] Persisted source-platform preferences across app launches
 - [x] VoiceOver labels for overview metrics and discovery cards
 - [x] Hydration gate to prevent first-launch state flicker
+- [x] Human-readable Mind-memory timestamp on the overview

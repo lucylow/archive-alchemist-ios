@@ -24,6 +24,11 @@ const discoveries = [
   { title: "The Future of AI in Content", year: 2022, score: 91, views: "8.7K", icon: "🎙️" },
   { title: "10 Tools Every Creator Needs", year: 2021, score: 89, views: "15.2K", icon: "📝" },
 ];
+const formatSavedAt = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+};
+
 const outputs = [
   ["TikTok", "TikTok / Reels Clip (0:58)"],
   ["Instagram", "Instagram Reel (0:30)"],
@@ -260,7 +265,7 @@ export default function HomeScreen() {
                   ? `Last workflow: ${memory.title} across ${memory.platforms.length} platform${memory.platforms.length === 1 ? "" : "s"}.`
                   : "Your first workflow will be remembered locally on this device."}
               </Text>
-              {memory && <Text style={styles.goldText}>{memory.followUp}</Text>}
+              {memory && <Text style={styles.goldText}>Saved {formatSavedAt(memory.savedAt)} · {memory.followUp}</Text>}
               {memory && <SecondaryButton label="Clear local memory" onPress={resetMemory} />}
             </View>
             <View style={styles.panel}>
