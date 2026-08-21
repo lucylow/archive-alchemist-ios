@@ -309,7 +309,12 @@ export default function HomeScreen() {
                   : "Your first workflow will be remembered locally on this device."}
               </Text>
               {memory && <Text style={styles.goldText}>Saved {formatSavedAt(memory.savedAt)} · {memory.followUp}</Text>}
-              {memory && <SecondaryButton label="Clear local memory" onPress={confirmResetMemory} />}
+              {memory && (
+                <View style={styles.actionRow}>
+                  <SecondaryButton label="Resume last follow-up" onPress={() => setPhase("results")} />
+                  <SecondaryButton label="Clear local memory" onPress={confirmResetMemory} />
+                </View>
+              )}
             </View>
             <View style={styles.panel}>
               <Text style={styles.sectionTitle}>Active Minds</Text>
@@ -568,6 +573,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   actionGroup: { flexDirection: "row", alignItems: "center", gap: 2 },
+  actionRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#261B4B", borderWidth: 1, borderColor: "#6C5B9D", alignItems: "center", justifyContent: "center" },
   backButtonText: { color: "#F8F4FF", fontSize: 30, lineHeight: 32, marginTop: -3 },
