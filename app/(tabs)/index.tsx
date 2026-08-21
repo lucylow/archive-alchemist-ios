@@ -272,14 +272,14 @@ export default function HomeScreen() {
     try {
       setIsSaving(true);
       await AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(record));
+      const nextHistory = [record, ...history.filter((item) => item.savedAt !== record.savedAt)].slice(0, 5);
+      try {
+        await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
+      } catch {
+        setNotice("Mind memory was saved, but the recent-workflow history could not be updated.");
+      }
       setMemory(record);
-      setHistory((current) => {
-        const next = [record, ...current.filter((item) => item.savedAt !== record.savedAt)].slice(0, 5);
-        AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(next)).catch(() =>
-          setNotice("Mind memory was saved, but the recent-workflow history could not be updated."),
-        );
-        return next;
-      });
+      setHistory(nextHistory);
       haptic.success();
       return true;
     } catch {

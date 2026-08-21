@@ -48,3 +48,4 @@
 - [x] Add an accessible action to reopen a saved workflow and its Minds insight
 - [x] Add an accessible retry action after a Minds analysis failure
 - [x] Add one bounded automatic retry for transient Minds analysis failures
+- [x] Refactor history persistence out of the React state updater for deterministic Mind saves
