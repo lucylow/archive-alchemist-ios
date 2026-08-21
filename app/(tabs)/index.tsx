@@ -5,19 +5,14 @@ import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressabl
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
 import { canAutoPost } from "@/lib/workflow";
+import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryResponse } from "@/shared/minds";
 
 type Phase = "home" | "connect" | "scan" | "discoveries" | "repurpose" | "results";
 type Platform = "YouTube" | "Spotify" | "Substack" | "Twitter" | "Instagram" | "TikTok";
 
-type Memory = {
-  title: string;
-  platforms: Platform[];
-  savedAt: string;
-  followUp: string;
-  mindsInsight?: MindsDiscoveryResponse;
-};
+type Memory = Omit<PersistedMindMemory, "platforms"> & { platforms: Platform[] };
 
 const MEMORY_KEY = "archive-alchemist-mind-memory";
 const HISTORY_KEY = "archive-alchemist-mind-history";
@@ -138,8 +133,7 @@ export default function HomeScreen() {
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
     if (!memory) return;
-    const updatedMemory = { ...memory, mindsInsight: insight };
-    const nextHistory = [updatedMemory, ...history.filter((item) => item.savedAt !== updatedMemory.savedAt)].slice(0, 5);
+    const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
     try {
       await Promise.all([
         AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(updatedMemory)),
