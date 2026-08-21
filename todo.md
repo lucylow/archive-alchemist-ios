@@ -29,3 +29,4 @@
 - [x] Final iOS metadata and EAS handoff hardening
 - [x] Final Expo release verification after handoff updates
 - [x] Final Apple submission checkpoint
+- [x] Reproducible Expo/App Store release preflight script

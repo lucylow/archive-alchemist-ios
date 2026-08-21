@@ -1,0 +1,45 @@
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { resolve } from "node:path";
+
+const root = process.cwd();
+const requiredFiles = [
+  "app.config.ts",
+  "eas.json",
+  "docs/APP_STORE_RELEASE.md",
+  "assets/images/icon.png",
+  "assets/images/splash-icon.png",
+  "assets/images/favicon.png",
+  "assets/images/android-icon-foreground.png",
+];
+
+const failures = [];
+for (const relativePath of requiredFiles) {
+  const absolutePath = resolve(root, relativePath);
+  if (!existsSync(absolutePath)) failures.push(`Missing ${relativePath}`);
+}
+
+const appConfig = readFileSync(resolve(root, "app.config.ts"), "utf8");
+const easConfig = JSON.parse(readFileSync(resolve(root, "eas.json"), "utf8"));
+
+for (const expected of ["Archive Alchemist", "com.archivealchemist.mobile", 'version: "1.0.0"']) {
+  if (!appConfig.includes(expected)) failures.push(`app.config.ts does not contain ${expected}`);
+}
+for (const profile of ["development", "preview", "production"]) {
+  if (!easConfig.build?.[profile]) failures.push(`eas.json is missing the ${profile} build profile`);
+}
+
+for (const relativePath of requiredFiles.slice(4)) {
+  const size = statSync(resolve(root, relativePath)).size;
+  if (size > 1024 * 1024) failures.push(`${relativePath} is larger than 1 MB (${size} bytes)`);
+}
+
+if (failures.length > 0) {
+  console.error("Release preflight failed:");
+  for (const failure of failures) console.error(`- ${failure}`);
+  process.exit(1);
+}
+
+console.log("Release preflight passed.");
+console.log("Bundle ID: com.archivealchemist.mobile");
+console.log("Profiles: development, preview, production");
+console.log("Note: replace eas.json submit.production.ios.ascAppId after creating the App Store Connect record.");
