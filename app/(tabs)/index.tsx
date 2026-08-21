@@ -38,10 +38,11 @@ const outputs = [
   ["Substack", "Blog Post (1,200 words)"],
 ] as const;
 
-function PrimaryButton({ label, onPress, disabled = false }: { label: string; onPress: () => void; disabled?: boolean }) {
+function PrimaryButton({ label, onPress, disabled = false, accessibilityHint }: { label: string; onPress: () => void; disabled?: boolean; accessibilityHint?: string }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={() => {
@@ -461,6 +462,7 @@ export default function HomeScreen() {
             </Text>
             <PrimaryButton
               label="Connect selected sources"
+              accessibilityHint={selectedPlatforms.length === 0 ? "Select at least one platform before connecting sources." : "Connects the selected platforms and begins the archive scan."}
               disabled={selectedPlatforms.length === 0}
               onPress={() => {
                 setNotice(`Connected ${selectedPlatforms.length} source${selectedPlatforms.length === 1 ? "" : "s"}.`);
@@ -492,7 +494,12 @@ export default function HomeScreen() {
                 </View>
               ))}
             </View>
-            <PrimaryButton label="Continue to discoveries" disabled={progress < 100} onPress={() => setPhase("discoveries")} />
+            <PrimaryButton
+              label="Continue to discoveries"
+              accessibilityHint={progress < 100 ? "Wait for the archive scan to finish before continuing." : "Opens the discovered archive items."}
+              disabled={progress < 100}
+              onPress={() => setPhase("discoveries")}
+            />
           </View>
         )}
 
@@ -569,6 +576,7 @@ export default function HomeScreen() {
             {reviewMode && <Text style={styles.reviewHint}>{approvedOutputs.length} of {selectedOutputs.length} outputs approved</Text>}
             <PrimaryButton
               label={isSaving ? "Saving Mind memory…" : reviewMode && approvedOutputs.length < selectedOutputs.length ? `Approve ${selectedOutputs.length - approvedOutputs.length} more` : "Auto-Post"}
+              accessibilityHint={isSaving ? "Wait while Mind memory is being saved." : reviewMode && approvedOutputs.length < selectedOutputs.length ? "Approve the remaining outputs before auto-posting." : "Schedules the approved content and saves this workflow to Mind memory."}
               disabled={isSaving || !canAutoPost(reviewMode, approvedOutputs, selectedOutputs.map(([, output]) => output))}
               onPress={async () => {
                 const saved = await saveMemory();
