@@ -87,10 +87,14 @@ export default function HomeScreen() {
     let active = true;
     const hydrate = async () => {
       try {
-        const [memoryValue, platformsValue] = await Promise.all([
+        const storageRead = Promise.all([
           AsyncStorage.getItem(MEMORY_KEY),
           AsyncStorage.getItem(PLATFORMS_KEY),
         ]);
+        const storageTimeout = new Promise<[string | null, string | null]>((resolve) => {
+          setTimeout(() => resolve([null, null]), 1500);
+        });
+        const [memoryValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue) setMemory(JSON.parse(memoryValue) as Memory);
         if (platformsValue) {
           const restored = JSON.parse(platformsValue) as Platform[];

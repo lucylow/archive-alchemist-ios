@@ -24,3 +24,4 @@
 - [x] Human-readable Mind-memory timestamp on the overview
 - [x] Confirmed destructive reset for local Mind memory
 - [x] Select All and Clear All controls for source onboarding
+- [x] Bounded hydration timeout to avoid an indefinite startup screen
