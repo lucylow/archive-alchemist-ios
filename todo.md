@@ -23,3 +23,4 @@
 - [x] Hydration gate to prevent first-launch state flicker
 - [x] Human-readable Mind-memory timestamp on the overview
 - [x] Confirmed destructive reset for local Mind memory
+- [x] Select All and Clear All controls for source onboarding

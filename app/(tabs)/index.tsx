@@ -308,6 +308,24 @@ export default function HomeScreen() {
           <View style={styles.stack}>
             <Text style={styles.screenTitle}>Choose your source archive</Text>
             <Text style={styles.bodyText}>Select the channels the Archaeologist should scan for dormant gold.</Text>
+            <View style={styles.rowBetween}>
+              <Text style={styles.selectionSummary}>{selectedPlatforms.length} selected</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={selectedPlatforms.length === platforms.length ? "Clear all platforms" : "Select all platforms"}
+                onPress={() => {
+                  haptic.medium();
+                  const next = selectedPlatforms.length === platforms.length ? [] : platforms;
+                  setSelectedPlatforms(next);
+                  AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(next)).catch(() =>
+                    setNotice("Platform preference could not be saved, but this session is still available."),
+                  );
+                }}
+                style={({ pressed }) => [styles.inlineAction, pressed && styles.pressed]}
+              >
+                <Text style={styles.inlineActionText}>{selectedPlatforms.length === platforms.length ? "Clear all" : "Select all"}</Text>
+              </Pressable>
+            </View>
             <View style={styles.platformGrid}>
               {platforms.map((platform) => {
                 const selected = selectedPlatforms.includes(platform);
@@ -539,7 +557,9 @@ const styles = StyleSheet.create({
   platformIcon: { color: "#F4C95D", fontSize: 22, fontWeight: "800" },
   platformName: { color: "#F8F4FF", fontSize: 13, fontWeight: "700" },
   platformMeta: { color: "#AAA0C7", fontSize: 10 },
-  selectionSummary: { color: "#F4C95D", fontSize: 13, fontWeight: "700", textAlign: "center" },
+  selectionSummary: { color: "#F4C95D", fontSize: 13, fontWeight: "700" },
+  inlineAction: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
+  inlineActionText: { color: "#FFE8A3", fontSize: 13, fontWeight: "800" },
   progressWrap: { height: 10, borderRadius: 5, overflow: "hidden", backgroundColor: "#261B4B", borderWidth: 1, borderColor: "#3B2C62" },
   progressFill: { height: "100%", borderRadius: 5, backgroundColor: "#F4C95D" },
   progressLabel: { color: "#AAA0C7", fontSize: 13 },
