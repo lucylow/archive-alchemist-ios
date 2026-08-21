@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
@@ -75,24 +75,34 @@ export default function HomeScreen() {
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(MEMORY_KEY)
-      .then((value) => {
-        if (value) setMemory(JSON.parse(value) as Memory);
-      })
-      .catch(() => AsyncStorage.removeItem(MEMORY_KEY));
-
-    AsyncStorage.getItem(PLATFORMS_KEY)
-      .then((value) => {
-        if (!value) return;
-        const restored = JSON.parse(value) as Platform[];
-        if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
-          setSelectedPlatforms(restored);
+    let active = true;
+    const hydrate = async () => {
+      try {
+        const [memoryValue, platformsValue] = await Promise.all([
+          AsyncStorage.getItem(MEMORY_KEY),
+          AsyncStorage.getItem(PLATFORMS_KEY),
+        ]);
+        if (memoryValue) setMemory(JSON.parse(memoryValue) as Memory);
+        if (platformsValue) {
+          const restored = JSON.parse(platformsValue) as Platform[];
+          if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
+            setSelectedPlatforms(restored);
+          }
         }
-      })
-      .catch(() => AsyncStorage.removeItem(PLATFORMS_KEY));
+      } catch {
+        await Promise.all([AsyncStorage.removeItem(MEMORY_KEY), AsyncStorage.removeItem(PLATFORMS_KEY)]);
+      } finally {
+        if (active) setIsHydrated(true);
+      }
+    };
+    hydrate();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -202,6 +212,18 @@ export default function HomeScreen() {
       <View style={[styles.progressFill, { width: `${progress}%` }]} />
     </View>
   ) : null;
+
+  if (!isHydrated) {
+    return (
+      <ScreenContainer containerClassName="bg-background" edges={["top", "left", "right", "bottom"]}>
+        <View style={styles.loadingState}>
+          <ActivityIndicator color="#F4C95D" size="large" />
+          <Text style={styles.loadingTitle}>Restoring Mind memory…</Text>
+          <Text style={styles.bodyText}>Preparing your creator workspace.</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer containerClassName="bg-background" edges={["top", "left", "right", "bottom"]}>
@@ -453,6 +475,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 40, gap: 18 },
+  loadingState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 10 },
+  loadingTitle: { color: "#F8F4FF", fontSize: 18, fontWeight: "800" },
   stack: { gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   headerLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
