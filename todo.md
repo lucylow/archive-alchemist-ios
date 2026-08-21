@@ -30,3 +30,4 @@
 - [x] Final Expo release verification after handoff updates
 - [x] Final Apple submission checkpoint
 - [x] Reproducible Expo/App Store release preflight script
+- [x] Polished native splash fade and branded hydration loading animation

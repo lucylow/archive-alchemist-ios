@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
@@ -82,6 +82,18 @@ export default function HomeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const loadingPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(loadingPulse, { toValue: 1, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(loadingPulse, { toValue: 0, duration: 950, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [loadingPulse]);
 
   useEffect(() => {
     let active = true;
@@ -240,8 +252,20 @@ export default function HomeScreen() {
   if (!isHydrated) {
     return (
       <ScreenContainer containerClassName="bg-background" edges={["top", "left", "right", "bottom"]}>
-        <View style={styles.loadingState}>
-          <ActivityIndicator color="#F4C95D" size="large" />
+        <View style={styles.loadingState} accessibilityLiveRegion="polite">
+          <View style={styles.loadingMark} accessibilityLabel="Archive Alchemist is preparing">
+            <Animated.View
+              style={[
+                styles.loadingPulseRing,
+                {
+                  opacity: loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.85] }),
+                  transform: [{ scale: loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.12] }) }],
+                },
+              ]}
+            />
+            <View style={styles.loadingMarkCore}><Text style={styles.loadingMarkText}>AA</Text></View>
+          </View>
+          <ActivityIndicator color="#F4C95D" size="small" />
           <Text style={styles.loadingTitle}>Restoring Mind memory…</Text>
           <Text style={styles.bodyText}>Preparing your creator workspace.</Text>
         </View>
@@ -536,6 +560,10 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 40, gap: 18 },
   loadingState: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 10 },
   loadingTitle: { color: "#F8F4FF", fontSize: 18, fontWeight: "800" },
+  loadingMark: { width: 92, height: 92, alignItems: "center", justifyContent: "center", marginBottom: 4 },
+  loadingPulseRing: { position: "absolute", width: 84, height: 84, borderRadius: 42, borderWidth: 1, borderColor: "#F4C95D", backgroundColor: "#2C1D55" },
+  loadingMarkCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center", shadowColor: "#F4C95D", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
+  loadingMarkText: { color: "#100B24", fontSize: 17, fontWeight: "900", letterSpacing: 1 },
   stack: { gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
