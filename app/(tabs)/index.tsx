@@ -261,6 +261,7 @@ export default function HomeScreen() {
   );
 
   const requestMindsInsight = () => {
+    if (mindsDiscovery.isPending) return;
     const requestId = ++mindsRequestId.current;
     setMindsInsight(null);
     mindsDiscovery.reset();
