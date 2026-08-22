@@ -83,12 +83,12 @@ const outputs = [
   ["Substack", "Blog Post (1,200 words)"],
 ] as const;
 
-function PrimaryButton({ label, onPress, disabled = false, accessibilityHint }: { label: string; onPress: () => void; disabled?: boolean; accessibilityHint?: string }) {
+function PrimaryButton({ label, onPress, disabled = false, accessibilityHint, accessibilityState }: { label: string; onPress: () => void; disabled?: boolean; accessibilityHint?: string; accessibilityState?: { busy?: boolean } }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, ...accessibilityState }}
       disabled={disabled}
       onPress={() => {
         if (!disabled) {
@@ -673,6 +673,7 @@ export default function HomeScreen() {
             <PrimaryButton
               label={mindsDiscovery.isPending ? "Minds is thinking…" : "Ask Minds for a smarter follow-up"}
               accessibilityHint="Sends the selected archive item to the server-side Minds strategist for a structured recommendation."
+              accessibilityState={{ busy: mindsDiscovery.isPending }}
               disabled={mindsDiscovery.isPending}
               onPress={requestMindsInsight}
             />

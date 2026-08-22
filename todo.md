@@ -59,4 +59,5 @@
 - [x] Guard the Minds request handler against duplicate submissions outside the disabled UI state
 - [x] Extract and test the pure Minds request-start guard used by the mobile handler
 - [x] Retry only transient Minds failures instead of repeating validation and structured-output errors
+- [x] Expose the Minds analysis busy state explicitly to assistive technologies
 - [x] Add deterministic tests for Minds request-state reset and stale-insight prevention
