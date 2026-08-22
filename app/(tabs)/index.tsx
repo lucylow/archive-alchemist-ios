@@ -151,7 +151,14 @@ export default function HomeScreen() {
       setNotice("Minds returned a structured follow-up plan for this archive item.");
       void persistInsightToMemory(data);
     },
-    onError: () => setNotice("Minds could not analyze this item right now. Your local workflow is still available."),
+    onError: (error) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setNotice(
+        errorMessage.includes("timed out")
+          ? "Minds took too long to respond. Try again when your connection is ready; your local workflow is still available."
+          : "Minds could not analyze this item right now. Your local workflow is still available.",
+      );
+    },
     retry: 1,
     retryDelay: 800,
   });
