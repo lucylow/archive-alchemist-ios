@@ -6,7 +6,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
-import { getMindsErrorNotice } from "@/lib/minds-notices";
+import { getMindsErrorNotice, getMindsRequestStartNotice } from "@/lib/minds-notices";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryResponse } from "@/shared/minds";
 
@@ -268,6 +268,7 @@ export default function HomeScreen() {
   const requestMindsInsight = () => {
     setMindsInsight(null);
     mindsDiscovery.reset();
+    setNotice(getMindsRequestStartNotice());
     mindsDiscovery.mutate({
       platforms: selectedPlatforms,
       archiveTitle: discoveries[0].title,

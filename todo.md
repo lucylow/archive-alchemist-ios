@@ -55,3 +55,4 @@
 - [x] Add a bounded server-side timeout for Minds LLM analysis requests
 - [x] Show timeout-specific Minds guidance and retry instructions in the mobile client
 - [x] Extract and test the Minds client error-message normalization for reliable timeout guidance
+- [x] Add deterministic tests for Minds request-state reset and stale-insight prevention

@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { getMindsErrorNotice } from "../lib/minds-notices";
+import { getMindsErrorNotice, getMindsRequestStartNotice } from "../lib/minds-notices";
 
-describe("getMindsErrorNotice", () => {
+describe("Minds request notices", () => {
+  it("announces a fresh analysis and cleared prior recommendation", () => {
+    expect(getMindsRequestStartNotice()).toContain("previous recommendation has been cleared");
+  });
+
   it("returns actionable guidance for timeout failures", () => {
     expect(getMindsErrorNotice(new Error("Minds analysis timed out"))).toContain("Try again");
   });
