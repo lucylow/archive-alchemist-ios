@@ -6,7 +6,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
-import { getMindsErrorNotice, getMindsRequestStartNotice } from "@/lib/minds-notices";
+import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest } from "@/lib/minds-request";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryResponse } from "@/shared/minds";
@@ -149,7 +149,7 @@ export default function HomeScreen() {
     }
   };
   const mindsDiscovery = trpc.minds.discover.useMutation({
-    retry: 1,
+    retry: (failureCount, error) => failureCount < 1 && shouldRetryMindsError(error),
     retryDelay: 800,
   });
 

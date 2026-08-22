@@ -11,3 +11,8 @@ export function getMindsErrorNotice(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   return message.includes("timed out") ? MINDS_TIMEOUT_NOTICE : MINDS_GENERIC_NOTICE;
 }
+
+export function shouldRetryMindsError(error: unknown): boolean {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  return ["timed out", "network", "fetch", "429", "502", "503", "504"].some((signal) => message.includes(signal));
+}
