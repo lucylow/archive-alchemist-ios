@@ -61,4 +61,5 @@
 - [x] Retry only transient Minds failures instead of repeating validation and structured-output errors
 - [x] Expose the Minds analysis busy state explicitly to assistive technologies
 - [x] Invalidate in-flight Minds callbacks when the user leaves the discoveries phase
+- [x] Extract and test the Minds request lifecycle gate for cancellation and late-response suppression
 - [x] Add deterministic tests for Minds request-state reset and stale-insight prevention

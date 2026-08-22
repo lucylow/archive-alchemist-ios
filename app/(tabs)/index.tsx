@@ -7,7 +7,7 @@ import { haptic } from "@/lib/haptics";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
-import { canStartMindsRequest } from "@/lib/minds-request";
+import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryResponse } from "@/shared/minds";
 
@@ -133,7 +133,7 @@ export default function HomeScreen() {
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
-  const mindsRequestId = useRef(0);
+  const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
     if (!memory) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -155,9 +155,9 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (phase !== "discoveries") {
-      mindsRequestId.current += 1;
+      mindsRequestGate.cancel();
     }
-  }, [phase]);
+  }, [phase, mindsRequestGate]);
 
   useEffect(() => {
     let mounted = true;
@@ -269,7 +269,7 @@ export default function HomeScreen() {
 
   const requestMindsInsight = () => {
     if (!canStartMindsRequest(mindsDiscovery.isPending)) return;
-    const requestId = ++mindsRequestId.current;
+    const requestId = mindsRequestGate.begin();
     setMindsInsight(null);
     mindsDiscovery.reset();
     setNotice(getMindsRequestStartNotice());
@@ -282,13 +282,13 @@ export default function HomeScreen() {
       },
       {
         onSuccess: (data) => {
-          if (requestId !== mindsRequestId.current) return;
+          if (!mindsRequestGate.isCurrent(requestId)) return;
           setMindsInsight(data);
           setNotice("Minds returned a structured follow-up plan for this archive item.");
           void persistInsightToMemory(data);
         },
         onError: (error) => {
-          if (requestId !== mindsRequestId.current) return;
+          if (!mindsRequestGate.isCurrent(requestId)) return;
           setNotice(getMindsErrorNotice(error));
         },
       },
@@ -296,7 +296,7 @@ export default function HomeScreen() {
   };
 
   const cancelMindsInsight = () => {
-    mindsRequestId.current += 1;
+    mindsRequestGate.cancel();
     mindsDiscovery.reset();
     setMindsInsight(null);
     setNotice("Minds analysis cancelled. Your local workflow is still available.");
