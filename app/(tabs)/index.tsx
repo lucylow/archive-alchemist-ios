@@ -132,6 +132,7 @@ export default function HomeScreen() {
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
+  const mindsRequestId = useRef(0);
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
     if (!memory) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -147,12 +148,6 @@ export default function HomeScreen() {
     }
   };
   const mindsDiscovery = trpc.minds.discover.useMutation({
-    onSuccess: (data) => {
-      setMindsInsight(data);
-      setNotice("Minds returned a structured follow-up plan for this archive item.");
-      void persistInsightToMemory(data);
-    },
-    onError: (error) => setNotice(getMindsErrorNotice(error)),
     retry: 1,
     retryDelay: 800,
   });
@@ -266,15 +261,37 @@ export default function HomeScreen() {
   );
 
   const requestMindsInsight = () => {
+    const requestId = ++mindsRequestId.current;
     setMindsInsight(null);
     mindsDiscovery.reset();
     setNotice(getMindsRequestStartNotice());
-    mindsDiscovery.mutate({
-      platforms: selectedPlatforms,
-      archiveTitle: discoveries[0].title,
-      sourceYear: discoveries[0].year,
-      sourceViews: discoveries[0].views,
-    });
+    mindsDiscovery.mutate(
+      {
+        platforms: selectedPlatforms,
+        archiveTitle: discoveries[0].title,
+        sourceYear: discoveries[0].year,
+        sourceViews: discoveries[0].views,
+      },
+      {
+        onSuccess: (data) => {
+          if (requestId !== mindsRequestId.current) return;
+          setMindsInsight(data);
+          setNotice("Minds returned a structured follow-up plan for this archive item.");
+          void persistInsightToMemory(data);
+        },
+        onError: (error) => {
+          if (requestId !== mindsRequestId.current) return;
+          setNotice(getMindsErrorNotice(error));
+        },
+      },
+    );
+  };
+
+  const cancelMindsInsight = () => {
+    mindsRequestId.current += 1;
+    mindsDiscovery.reset();
+    setMindsInsight(null);
+    setNotice("Minds analysis cancelled. Your local workflow is still available.");
   };
 
   const saveMemory = async () => {
@@ -657,6 +674,13 @@ export default function HomeScreen() {
               disabled={mindsDiscovery.isPending}
               onPress={requestMindsInsight}
             />
+            {mindsDiscovery.isPending && (
+              <SecondaryButton
+                label="Cancel Minds request"
+                accessibilityHint="Stops showing the pending Minds analysis and keeps the local workflow available."
+                onPress={cancelMindsInsight}
+              />
+            )}
             {mindsDiscovery.isError && !mindsInsight && (
               <SecondaryButton
                 label="Try Minds again"
