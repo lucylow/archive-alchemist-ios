@@ -51,3 +51,4 @@
 - [x] Refactor history persistence out of the React state updater for deterministic Mind saves
 - [x] Automatically persist a newly generated Minds insight into the active saved workflow
 - [x] Extract and test the pure Minds-memory merge logic used by automatic persistence
+- [x] Clear stale Minds insight state before starting a new analysis request

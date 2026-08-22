@@ -264,12 +264,16 @@ export default function HomeScreen() {
     [selectedPlatforms],
   );
 
-  const requestMindsInsight = () => mindsDiscovery.mutate({
-    platforms: selectedPlatforms,
-    archiveTitle: discoveries[0].title,
-    sourceYear: discoveries[0].year,
-    sourceViews: discoveries[0].views,
-  });
+  const requestMindsInsight = () => {
+    setMindsInsight(null);
+    mindsDiscovery.reset();
+    mindsDiscovery.mutate({
+      platforms: selectedPlatforms,
+      archiveTitle: discoveries[0].title,
+      sourceYear: discoveries[0].year,
+      sourceViews: discoveries[0].views,
+    });
+  };
 
   const saveMemory = async () => {
     const record: Memory = {
