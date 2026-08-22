@@ -6,6 +6,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
+import { getMindsErrorNotice } from "@/lib/minds-notices";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryResponse } from "@/shared/minds";
 
@@ -151,14 +152,7 @@ export default function HomeScreen() {
       setNotice("Minds returned a structured follow-up plan for this archive item.");
       void persistInsightToMemory(data);
     },
-    onError: (error) => {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      setNotice(
-        errorMessage.includes("timed out")
-          ? "Minds took too long to respond. Try again when your connection is ready; your local workflow is still available."
-          : "Minds could not analyze this item right now. Your local workflow is still available.",
-      );
-    },
+    onError: (error) => setNotice(getMindsErrorNotice(error)),
     retry: 1,
     retryDelay: 800,
   });
