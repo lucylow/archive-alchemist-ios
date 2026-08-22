@@ -60,4 +60,5 @@
 - [x] Extract and test the pure Minds request-start guard used by the mobile handler
 - [x] Retry only transient Minds failures instead of repeating validation and structured-output errors
 - [x] Expose the Minds analysis busy state explicitly to assistive technologies
+- [x] Invalidate in-flight Minds callbacks when the user leaves the discoveries phase
 - [x] Add deterministic tests for Minds request-state reset and stale-insight prevention

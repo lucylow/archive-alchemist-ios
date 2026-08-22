@@ -154,6 +154,12 @@ export default function HomeScreen() {
   });
 
   useEffect(() => {
+    if (phase !== "discoveries") {
+      mindsRequestId.current += 1;
+    }
+  }, [phase]);
+
+  useEffect(() => {
     let mounted = true;
     AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
       if (mounted) setReduceMotion(enabled);
