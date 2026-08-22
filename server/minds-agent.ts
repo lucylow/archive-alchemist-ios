@@ -4,6 +4,23 @@ import { invokeLLM } from "./_core/llm";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "../shared/minds";
 
 const supportedPlatforms = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"] as const;
+export const MINDS_REQUEST_TIMEOUT_MS = 20_000;
+
+export function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("Minds analysis timed out")), timeoutMs);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error: unknown) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 export const mindsDiscoveryInput = z.object({
   platforms: z.array(z.enum(supportedPlatforms)).min(1).max(supportedPlatforms.length),
@@ -56,7 +73,7 @@ export function parseMindsDiscoveryResponse(content: unknown): MindsDiscoveryRes
 
 export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<MindsDiscoveryResponse> {
   const validatedInput = mindsDiscoveryInput.parse(input);
-  const response = await invokeLLM({
+  const response = await withTimeout(invokeLLM({
     messages: [
       {
         role: "system",
@@ -74,7 +91,7 @@ export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<M
       },
     ],
     response_format: { type: "json_object" },
-  });
+  }), MINDS_REQUEST_TIMEOUT_MS);
 
   return parseMindsDiscoveryResponse(response.choices[0]?.message.content);
 }

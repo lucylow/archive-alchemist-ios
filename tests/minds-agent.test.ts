@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { mindsDiscoveryInput, parseMindsDiscoveryResponse } from "../server/minds-agent";
+import { mindsDiscoveryInput, parseMindsDiscoveryResponse, withTimeout } from "../server/minds-agent";
+
+describe("Minds request timeout", () => {
+  it("resolves before the timeout when the request completes", async () => {
+    await expect(withTimeout(Promise.resolve("ready"), 20)).resolves.toBe("ready");
+  });
+
+  it("rejects with an explicit timeout error when the request is too slow", async () => {
+    const slowRequest = new Promise<string>((resolve) => setTimeout(() => resolve("late"), 25));
+    await expect(withTimeout(slowRequest, 5)).rejects.toThrow("Minds analysis timed out");
+  });
+});
 
 describe("Minds discovery input", () => {
   it("accepts a bounded archive request", () => {
