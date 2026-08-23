@@ -79,3 +79,4 @@
 - [x] Bound Minds analytics retention to a privacy-safe rolling window
 - [x] Add an admin-only aggregated Minds analytics summary endpoint
 - [x] Add normalized Minds success/retry rates and explicit summary outage handling
+- [x] Add authorization regression tests for the admin-only Minds analytics summary
