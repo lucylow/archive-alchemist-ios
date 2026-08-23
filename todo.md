@@ -111,3 +111,4 @@
 - [x] Mark authentication and OAuth session responses as no-store
 - [x] Add deterministic coverage for private authentication response headers
 - [x] Return sanitized JSON for parser and unhandled API request errors
+- [x] Add deterministic tests for sanitized 413 and 500 API error responses

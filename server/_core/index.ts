@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { getTrustedCorsOrigins, isCorsPreflightAllowed, isTrustedCorsOrigin } from "../cors";
+import { normalizeApiError } from "../api-errors";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -91,19 +92,12 @@ async function startServer() {
       return;
     }
 
-    const errorType = error instanceof Error ? error.name : "unknown";
-    const isPayloadTooLarge =
-      typeof error === "object" &&
-      error !== null &&
-      "type" in error &&
-      error.type === "entity.too.large";
-    const statusCode = isPayloadTooLarge ? 413 : 500;
-    const message = isPayloadTooLarge
-      ? "Request payload is too large."
-      : "The server could not process this request.";
-
-    console.error("[api] Request failed", { errorType, statusCode });
-    res.status(statusCode).json({ error: message });
+    const safeError = normalizeApiError(error);
+    console.error("[api] Request failed", {
+      errorType: safeError.errorType,
+      statusCode: safeError.statusCode,
+    });
+    res.status(safeError.statusCode).json({ error: safeError.message });
   });
 
   const preferredPort = parseInt(process.env.PORT || "3000");
