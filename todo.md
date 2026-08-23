@@ -104,3 +104,4 @@
 - [x] Make storage proxy diagnostics metadata-only
 - [x] Make API startup failure diagnostics metadata-only
 - [x] Restrict credentialed API CORS responses to trusted application origins
+- [x] Bound API request body parsing to a workflow-appropriate size limit
