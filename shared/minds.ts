@@ -5,6 +5,7 @@ export type MindsDiscoveryRequest = {
   archiveTitle: string;
   sourceYear: number;
   sourceViews: string;
+  retryAttempt?: number;
 };
 
 export type MindsRecommendation = {

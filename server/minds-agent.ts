@@ -27,6 +27,7 @@ export const mindsDiscoveryInput = z.object({
   archiveTitle: z.string().trim().min(1).max(120),
   sourceYear: z.number().int().min(1900).max(new Date().getFullYear()),
   sourceViews: z.string().trim().min(1).max(32),
+  retryAttempt: z.number().int().min(0).max(1).optional().default(0),
 });
 
 const mindsDiscoveryOutput = z.object({
@@ -73,6 +74,7 @@ export function parseMindsDiscoveryResponse(content: unknown): MindsDiscoveryRes
 
 export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<MindsDiscoveryResponse> {
   const validatedInput = mindsDiscoveryInput.parse(input);
+  const { retryAttempt: _retryAttempt, ...modelInput } = validatedInput;
   const response = await withTimeout(invokeLLM({
     messages: [
       {
@@ -87,7 +89,7 @@ export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<M
       },
       {
         role: "user",
-        content: JSON.stringify(validatedInput),
+        content: JSON.stringify(modelInput),
       },
     ],
     response_format: { type: "json_object" },

@@ -26,6 +26,7 @@ export const appRouter = router({
     discover: publicProcedure.input(mindsDiscoveryInput).mutation(async ({ ctx, input }) => {
       const startedAt = Date.now();
       const userId = ctx.user?.id;
+      const retryCount = input.retryAttempt ?? 0;
       let quota = null;
       if (ctx.user) {
         try {
@@ -41,7 +42,7 @@ export const appRouter = router({
           userId,
           outcome: "quota_blocked",
           durationMs: clampMindsDurationMs(Date.now() - startedAt),
-          retryCount: 0,
+          retryCount,
           platformCount: input.platforms.length,
           errorCode: "TOO_MANY_REQUESTS",
         });
@@ -57,7 +58,7 @@ export const appRouter = router({
           userId,
           outcome: "success",
           durationMs: clampMindsDurationMs(Date.now() - startedAt),
-          retryCount: 0,
+          retryCount,
           platformCount: input.platforms.length,
           errorCode: null,
         });
@@ -67,7 +68,7 @@ export const appRouter = router({
           userId,
           outcome: "failure",
           durationMs: clampMindsDurationMs(Date.now() - startedAt),
-          retryCount: 0,
+          retryCount,
           platformCount: input.platforms.length,
           errorCode: classifyMindsFailure(error),
         });

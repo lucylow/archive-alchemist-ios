@@ -9,7 +9,7 @@ import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
 import { trpc } from "@/lib/trpc";
-import type { MindsDiscoveryResponse } from "@/shared/minds";
+import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 
 type Phase = "home" | "connect" | "scan" | "discoveries" | "repurpose" | "results";
 type Platform = "YouTube" | "Spotify" | "Substack" | "Twitter" | "Instagram" | "TikTok";
@@ -270,29 +270,40 @@ export default function HomeScreen() {
   const requestMindsInsight = () => {
     if (!canStartMindsRequest(mindsDiscovery.isPending)) return;
     const requestId = mindsRequestGate.begin();
+    const payload: Omit<MindsDiscoveryRequest, "retryAttempt"> = {
+      platforms: selectedPlatforms,
+      archiveTitle: discoveries[0].title,
+      sourceYear: discoveries[0].year,
+      sourceViews: discoveries[0].views,
+    };
     setMindsInsight(null);
     mindsDiscovery.reset();
     setNotice(getMindsRequestStartNotice());
-    mindsDiscovery.mutate(
-      {
-        platforms: selectedPlatforms,
-        archiveTitle: discoveries[0].title,
-        sourceYear: discoveries[0].year,
-        sourceViews: discoveries[0].views,
-      },
-      {
-        onSuccess: (data) => {
-          if (!mindsRequestGate.isCurrent(requestId)) return;
-          setMindsInsight(data);
-          setNotice("Minds returned a structured follow-up plan for this archive item.");
-          void persistInsightToMemory(data);
+
+    const submitAttempt = (retryAttempt: number): void => {
+      mindsDiscovery.mutate(
+        { ...payload, retryAttempt },
+        {
+          onSuccess: (data) => {
+            if (!mindsRequestGate.isCurrent(requestId)) return;
+            setMindsInsight(data);
+            setNotice("Minds returned a structured follow-up plan for this archive item.");
+            void persistInsightToMemory(data);
+          },
+          onError: (error) => {
+            if (!mindsRequestGate.isCurrent(requestId)) return;
+            if (retryAttempt === 0 && shouldRetryMindsError(error)) {
+              setNotice("Minds is retrying after a temporary service issue.");
+              submitAttempt(1);
+              return;
+            }
+            setNotice(getMindsErrorNotice(error));
+          },
         },
-        onError: (error) => {
-          if (!mindsRequestGate.isCurrent(requestId)) return;
-          setNotice(getMindsErrorNotice(error));
-        },
-      },
-    );
+      );
+    };
+
+    submitAttempt(0);
   };
 
   const cancelMindsInsight = () => {

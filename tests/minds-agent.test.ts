@@ -47,6 +47,33 @@ describe("Minds discovery input", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts only the initial request or one bounded retry attempt", () => {
+    const initial = mindsDiscoveryInput.safeParse({
+      platforms: ["YouTube"],
+      archiveTitle: "Archive item",
+      sourceYear: 2023,
+      sourceViews: "12.4K",
+    });
+    const retry = mindsDiscoveryInput.safeParse({
+      platforms: ["YouTube"],
+      archiveTitle: "Archive item",
+      sourceYear: 2023,
+      sourceViews: "12.4K",
+      retryAttempt: 1,
+    });
+    const repeatedRetry = mindsDiscoveryInput.safeParse({
+      platforms: ["YouTube"],
+      archiveTitle: "Archive item",
+      sourceYear: 2023,
+      sourceViews: "12.4K",
+      retryAttempt: 2,
+    });
+
+    expect(initial.success).toBe(true);
+    expect(retry.success).toBe(true);
+    expect(repeatedRetry.success).toBe(false);
+  });
+
   it("normalizes fenced JSON responses", () => {
     const payload = JSON.stringify({
       summary: "Reuse the lesson",
