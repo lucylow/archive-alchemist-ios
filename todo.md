@@ -154,3 +154,5 @@
 
 - [x] Require all configured Android adaptive icon assets in release preflight
 
+- [x] Normalize release preflight failures for missing or malformed configuration files
+

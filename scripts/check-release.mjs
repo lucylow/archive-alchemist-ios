@@ -15,13 +15,27 @@ const requiredFiles = [
 ];
 
 const failures = [];
+const reportFailures = () => {
+  if (failures.length === 0) return;
+  console.error("Release preflight failed:");
+  for (const failure of failures) console.error(`- ${failure}`);
+  process.exit(1);
+};
+
 for (const relativePath of requiredFiles) {
   const absolutePath = resolve(root, relativePath);
   if (!existsSync(absolutePath)) failures.push(`Missing ${relativePath}`);
 }
+reportFailures();
 
 const appConfig = readFileSync(resolve(root, "app.config.ts"), "utf8");
-const easConfig = JSON.parse(readFileSync(resolve(root, "eas.json"), "utf8"));
+let easConfig;
+try {
+  easConfig = JSON.parse(readFileSync(resolve(root, "eas.json"), "utf8"));
+} catch {
+  failures.push("eas.json is not valid JSON");
+  reportFailures();
+}
 
 for (const expected of [
   "Archive Alchemist",
@@ -48,11 +62,7 @@ for (const relativePath of requiredFiles.slice(4)) {
   if (size > 1024 * 1024) failures.push(`${relativePath} is larger than 1 MB (${size} bytes)`);
 }
 
-if (failures.length > 0) {
-  console.error("Release preflight failed:");
-  for (const failure of failures) console.error(`- ${failure}`);
-  process.exit(1);
-}
+reportFailures();
 
 console.log("Release preflight passed.");
 console.log("Bundle ID: com.archivealchemist.mobile");
