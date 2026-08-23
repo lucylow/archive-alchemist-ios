@@ -88,3 +88,4 @@
 - [x] Bound Minds archive payload size before LLM analysis
 - [x] Add an administrator-only mobile Minds analytics screen with accessible loading and error states
 - [x] Expose typed user roles and show an administrator-only analytics entry point
+- [x] Add accessible 1-, 7-, and 30-day selection to the admin Minds analytics screen

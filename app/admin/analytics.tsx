@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -9,8 +10,9 @@ import { trpc } from "@/lib/trpc";
 export default function AdminAnalyticsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const [windowDays, setWindowDays] = useState<1 | 7 | 30>(7);
   const summaryQuery = trpc.minds.analyticsSummary.useQuery(
-    { windowDays: 7 },
+    { windowDays },
     { retry: false },
   );
 
@@ -33,8 +35,36 @@ export default function AdminAnalyticsScreen() {
             </Pressable>
             <Text className="text-3xl font-bold text-foreground">Minds analytics</Text>
             <Text className="text-base leading-6 text-muted">
-              A private seven-day operational snapshot for administrators.
+              A private operational snapshot for administrators.
             </Text>
+            <View accessibilityRole="radiogroup" accessibilityLabel="Analytics time window" className="mt-3 flex-row gap-2">
+              {([1, 7, 30] as const).map((days) => {
+                const selected = windowDays === days;
+                return (
+                  <Pressable
+                    key={days}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`Last ${days} day${days === 1 ? "" : "s"}`}
+                    accessibilityState={{ selected }}
+                    onPress={() => setWindowDays(days)}
+                    style={({ pressed }) => [
+                      {
+                        borderColor: selected ? colors.primary : colors.border,
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        paddingHorizontal: 14,
+                        paddingVertical: 9,
+                      },
+                      pressed && { opacity: 0.7 },
+                    ]}
+                  >
+                    <Text style={{ color: selected ? colors.primary : colors.muted, fontWeight: "600" }}>
+                      {days}d
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
 
           {summaryQuery.isPending ? (
@@ -94,7 +124,7 @@ export default function AdminAnalyticsScreen() {
                 ))}
               </View>
               <Text className="text-sm text-muted">
-                The summary covers the last seven UTC days and excludes archive content.
+                The summary covers the last {windowDays} UTC day{windowDays === 1 ? "" : "s"} and excludes archive content.
               </Text>
             </View>
           )}
