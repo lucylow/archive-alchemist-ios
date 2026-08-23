@@ -81,15 +81,15 @@ export type InvokeResult = {
   id: string;
   created: number;
   model: string;
-  choices: Array<{
+  choices: {
     index: number;
     message: {
       role: Role;
-      content: string | Array<TextContent | ImageContent | FileContent>;
+      content: string | (TextContent | ImageContent | FileContent)[];
       tool_calls?: ToolCall[];
     };
     finish_reason: string | null;
-  }>;
+  }[];
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -386,8 +386,8 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`);
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error(`LLM invoke failed: ${response.status} ${response.statusText}`);
   }
 
   return (await response.json()) as InvokeResult;
@@ -418,10 +418,8 @@ export async function listLLMModels(): Promise<ModelsResponse> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `List LLM models failed: ${response.status} ${response.statusText} – ${errorText}`,
-    );
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error(`List LLM models failed: ${response.status} ${response.statusText}`);
   }
 
   return (await response.json()) as ModelsResponse;
