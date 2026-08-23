@@ -128,3 +128,5 @@
 
 - [x] Validate preview safe-area messages by source and bounded finite inset values
 
+- [x] Extend release preflight to reject unused native capability and permission declarations
+

@@ -28,6 +28,12 @@ for (const profile of ["development", "preview", "production"]) {
   if (!easConfig.build?.[profile]) failures.push(`eas.json is missing the ${profile} build profile`);
 }
 
+for (const forbidden of ["expo-audio", "expo-video", "expo-notifications", "POST_NOTIFICATIONS"]) {
+  if (appConfig.includes(forbidden)) {
+    failures.push(`app.config.ts contains unused native capability ${forbidden}`);
+  }
+}
+
 for (const relativePath of requiredFiles.slice(4)) {
   const size = statSync(resolve(root, relativePath)).size;
   if (size > 1024 * 1024) failures.push(`${relativePath} is larger than 1 MB (${size} bytes)`);
