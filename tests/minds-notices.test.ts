@@ -39,4 +39,9 @@ describe("Minds request notices", () => {
     expect(shouldRetryMindsError(null)).toBe(false);
     expect(shouldRetryMindsError({ code: "SCHEMA_INVALID" })).toBe(false);
   });
+
+  it("recognizes structured transient transport codes", () => {
+    expect(shouldRetryMindsError({ data: { code: "503" } })).toBe(true);
+    expect(shouldRetryMindsError({ code: "TIMEOUT" })).toBe(true);
+  });
 });
