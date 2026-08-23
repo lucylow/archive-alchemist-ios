@@ -156,3 +156,5 @@
 
 - [x] Normalize release preflight failures for missing or malformed configuration files
 
+- [x] Add deterministic tests for normalized release preflight configuration failures
+
