@@ -72,3 +72,4 @@
 - [x] Persist authenticated Minds daily quota counters in the database with a safe fallback
 - [x] Add privacy-conscious durable Minds request analytics without storing user content
 - [x] Record bounded client retry attempts in durable Minds analytics
+- [x] Prevent concurrent authenticated Minds quota reservations from undercounting usage

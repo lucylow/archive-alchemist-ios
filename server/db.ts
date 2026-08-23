@@ -121,7 +121,8 @@ export async function reservePersistedMindsSlot(
       .select()
       .from(mindsUsage)
       .where(and(eq(mindsUsage.userId, userId), eq(mindsUsage.usageDate, dateKey)))
-      .limit(1);
+      .limit(1)
+      .for("update");
     const current = rows[0];
     const used = current?.requestCount ?? 0;
 
