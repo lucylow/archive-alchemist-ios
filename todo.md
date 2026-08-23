@@ -83,3 +83,4 @@
 - [x] Cover the authorized administrator path and safe analytics-storage outage response
 - [x] Normalize malformed Minds analytics metrics to finite non-negative values
 - [x] Sanitize Minds analytics event metrics before database persistence
+- [x] Allowlist Minds analytics error codes before database persistence

@@ -3,6 +3,16 @@ import type { InsertMindsEvent } from "../drizzle/schema";
 
 export type MindsFailureCode = "TIMEOUT" | "NETWORK" | "STRUCTURED_OUTPUT" | "UPSTREAM";
 
+const MINDS_FAILURE_CODES = new Set<MindsFailureCode>(["TIMEOUT", "NETWORK", "STRUCTURED_OUTPUT", "UPSTREAM"]);
+
+export function sanitizeMindsErrorCode(value: unknown): MindsFailureCode | null {
+  return typeof value === "string" && MINDS_FAILURE_CODES.has(value as MindsFailureCode)
+    ? (value as MindsFailureCode)
+    : value == null
+      ? null
+      : "UPSTREAM";
+}
+
 export const mindsAnalyticsSummaryInput = z.object({
   windowDays: z.union([z.literal(1), z.literal(7), z.literal(30)]).default(7),
 });
@@ -13,6 +23,7 @@ export function sanitizeMindsEvent(event: Omit<InsertMindsEvent, "createdAt">): 
     durationMs: clampMindsDurationMs(normalizeMindsAnalyticsMetric(event.durationMs)),
     retryCount: Math.min(Math.round(normalizeMindsAnalyticsMetric(event.retryCount)), 1),
     platformCount: Math.round(normalizeMindsAnalyticsMetric(event.platformCount)),
+    errorCode: sanitizeMindsErrorCode(event.errorCode),
   };
 }
 

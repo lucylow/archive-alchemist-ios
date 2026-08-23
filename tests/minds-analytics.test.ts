@@ -4,6 +4,7 @@ import {
   classifyMindsFailure,
   calculateMindsAnalyticsRates,
   normalizeMindsAnalyticsMetric,
+  sanitizeMindsErrorCode,
   sanitizeMindsEvent,
   clampMindsDurationMs,
   getMindsAnalyticsRetentionCutoff,
@@ -25,6 +26,12 @@ describe("Minds analytics helpers", () => {
     expect(clampMindsDurationMs(Number.MAX_SAFE_INTEGER)).toBe(2_147_483_647);
   });
 
+  it("allowlists analytics error codes without retaining raw messages", () => {
+    expect(sanitizeMindsErrorCode("TIMEOUT")).toBe("TIMEOUT");
+    expect(sanitizeMindsErrorCode(null)).toBeNull();
+    expect(sanitizeMindsErrorCode("database password leaked")).toBe("UPSTREAM");
+  });
+
   it("sanitizes persisted event metrics without changing categorical metadata", () => {
     const event = sanitizeMindsEvent({
       userId: 7,
@@ -32,7 +39,7 @@ describe("Minds analytics helpers", () => {
       durationMs: Number.POSITIVE_INFINITY,
       retryCount: 8,
       platformCount: -2,
-      errorCode: "TIMEOUT",
+      errorCode: "raw timeout: secret details",
     });
     expect(event).toMatchObject({
       userId: 7,
@@ -40,7 +47,7 @@ describe("Minds analytics helpers", () => {
       durationMs: 0,
       retryCount: 1,
       platformCount: 0,
-      errorCode: "TIMEOUT",
+      errorCode: "UPSTREAM",
     });
   });
 
