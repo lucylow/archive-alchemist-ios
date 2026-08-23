@@ -92,3 +92,4 @@
 - [x] Add previous-window comparisons to the admin Minds analytics summary
 - [x] Enable and verify the authentication logout regression test instead of leaving it skipped
 - [x] Remove sensitive OAuth callback logging and keep authentication diagnostics metadata-only
+- [x] Remove user profile and exception payloads from auth hook diagnostics
