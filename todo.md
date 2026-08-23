@@ -99,3 +99,4 @@
 - [x] Remove leftover theme-provider debug logging from the production bundle
 - [x] Make server database and quota diagnostics metadata-only
 - [x] Make server OAuth and session diagnostics metadata-only
+- [x] Make SDK session verification and OAuth sync diagnostics metadata-only
