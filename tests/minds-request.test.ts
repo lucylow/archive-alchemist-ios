@@ -20,4 +20,15 @@ describe("canStartMindsRequest", () => {
     const nextRequest = gate.begin();
     expect(gate.isCurrent(nextRequest)).toBe(true);
   });
+
+  it("keeps repeated cancellation invalidation-safe", () => {
+    const gate = createMindsRequestGate();
+    const request = gate.begin();
+    gate.cancel();
+    gate.cancel();
+    expect(gate.isCurrent(request)).toBe(false);
+    const replacementRequest = gate.begin();
+    expect(gate.isCurrent(replacementRequest)).toBe(true);
+    expect(gate.isCurrent(request)).toBe(false);
+  });
 });
