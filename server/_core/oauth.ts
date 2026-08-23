@@ -91,7 +91,9 @@ export function registerOAuthRoutes(app: Express) {
         "http://localhost:8081";
       res.redirect(302, frontendUrl);
     } catch (error) {
-      console.error("[OAuth] Callback failed", error);
+      console.error("[OAuth] Callback failed", {
+        errorType: error instanceof Error ? error.name : "unknown",
+      });
       res.status(500).json({ error: "OAuth callback failed" });
     }
   });
@@ -123,7 +125,9 @@ export function registerOAuthRoutes(app: Express) {
         user: buildUserResponse(user),
       });
     } catch (error) {
-      console.error("[OAuth] Mobile exchange failed", error);
+      console.error("[OAuth] Mobile exchange failed", {
+        errorType: error instanceof Error ? error.name : "unknown",
+      });
       res.status(500).json({ error: "OAuth mobile exchange failed" });
     }
   });
@@ -140,7 +144,9 @@ export function registerOAuthRoutes(app: Express) {
       const user = await sdk.authenticateRequest(req);
       res.json({ user: buildUserResponse(user) });
     } catch (error) {
-      console.error("[Auth] /api/auth/me failed:", error);
+      console.warn("[Auth] /api/auth/me rejected", {
+        errorType: error instanceof Error ? error.name : "unknown",
+      });
       res.status(401).json({ error: "Not authenticated", user: null });
     }
   });
@@ -167,7 +173,9 @@ export function registerOAuthRoutes(app: Express) {
 
       res.json({ success: true, user: buildUserResponse(user) });
     } catch (error) {
-      console.error("[Auth] /api/auth/session failed:", error);
+      console.warn("[Auth] /api/auth/session rejected", {
+        errorType: error instanceof Error ? error.name : "unknown",
+      });
       res.status(401).json({ error: "Invalid token" });
     }
   });

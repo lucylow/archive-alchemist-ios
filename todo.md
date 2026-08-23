@@ -98,3 +98,4 @@
 - [x] Handle rejected OAuth URL capability checks without unhandled login promises
 - [x] Remove leftover theme-provider debug logging from the production bundle
 - [x] Make server database and quota diagnostics metadata-only
+- [x] Make server OAuth and session diagnostics metadata-only
