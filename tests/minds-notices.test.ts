@@ -29,4 +29,14 @@ describe("Minds request notices", () => {
   it("does not retry structured validation failures", () => {
     expect(shouldRetryMindsError(new Error("Minds returned invalid structured output"))).toBe(false);
   });
+
+  it("handles uppercase and string transient errors", () => {
+    expect(shouldRetryMindsError(new Error("NETWORK request failed"))).toBe(true);
+    expect(shouldRetryMindsError("502 gateway error")).toBe(true);
+  });
+
+  it("does not retry unrelated non-error values", () => {
+    expect(shouldRetryMindsError(null)).toBe(false);
+    expect(shouldRetryMindsError({ code: "SCHEMA_INVALID" })).toBe(false);
+  });
 });
