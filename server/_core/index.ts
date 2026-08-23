@@ -82,4 +82,9 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+startServer().catch((error) => {
+  console.error("[api] Server failed to start", {
+    errorType: error instanceof Error ? error.name : "unknown",
+  });
+  process.exitCode = 1;
+});

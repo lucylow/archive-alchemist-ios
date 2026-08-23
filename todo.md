@@ -102,3 +102,4 @@
 - [x] Make SDK session verification and OAuth sync diagnostics metadata-only
 - [x] Make owner-notification diagnostics metadata-only
 - [x] Make storage proxy diagnostics metadata-only
+- [x] Make API startup failure diagnostics metadata-only
