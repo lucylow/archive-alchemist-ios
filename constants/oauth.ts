@@ -1,11 +1,11 @@
 import * as Linking from "expo-linking";
 import * as ReactNative from "react-native";
+import { getDeepLinkScheme } from "@/shared/const";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
-const bundleId = "com.app.archivealchemistios";
-const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
-const schemeFromBundleId = `manus${timestamp}`;
+const bundleId = "com.archivealchemist.mobile";
+const schemeFromBundleId = getDeepLinkScheme(bundleId);
 
 const env = {
   portal: process.env.EXPO_PUBLIC_OAUTH_PORTAL_URL ?? "",
@@ -23,6 +23,7 @@ export const APP_ID = env.appId;
 export const OWNER_OPEN_ID = env.ownerId;
 export const OWNER_NAME = env.ownerName;
 export const API_BASE_URL = env.apiBaseUrl;
+export const DEEP_LINK_SCHEME = env.deepLinkScheme;
 
 /**
  * Get the API base URL, deriving from current hostname if not set.
@@ -73,7 +74,7 @@ export const getRedirectUri = () => {
     return `${getApiBaseUrl()}/api/oauth/callback`;
   } else {
     return Linking.createURL("/oauth/callback", {
-      scheme: env.deepLinkScheme,
+      scheme: DEEP_LINK_SCHEME,
     });
   }
 };
@@ -115,15 +116,17 @@ export async function startOAuthLogin(): Promise<string | null> {
   const supported = await Linking.canOpenURL(loginUrl);
   if (!supported) {
     console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
-    // 可考虑抛出错误或返回错误状态，让调用方处理
+    // The caller remains on the current screen and can retry the login action.
     return null;
   }
 
   try {
     await Linking.openURL(loginUrl);
   } catch (error) {
-    console.error("[OAuth] Failed to open login URL:", error);
-    // 可考虑抛出错误让调用方处理
+    console.error("[OAuth] Failed to open login URL", {
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
+    // The callback remains responsible for completing the authentication flow.
   }
 
   // The OAuth callback will reopen the app via deep link.

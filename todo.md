@@ -93,3 +93,4 @@
 - [x] Enable and verify the authentication logout regression test instead of leaving it skipped
 - [x] Remove sensitive OAuth callback logging and keep authentication diagnostics metadata-only
 - [x] Remove user profile and exception payloads from auth hook diagnostics
+- [x] Align OAuth deep-link scheme derivation with the production bundle identifier
