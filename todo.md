@@ -126,3 +126,5 @@
 
 - [x] Disable Manus runtime debug logging in production builds
 
+- [x] Validate preview safe-area messages by source and bounded finite inset values
+

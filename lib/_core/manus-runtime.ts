@@ -10,6 +10,7 @@
 
 import { Platform } from "react-native";
 import type { Metrics } from "react-native-safe-area-context";
+import { isValidSafeAreaInsets, type SafeAreaInsetPayload } from "@/shared/safe-area";
 
 // Debug logging with timestamps
 const DEBUG = process.env.NODE_ENV === "development";
@@ -20,7 +21,6 @@ const log = (msg: string) => {
 };
 
 type MessageType = "appDevServerReady";
-type SafeAreaInsets = { top: number; right: number; bottom: number; left: number };
 type SafeAreaCallback = (metrics: Metrics) => void;
 
 interface SpacePreviewerMessage {
@@ -61,25 +61,21 @@ function sendToParent(type: MessageType, payload: Record<string, unknown> = {}):
 let initialized = false;
 let safeAreaCallback: SafeAreaCallback | null = null;
 
-function isValidInsets(payload: Record<string, unknown>): payload is SafeAreaInsets {
-  return (
-    typeof payload.top === "number" &&
-    typeof payload.bottom === "number" &&
-    typeof payload.left === "number" &&
-    typeof payload.right === "number"
-  );
-}
-
 function handleMessage(event: MessageEvent<unknown>): void {
   // NOTE: Validate event.origin if we need to transfer sensitive data
   const data = event.data as SpacePreviewerMessage | undefined;
   if (!data || data.type !== "SpacePreviewerChannel") return;
+  if (event.source !== window.parent) return;
 
   const { payload } = data;
   if (!payload || payload.to !== "content") return;
 
-  if (payload.type === "setSafeAreaInsets" && isValidInsets(payload.payload) && safeAreaCallback) {
-    const insets = payload.payload;
+  if (
+    payload.type === "setSafeAreaInsets" &&
+    isValidSafeAreaInsets(payload.payload) &&
+    safeAreaCallback
+  ) {
+    const insets: SafeAreaInsetPayload = payload.payload;
     const frame = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
     safeAreaCallback({ insets, frame });
     log(
