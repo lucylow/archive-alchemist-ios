@@ -106,3 +106,4 @@
 - [x] Restrict credentialed API CORS responses to trusted application origins
 - [x] Bound API request body parsing to a workflow-appropriate size limit
 - [x] Add deterministic tests for trusted-origin CORS boundaries
+- [x] Use secure-compatible SameSite cookies for local HTTP and production HTTPS
