@@ -52,10 +52,11 @@ describe("Minds analytics authorization", () => {
 
   it("allows administrators to receive aggregate metrics without raw events", async () => {
     const summary = await caller(adminUser).minds.analyticsSummary({ windowDays: 7 });
-    expect(summary.windowDays).toBe(7);
-    expect(summary.totalRequests).toEqual(expect.any(Number));
-    expect(summary.successRate).toEqual(expect.any(Number));
-    expect(summary.retryRate).toEqual(expect.any(Number));
+    expect(summary.current.windowDays).toBe(7);
+    expect(summary.current.totalRequests).toEqual(expect.any(Number));
+    expect(summary.current.successRate).toEqual(expect.any(Number));
+    expect(summary.current.retryRate).toEqual(expect.any(Number));
+    expect(summary.previous.windowDays).toBe(7);
     expect(summary).not.toHaveProperty("errorMessage");
   });
 });

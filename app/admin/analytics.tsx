@@ -4,7 +4,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { buildAdminAnalyticsCards } from "@/lib/admin-analytics";
+import { buildAdminAnalyticsCards, buildAdminAnalyticsTrends } from "@/lib/admin-analytics";
 import { trpc } from "@/lib/trpc";
 
 export default function AdminAnalyticsScreen() {
@@ -18,7 +18,10 @@ export default function AdminAnalyticsScreen() {
 
   const errorCode = (summaryQuery.error as { data?: { code?: string } } | null)?.data?.code;
   const isForbidden = errorCode === "FORBIDDEN";
-  const cards = summaryQuery.data ? buildAdminAnalyticsCards(summaryQuery.data) : [];
+  const currentSummary = summaryQuery.data?.current;
+  const previousSummary = summaryQuery.data?.previous;
+  const cards = currentSummary ? buildAdminAnalyticsCards(currentSummary) : [];
+  const trends = currentSummary && previousSummary ? buildAdminAnalyticsTrends(currentSummary, previousSummary) : [];
 
   return (
     <ScreenContainer className="p-5" edges={["top", "left", "right", "bottom"]}>
@@ -126,6 +129,17 @@ export default function AdminAnalyticsScreen() {
               <Text className="text-sm text-muted">
                 The summary covers the last {windowDays} UTC day{windowDays === 1 ? "" : "s"} and excludes archive content.
               </Text>
+              <View accessible accessibilityLabel="Comparison with the previous matching window" className="rounded-2xl border border-border bg-surface p-4">
+                <Text className="text-sm font-semibold text-foreground">Compared with previous window</Text>
+                <View className="mt-3 flex-row flex-wrap gap-3">
+                  {trends.map((trend) => (
+                    <View key={trend.label} accessible accessibilityLabel={trend.accessibilityLabel} className="min-w-[46%] flex-1">
+                      <Text className="text-xs text-muted">{trend.label}</Text>
+                      <Text className="mt-1 text-base font-semibold text-foreground">{trend.value}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
             </View>
           )}
         </View>

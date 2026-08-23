@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildAdminAnalyticsCards } from "../lib/admin-analytics";
+import { buildAdminAnalyticsCards, buildAdminAnalyticsTrends } from "../lib/admin-analytics";
 import type { MindsAnalyticsSummary } from "../server/db";
 
 const summary: MindsAnalyticsSummary = {
@@ -17,6 +17,15 @@ const summary: MindsAnalyticsSummary = {
 };
 
 describe("administrator analytics view model", () => {
+  it("formats aggregate metric deltas against the previous matching window", () => {
+    expect(buildAdminAnalyticsTrends(summary, { ...summary, totalRequests: 7, successRate: 0.7, retryRate: 0.1, averageDurationMs: 500 })).toEqual([
+      { label: "Requests", value: "+3", accessibilityLabel: "+3 requests versus the previous window" },
+      { label: "Success", value: "+10 pp", accessibilityLabel: "+10 percentage points success rate versus the previous window" },
+      { label: "Retries", value: "+10 pp", accessibilityLabel: "+10 percentage points retry rate versus the previous window" },
+      { label: "Latency", value: "-80 ms", accessibilityLabel: "-80 milliseconds average latency versus the previous window" },
+    ]);
+  });
+
   it("formats aggregate metrics for readable accessible cards", () => {
     expect(buildAdminAnalyticsCards(summary)).toEqual([
       { label: "Requests", value: "10", accessibilityLabel: "10 total Minds requests" },

@@ -89,3 +89,4 @@
 - [x] Add an administrator-only mobile Minds analytics screen with accessible loading and error states
 - [x] Expose typed user roles and show an administrator-only analytics entry point
 - [x] Add accessible 1-, 7-, and 30-day selection to the admin Minds analytics screen
+- [x] Add previous-window comparisons to the admin Minds analytics summary

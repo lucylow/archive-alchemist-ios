@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { TRPCError } from "@trpc/server";
 import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 import { mindsDiscoveryInput, runMindsDiscovery } from "./minds-agent";
-import { getMindsAnalyticsSummary, getPersistedMindsQuotaStatus, recordMindsEvent, reservePersistedMindsSlot } from "./db";
+import { getMindsAnalyticsComparison, getPersistedMindsQuotaStatus, recordMindsEvent, reservePersistedMindsSlot } from "./db";
 import { classifyMindsFailure, clampMindsDurationMs, mindsAnalyticsSummaryInput } from "./minds-analytics";
 import { MINDS_DAILY_LIMIT, getMindsQuotaSubject, getMindsQuotaStatus, reserveMindsSlot } from "./minds-quota";
 
@@ -26,7 +26,7 @@ export const appRouter = router({
     analyticsSummary: adminProcedure
       .input(mindsAnalyticsSummaryInput.optional())
       .query(async ({ input }) => {
-        const summary = await getMindsAnalyticsSummary(input?.windowDays ?? 7);
+        const summary = await getMindsAnalyticsComparison(input?.windowDays ?? 7);
         if (!summary) {
           throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Minds analytics are temporarily unavailable." });
         }

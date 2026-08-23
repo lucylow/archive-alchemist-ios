@@ -152,6 +152,16 @@ export async function getMindsAnalyticsSummary(days: number, now: Date = new Dat
   }
 }
 
+export async function getMindsAnalyticsComparison(days: number, now: Date = new Date()): Promise<{
+  current: MindsAnalyticsSummary;
+  previous: MindsAnalyticsSummary;
+} | null> {
+  const current = await getMindsAnalyticsSummary(days, now);
+  const previous = await getMindsAnalyticsSummary(days, new Date(now.getTime() - days * 24 * 60 * 60 * 1000));
+  if (!current || !previous) return null;
+  return { current, previous };
+}
+
 export async function getPersistedMindsQuotaStatus(
   userId: number,
   now: Date,
