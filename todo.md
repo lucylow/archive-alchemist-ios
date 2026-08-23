@@ -124,3 +124,5 @@
 
 - [x] Prevent OAuth login crashes when required public configuration is missing or malformed
 
+- [x] Disable Manus runtime debug logging in production builds
+
