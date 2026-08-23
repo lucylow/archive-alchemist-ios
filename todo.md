@@ -140,3 +140,5 @@
 
 - [x] Remove oversized persisted Mind keys after detecting them during startup hydration
 
+- [x] Explain local-memory recovery when corrupted or oversized persisted data is discarded
+

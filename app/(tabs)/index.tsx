@@ -205,6 +205,12 @@ export default function HomeScreen() {
   useEffect(() => {
     let active = true;
     const hydrate = async () => {
+      let recoveredInvalidStorage = false;
+      const discardStoredValue = async (key: string) => {
+        recoveredInvalidStorage = true;
+        await AsyncStorage.removeItem(key);
+      };
+
       try {
         const storageRead = Promise.all([
           AsyncStorage.getItem(MEMORY_KEY),
@@ -222,13 +228,13 @@ export default function HomeScreen() {
               setMemory(restoredMemory);
               setMindsInsight(restoredMemory.mindsInsight ?? null);
             } else {
-              await AsyncStorage.removeItem(MEMORY_KEY);
+              await discardStoredValue(MEMORY_KEY);
             }
           } catch {
-            await AsyncStorage.removeItem(MEMORY_KEY);
+            await discardStoredValue(MEMORY_KEY);
           }
         } else if (memoryValue) {
-          await AsyncStorage.removeItem(MEMORY_KEY);
+          await discardStoredValue(MEMORY_KEY);
         }
         if (historyValue && isWithinStorageLimit(historyValue, MAX_HISTORY_STORAGE_LENGTH)) {
           try {
@@ -236,13 +242,13 @@ export default function HomeScreen() {
             if (Array.isArray(restoredHistory) && restoredHistory.every(isValidMemory)) {
               setHistory(restoredHistory.slice(0, 5));
             } else {
-              await AsyncStorage.removeItem(HISTORY_KEY);
+              await discardStoredValue(HISTORY_KEY);
             }
           } catch {
-            await AsyncStorage.removeItem(HISTORY_KEY);
+            await discardStoredValue(HISTORY_KEY);
           }
         } else if (historyValue) {
-          await AsyncStorage.removeItem(HISTORY_KEY);
+          await discardStoredValue(HISTORY_KEY);
         }
         if (platformsValue && isWithinStorageLimit(platformsValue, MAX_PLATFORMS_STORAGE_LENGTH)) {
           try {
@@ -250,13 +256,16 @@ export default function HomeScreen() {
             if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
               setSelectedPlatforms(restored);
             } else {
-              await AsyncStorage.removeItem(PLATFORMS_KEY);
+              await discardStoredValue(PLATFORMS_KEY);
             }
           } catch {
-            await AsyncStorage.removeItem(PLATFORMS_KEY);
+            await discardStoredValue(PLATFORMS_KEY);
           }
         } else if (platformsValue) {
-          await AsyncStorage.removeItem(PLATFORMS_KEY);
+          await discardStoredValue(PLATFORMS_KEY);
+        }
+        if (recoveredInvalidStorage) {
+          setNotice("Some saved local memory was reset because it was invalid or too large. Your current session is still available.");
         }
       } catch {
         setNotice("Saved local preferences could not be read. Your current session is still available.");
