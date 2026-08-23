@@ -1,9 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { haptic } from "@/lib/haptics";
+import { useAuth } from "@/hooks/use-auth";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
@@ -120,6 +122,8 @@ function SecondaryButton({ label, onPress, accessibilityHint }: { label: string;
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { isAdmin } = useAuth();
   const [phase, setPhase] = useState<Phase>("home");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["YouTube", "Instagram", "TikTok"]);
   const [progress, setProgress] = useState(0);
@@ -488,6 +492,21 @@ export default function HomeScreen() {
               </Text>
               <PrimaryButton label="Start a new dig" onPress={() => { mindsDiscovery.reset(); setMindsInsight(null); setPhase("connect"); }} />
             </View>
+            {isAdmin && (
+              <View style={styles.panel}>
+                <View style={styles.rowBetween}>
+                  <View style={styles.flexOne}>
+                    <Text style={styles.sectionTitle}>Operator tools</Text>
+                    <Text style={styles.bodyText}>Review private aggregate Minds performance without opening raw events.</Text>
+                  </View>
+                  <SecondaryButton
+                    label="View analytics"
+                    accessibilityHint="Opens the administrator-only Minds analytics summary."
+                    onPress={() => router.push("/admin/analytics")}
+                  />
+                </View>
+              </View>
+            )}
             <View style={styles.statsRow}>
               <Stat label="Archive items" value="412" />
               <Stat label="Dormant gold" value="37" />

@@ -44,8 +44,9 @@ export default function OAuthCallback() {
                   ? atob(params.user)
                   : Buffer.from(params.user, "base64").toString("utf-8");
               const userData = JSON.parse(userJson);
-              const userInfo: Auth.User = {
+                const userInfo: Auth.User = {
                 id: userData.id,
+                role: userData.role === "admin" ? "admin" : "user",
                 openId: userData.openId,
                 name: userData.name,
                 email: userData.email,
@@ -197,6 +198,7 @@ export default function OAuthCallback() {
             console.log("[OAuth] User data received:", result.user);
             const userInfo: Auth.User = {
               id: result.user.id,
+              role: result.user.role === "admin" ? "admin" : "user",
               openId: result.user.openId,
               name: result.user.name,
               email: result.user.email,

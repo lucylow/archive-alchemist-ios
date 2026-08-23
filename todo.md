@@ -87,3 +87,4 @@
 - [x] Declare iOS required-reason API usage for local persistence in the privacy manifest
 - [x] Bound Minds archive payload size before LLM analysis
 - [x] Add an administrator-only mobile Minds analytics screen with accessible loading and error states
+- [x] Expose typed user roles and show an administrator-only analytics entry point

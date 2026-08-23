@@ -26,8 +26,9 @@ export function useAuth(options?: UseAuthOptions) {
         console.log("[useAuth] API user response:", apiUser);
 
         if (apiUser) {
-          const userInfo: Auth.User = {
+            const userInfo: Auth.User = {
             id: apiUser.id,
+            role: apiUser.role,
             openId: apiUser.openId,
             name: apiUser.name,
             email: apiUser.email,
@@ -95,6 +96,7 @@ export function useAuth(options?: UseAuthOptions) {
   }, []);
 
   const isAuthenticated = useMemo(() => Boolean(user), [user]);
+  const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
 
   useEffect(() => {
     console.log("[useAuth] useEffect triggered, autoFetch:", autoFetch, "platform:", Platform.OS);
@@ -137,6 +139,7 @@ export function useAuth(options?: UseAuthOptions) {
     loading,
     error,
     isAuthenticated,
+    isAdmin,
     refresh: fetchUser,
     logout,
   };
