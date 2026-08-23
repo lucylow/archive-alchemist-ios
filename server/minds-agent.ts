@@ -5,6 +5,7 @@ import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "../shared/mi
 
 const supportedPlatforms = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"] as const;
 export const MINDS_REQUEST_TIMEOUT_MS = 20_000;
+export const MINDS_MODEL_INPUT_MAX_BYTES = 256;
 
 export function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -29,6 +30,16 @@ export const mindsDiscoveryInput = z.object({
   sourceViews: z.string().trim().min(1).max(32),
   retryAttempt: z.number().int().min(0).max(1).optional().default(0),
 });
+
+export function serializeMindsModelInput(input: MindsDiscoveryRequest): string {
+  const validatedInput = mindsDiscoveryInput.parse(input);
+  const { retryAttempt: _retryAttempt, ...modelInput } = validatedInput;
+  const serialized = JSON.stringify(modelInput);
+  if (Buffer.byteLength(serialized, "utf8") > MINDS_MODEL_INPUT_MAX_BYTES) {
+    throw new Error("Minds archive payload is too large");
+  }
+  return serialized;
+}
 
 const mindsDiscoveryOutput = z.object({
   summary: z.string().trim().min(1).max(500),
@@ -73,8 +84,7 @@ export function parseMindsDiscoveryResponse(content: unknown): MindsDiscoveryRes
 }
 
 export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<MindsDiscoveryResponse> {
-  const validatedInput = mindsDiscoveryInput.parse(input);
-  const { retryAttempt: _retryAttempt, ...modelInput } = validatedInput;
+  const serializedModelInput = serializeMindsModelInput(input);
   const response = await withTimeout(invokeLLM({
     messages: [
       {
@@ -89,7 +99,7 @@ export async function runMindsDiscovery(input: MindsDiscoveryRequest): Promise<M
       },
       {
         role: "user",
-        content: JSON.stringify(modelInput),
+          content: serializedModelInput,
       },
     ],
     response_format: { type: "json_object" },

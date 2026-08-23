@@ -85,3 +85,4 @@
 - [x] Sanitize Minds analytics event metrics before database persistence
 - [x] Allowlist Minds analytics error codes before database persistence
 - [x] Declare iOS required-reason API usage for local persistence in the privacy manifest
+- [x] Bound Minds archive payload size before LLM analysis

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { mindsDiscoveryInput, parseMindsDiscoveryResponse, withTimeout } from "../server/minds-agent";
+import type { MindsDiscoveryRequest } from "../shared/minds";
+
+import {
+  MINDS_MODEL_INPUT_MAX_BYTES,
+  mindsDiscoveryInput,
+  parseMindsDiscoveryResponse,
+  serializeMindsModelInput,
+  withTimeout,
+} from "../server/minds-agent";
 
 describe("Minds request timeout", () => {
   it("resolves before the timeout when the request completes", async () => {
@@ -45,6 +53,28 @@ describe("Minds discovery input", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("excludes retry telemetry from the model payload", () => {
+    const serialized = serializeMindsModelInput({
+      platforms: ["YouTube"],
+      archiveTitle: "Archive item",
+      sourceYear: 2023,
+      sourceViews: "12.4K",
+      retryAttempt: 1,
+    });
+    expect(serialized).not.toContain("retryAttempt");
+  });
+
+  it("rejects a serialized model payload beyond the hard byte limit", () => {
+    const oversizedInput = {
+      platforms: ["YouTube"] as MindsDiscoveryRequest["platforms"],
+      archiveTitle: "é".repeat(120),
+      sourceYear: 2023,
+      sourceViews: "x".repeat(32),
+    };
+    expect(MINDS_MODEL_INPUT_MAX_BYTES).toBeGreaterThan(0);
+    expect(() => serializeMindsModelInput(oversizedInput)).toThrow("payload is too large");
   });
 
   it("accepts only the initial request or one bounded retry attempt", () => {
