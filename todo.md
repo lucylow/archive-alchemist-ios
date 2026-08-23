@@ -114,3 +114,4 @@
 - [x] Add deterministic tests for sanitized 413 and 500 API error responses
 - [x] Validate the API startup port environment value with a safe fallback
 - [x] Add deterministic security headers to API responses
+- [x] Reduce verbose OAuth callback diagnostics to essential metadata-only events
