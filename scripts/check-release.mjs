@@ -10,6 +10,8 @@ const requiredFiles = [
   "assets/images/splash-icon.png",
   "assets/images/favicon.png",
   "assets/images/android-icon-foreground.png",
+  "assets/images/android-icon-background.png",
+  "assets/images/android-icon-monochrome.png",
 ];
 
 const failures = [];

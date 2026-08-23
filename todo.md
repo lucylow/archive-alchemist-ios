@@ -152,3 +152,5 @@
 
 - [x] Add pure, deterministic coverage for Auto-Post persistence result messaging
 
+- [x] Require all configured Android adaptive icon assets in release preflight
+
