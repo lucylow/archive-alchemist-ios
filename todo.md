@@ -110,3 +110,4 @@
 - [x] Remove upstream response bodies from LLM error surfaces
 - [x] Mark authentication and OAuth session responses as no-store
 - [x] Add deterministic coverage for private authentication response headers
+- [x] Return sanitized JSON for parser and unhandled API request errors

@@ -84,6 +84,28 @@ async function startServer() {
     }),
   );
 
+  // Keep parser and unexpected request failures JSON-shaped and free of raw exception details.
+  app.use((error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (res.headersSent) {
+      next(error);
+      return;
+    }
+
+    const errorType = error instanceof Error ? error.name : "unknown";
+    const isPayloadTooLarge =
+      typeof error === "object" &&
+      error !== null &&
+      "type" in error &&
+      error.type === "entity.too.large";
+    const statusCode = isPayloadTooLarge ? 413 : 500;
+    const message = isPayloadTooLarge
+      ? "Request payload is too large."
+      : "The server could not process this request.";
+
+    console.error("[api] Request failed", { errorType, statusCode });
+    res.status(statusCode).json({ error: message });
+  });
+
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
 
