@@ -146,3 +146,5 @@
 
 - [x] Document the strict App Store submission preflight in the release guide
 
+- [x] Make workflow status notices accessible with a separate dismiss action
+

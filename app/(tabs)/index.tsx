@@ -495,17 +495,26 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {header}
         {notice && (
-          <Pressable
+          <View
             accessible
             accessibilityRole="alert"
-            accessibilityLabel={`${notice}. Double tap to dismiss.`}
-            accessibilityHint="Dismisses this workflow status message."
+            accessibilityLabel={notice}
             accessibilityLiveRegion="polite"
-            onPress={() => setNotice(null)}
             style={styles.notice}
           >
-            <Text style={styles.noticeText}>{notice}</Text>
-          </Pressable>
+            <View style={styles.noticeRow}>
+              <Text style={styles.noticeText}>{notice}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss status message"
+                accessibilityHint="Closes this workflow status message."
+                onPress={() => setNotice(null)}
+                style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}
+              >
+                <Text style={styles.noticeDismissText}>Dismiss</Text>
+              </Pressable>
+            </View>
+          </View>
         )}
 
         {phase === "home" && (
@@ -997,5 +1006,8 @@ const styles = StyleSheet.create({
   reviewHint: { color: "#AAA0C7", fontSize: 13, textAlign: "center" },
   followUpCard: { backgroundColor: "#30234F", borderColor: "#F4C95D", borderWidth: 1, borderRadius: 18, padding: 18, gap: 10 },
   notice: { backgroundColor: "#30234F", borderColor: "#F4C95D", borderWidth: 1, borderRadius: 14, padding: 13 },
-  noticeText: { color: "#FFE8A3", fontSize: 13, lineHeight: 18 },
+  noticeRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  noticeText: { color: "#FFE8A3", fontSize: 13, lineHeight: 18, flex: 1 },
+  noticeDismiss: { borderColor: "#6C5B9D", borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
+  noticeDismissText: { color: "#F8F4FF", fontSize: 12, fontWeight: "800" },
 });
