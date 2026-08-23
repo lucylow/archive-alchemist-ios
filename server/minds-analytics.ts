@@ -6,6 +6,23 @@ export const mindsAnalyticsSummaryInput = z.object({
   windowDays: z.union([z.literal(1), z.literal(7), z.literal(30)]).default(7),
 });
 
+export type MindsAnalyticsRates = {
+  successRate: number;
+  retryRate: number;
+};
+
+export function calculateMindsAnalyticsRates(
+  totalRequests: number,
+  successCount: number,
+  retriedRequestCount: number,
+): MindsAnalyticsRates {
+  if (totalRequests <= 0) return { successRate: 0, retryRate: 0 };
+  return {
+    successRate: Math.max(0, Math.min(successCount / totalRequests, 1)),
+    retryRate: Math.max(0, Math.min(retriedRequestCount / totalRequests, 1)),
+  };
+}
+
 export const MINDS_ANALYTICS_RETENTION_DAYS = 90;
 export const MINDS_ANALYTICS_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 

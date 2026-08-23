@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   classifyMindsFailure,
+  calculateMindsAnalyticsRates,
   clampMindsDurationMs,
   getMindsAnalyticsRetentionCutoff,
   mindsAnalyticsSummaryInput,
@@ -20,6 +21,12 @@ describe("Minds analytics helpers", () => {
     expect(clampMindsDurationMs(-10)).toBe(0);
     expect(clampMindsDurationMs(12.8)).toBe(13);
     expect(clampMindsDurationMs(Number.MAX_SAFE_INTEGER)).toBe(2_147_483_647);
+  });
+
+  it("calculates stable zero-safe success and retry rates", () => {
+    expect(calculateMindsAnalyticsRates(0, 0, 0)).toEqual({ successRate: 0, retryRate: 0 });
+    expect(calculateMindsAnalyticsRates(10, 8, 2)).toEqual({ successRate: 0.8, retryRate: 0.2 });
+    expect(calculateMindsAnalyticsRates(2, 4, -1)).toEqual({ successRate: 1, retryRate: 0 });
   });
 
   it("uses a deterministic 90-day retention cutoff", () => {

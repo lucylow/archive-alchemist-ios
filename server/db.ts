@@ -4,6 +4,7 @@ import { InsertUser, InsertMindsEvent, mindsEvents, mindsUsage, users } from "..
 import type { MindsQuotaResult } from "./minds-quota";
 import {
   getMindsAnalyticsRetentionCutoff,
+  calculateMindsAnalyticsRates,
   shouldRunMindsAnalyticsCleanup,
 } from "./minds-analytics";
 import { ENV } from "./_core/env";
@@ -111,30 +112,40 @@ export async function getMindsAnalyticsSummary(days: number, now: Date = new Dat
   if (!db) return null;
 
   const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-  const [rows] = await db.execute(sql`
-    SELECT
-      COUNT(*) AS totalRequests,
-      SUM(CASE WHEN outcome = 'success' THEN 1 ELSE 0 END) AS successCount,
-      SUM(CASE WHEN outcome = 'failure' THEN 1 ELSE 0 END) AS failureCount,
-      SUM(CASE WHEN outcome = 'quota_blocked' THEN 1 ELSE 0 END) AS quotaBlockedCount,
-      COALESCE(AVG(durationMs), 0) AS averageDurationMs,
-      SUM(CASE WHEN retryCount > 0 THEN 1 ELSE 0 END) AS retriedRequestCount
-    FROM minds_events
-    WHERE createdAt >= ${since}
-  `) as unknown as [Record<string, unknown>[], unknown];
-  const row = rows[0] ?? {};
-  const toCount = (value: unknown) => Number(value ?? 0);
+  try {
+    const [rows] = await db.execute(sql`
+      SELECT
+        COUNT(*) AS totalRequests,
+        SUM(CASE WHEN outcome = 'success' THEN 1 ELSE 0 END) AS successCount,
+        SUM(CASE WHEN outcome = 'failure' THEN 1 ELSE 0 END) AS failureCount,
+        SUM(CASE WHEN outcome = 'quota_blocked' THEN 1 ELSE 0 END) AS quotaBlockedCount,
+        COALESCE(AVG(durationMs), 0) AS averageDurationMs,
+        SUM(CASE WHEN retryCount > 0 THEN 1 ELSE 0 END) AS retriedRequestCount
+      FROM minds_events
+      WHERE createdAt >= ${since}
+    `) as unknown as [Record<string, unknown>[], unknown];
+    const row = rows[0] ?? {};
+    const toCount = (value: unknown) => Number(value ?? 0);
+    const totalRequests = toCount(row.totalRequests);
+    const successCount = toCount(row.successCount);
+    const retriedRequestCount = toCount(row.retriedRequestCount);
+    const rates = calculateMindsAnalyticsRates(totalRequests, successCount, retriedRequestCount);
 
-  return {
-    windowDays: days,
-    since,
-    totalRequests: toCount(row.totalRequests),
-    successCount: toCount(row.successCount),
-    failureCount: toCount(row.failureCount),
-    quotaBlockedCount: toCount(row.quotaBlockedCount),
-    averageDurationMs: Math.round(toCount(row.averageDurationMs)),
-    retriedRequestCount: toCount(row.retriedRequestCount),
-  };
+    return {
+      windowDays: days,
+      since,
+      totalRequests,
+      successCount,
+      failureCount: toCount(row.failureCount),
+      quotaBlockedCount: toCount(row.quotaBlockedCount),
+      averageDurationMs: Math.round(toCount(row.averageDurationMs)),
+      retriedRequestCount,
+      ...rates,
+    };
+  } catch (error) {
+    console.warn("[Minds] Analytics summary query unavailable", error);
+    return null;
+  }
 }
 
 export async function getPersistedMindsQuotaStatus(
