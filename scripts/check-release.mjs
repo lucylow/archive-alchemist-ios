@@ -21,7 +21,14 @@ for (const relativePath of requiredFiles) {
 const appConfig = readFileSync(resolve(root, "app.config.ts"), "utf8");
 const easConfig = JSON.parse(readFileSync(resolve(root, "eas.json"), "utf8"));
 
-for (const expected of ["Archive Alchemist", "com.archivealchemist.mobile", 'version: "1.0.0"']) {
+for (const expected of [
+  "Archive Alchemist",
+  "com.archivealchemist.mobile",
+  'version: "1.0.0"',
+  "NSPrivacyAccessedAPICategoryUserDefaults",
+  'NSPrivacyAccessedAPITypeReasons: ["CA92.1"]',
+  'ITSAppUsesNonExemptEncryption": false',
+]) {
   if (!appConfig.includes(expected)) failures.push(`app.config.ts does not contain ${expected}`);
 }
 for (const profile of ["development", "preview", "production"]) {

@@ -134,3 +134,5 @@
 
 - [x] Announce Auto-Post persistence busy state to assistive technologies
 
+- [x] Require iOS privacy manifest and encryption declarations in release preflight
+
