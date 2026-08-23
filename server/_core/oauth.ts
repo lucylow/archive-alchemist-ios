@@ -40,6 +40,11 @@ async function syncUser(userInfo: {
   );
 }
 
+function markPrivateResponse(res: Response) {
+  res.set("Cache-Control", "no-store");
+  res.set("Pragma", "no-cache");
+}
+
 function buildUserResponse(
   user:
     | Awaited<ReturnType<typeof getUserByOpenId>>
@@ -63,6 +68,7 @@ function buildUserResponse(
 
 export function registerOAuthRoutes(app: Express) {
   app.get("/api/oauth/callback", async (req: Request, res: Response) => {
+    markPrivateResponse(res);
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
@@ -99,6 +105,7 @@ export function registerOAuthRoutes(app: Express) {
   });
 
   app.get("/api/oauth/mobile", async (req: Request, res: Response) => {
+    markPrivateResponse(res);
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
 
@@ -133,6 +140,7 @@ export function registerOAuthRoutes(app: Express) {
   });
 
   app.post("/api/auth/logout", (req: Request, res: Response) => {
+    markPrivateResponse(res);
     const cookieOptions = getSessionCookieOptions(req);
     res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
     res.json({ success: true });
@@ -140,6 +148,7 @@ export function registerOAuthRoutes(app: Express) {
 
   // Get current authenticated user - works with both cookie (web) and Bearer token (mobile)
   app.get("/api/auth/me", async (req: Request, res: Response) => {
+    markPrivateResponse(res);
     try {
       const user = await sdk.authenticateRequest(req);
       res.json({ user: buildUserResponse(user) });
@@ -155,6 +164,7 @@ export function registerOAuthRoutes(app: Express) {
   // Used by iframe preview: frontend receives token via postMessage, then calls this endpoint
   // to get a proper Set-Cookie response from the backend (3000-xxx domain)
   app.post("/api/auth/session", async (req: Request, res: Response) => {
+    markPrivateResponse(res);
     try {
       // Authenticate using Bearer token from Authorization header
       const user = await sdk.authenticateRequest(req);

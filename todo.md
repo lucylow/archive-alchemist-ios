@@ -108,3 +108,4 @@
 - [x] Add deterministic tests for trusted-origin CORS boundaries
 - [x] Use secure-compatible SameSite cookies for local HTTP and production HTTPS
 - [x] Remove upstream response bodies from LLM error surfaces
+- [x] Mark authentication and OAuth session responses as no-store
