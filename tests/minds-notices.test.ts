@@ -43,5 +43,6 @@ describe("Minds request notices", () => {
   it("recognizes structured transient transport codes", () => {
     expect(shouldRetryMindsError({ data: { code: "503" } })).toBe(true);
     expect(shouldRetryMindsError({ code: "TIMEOUT" })).toBe(true);
+    expect(shouldRetryMindsError({ code: "408" })).toBe(true);
   });
 });

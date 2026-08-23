@@ -65,4 +65,5 @@
 - [x] Cover repeated cancellation and navigation invalidation in the Minds lifecycle gate tests
 - [x] Cover uppercase, string, and non-transient Minds retry-classification inputs
 - [x] Inspect structured error codes when classifying transient Minds failures
+- [x] Treat structured HTTP 408 request-timeout responses as retryable Minds failures
 - [x] Add deterministic tests for Minds request-state reset and stale-insight prevention

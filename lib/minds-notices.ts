@@ -29,5 +29,5 @@ export function getMindsErrorNotice(error: unknown): string {
 
 export function shouldRetryMindsError(error: unknown): boolean {
   const message = getMindsErrorText(error).toLowerCase();
-  return ["timed out", "timeout", "network", "fetch", "429", "502", "503", "504"].some((signal) => message.includes(signal));
+  return ["timed out", "timeout", "network", "fetch", "408", "429", "502", "503", "504"].some((signal) => message.includes(signal));
 }
