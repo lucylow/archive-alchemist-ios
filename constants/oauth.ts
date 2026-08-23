@@ -1,6 +1,7 @@
 import * as Linking from "expo-linking";
 import * as ReactNative from "react-native";
 import { getDeepLinkScheme } from "@/shared/const";
+import { buildOAuthLoginUrl } from "@/shared/oauth-config";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
@@ -82,14 +83,7 @@ export const getRedirectUri = () => {
 export const getLoginUrl = () => {
   const redirectUri = getRedirectUri();
   const state = encodeState(redirectUri);
-
-  const url = new URL(`${OAUTH_PORTAL_URL}/app-auth`);
-  url.searchParams.set("appId", APP_ID);
-  url.searchParams.set("redirectUri", redirectUri);
-  url.searchParams.set("state", state);
-  url.searchParams.set("type", "signIn");
-
-  return url.toString();
+  return buildOAuthLoginUrl(OAUTH_PORTAL_URL, APP_ID, redirectUri, state);
 };
 
 /**
@@ -104,6 +98,7 @@ export const getLoginUrl = () => {
  */
 export async function startOAuthLogin(): Promise<string | null> {
   const loginUrl = getLoginUrl();
+  if (!loginUrl) return null;
 
   if (ReactNative.Platform.OS === "web") {
     // On web, just redirect

@@ -122,3 +122,5 @@
 
 - [x] Remove unused notification capability and Android notification permission from the release build
 
+- [x] Prevent OAuth login crashes when required public configuration is missing or malformed
+
