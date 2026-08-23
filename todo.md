@@ -138,3 +138,5 @@
 
 - [x] Bound local Mind hydration payloads before JSON parsing
 
+- [x] Remove oversized persisted Mind keys after detecting them during startup hydration
+

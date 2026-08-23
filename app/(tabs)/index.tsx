@@ -227,6 +227,8 @@ export default function HomeScreen() {
           } catch {
             await AsyncStorage.removeItem(MEMORY_KEY);
           }
+        } else if (memoryValue) {
+          await AsyncStorage.removeItem(MEMORY_KEY);
         }
         if (historyValue && isWithinStorageLimit(historyValue, MAX_HISTORY_STORAGE_LENGTH)) {
           try {
@@ -239,6 +241,8 @@ export default function HomeScreen() {
           } catch {
             await AsyncStorage.removeItem(HISTORY_KEY);
           }
+        } else if (historyValue) {
+          await AsyncStorage.removeItem(HISTORY_KEY);
         }
         if (platformsValue && isWithinStorageLimit(platformsValue, MAX_PLATFORMS_STORAGE_LENGTH)) {
           try {
@@ -251,6 +255,8 @@ export default function HomeScreen() {
           } catch {
             await AsyncStorage.removeItem(PLATFORMS_KEY);
           }
+        } else if (platformsValue) {
+          await AsyncStorage.removeItem(PLATFORMS_KEY);
         }
       } catch {
         setNotice("Saved local preferences could not be read. Your current session is still available.");
