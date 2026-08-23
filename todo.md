@@ -130,3 +130,5 @@
 
 - [x] Extend release preflight to reject unused native capability and permission declarations
 
+- [x] Prevent rapid duplicate Auto-Post taps from writing the same workflow more than once
+

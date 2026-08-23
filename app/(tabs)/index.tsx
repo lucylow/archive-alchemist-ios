@@ -10,6 +10,7 @@ import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
+import { createSaveRequestGate } from "@/lib/save-request";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 
@@ -138,6 +139,7 @@ export default function HomeScreen() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
+  const saveRequestGate = useRef(createSaveRequestGate()).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
     if (!memory) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -323,6 +325,8 @@ export default function HomeScreen() {
   };
 
   const saveMemory = async () => {
+    if (!saveRequestGate.tryStart()) return false;
+
     const record: Memory = {
       title: "How to Edit Like a Pro",
       platforms: selectedPlatforms,
@@ -347,6 +351,7 @@ export default function HomeScreen() {
       setNotice("Mind memory could not be saved. Your workflow is still available for this session.");
       return false;
     } finally {
+      saveRequestGate.finish();
       setIsSaving(false);
     }
   };
