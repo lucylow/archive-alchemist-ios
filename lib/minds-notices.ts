@@ -1,6 +1,7 @@
 const MINDS_TIMEOUT_NOTICE =
   "Minds took too long to respond. Try again when your connection is ready; your local workflow is still available.";
 const MINDS_GENERIC_NOTICE = "Minds could not analyze this item right now. Your local workflow is still available.";
+const MINDS_QUOTA_NOTICE = "You have reached today's Minds analysis limit. Your local workflow is still available; try again tomorrow.";
 const MINDS_ANALYZING_NOTICE = "Minds is analyzing this archive item. Your previous recommendation has been cleared.";
 
 export function getMindsRequestStartNotice(): string {
@@ -21,8 +22,11 @@ function getMindsErrorText(error: unknown): string {
 }
 
 export function getMindsErrorNotice(error: unknown): string {
-  const message = getMindsErrorText(error);
-  return ["timed out", "timeout", "408"].some((signal) => message.toLowerCase().includes(signal))
+  const message = getMindsErrorText(error).toLowerCase();
+  if (["too_many_requests", "daily minds limit", "limit reached"].some((signal) => message.includes(signal))) {
+    return MINDS_QUOTA_NOTICE;
+  }
+  return ["timed out", "timeout", "408"].some((signal) => message.includes(signal))
     ? MINDS_TIMEOUT_NOTICE
     : MINDS_GENERIC_NOTICE;
 }

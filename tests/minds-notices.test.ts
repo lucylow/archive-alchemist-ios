@@ -49,4 +49,10 @@ describe("Minds request notices", () => {
   it("uses timeout guidance for a structured 408 failure", () => {
     expect(getMindsErrorNotice({ code: "408" })).toContain("Try again");
   });
+
+  it("uses daily-limit guidance without classifying quota errors as retryable", () => {
+    const error = { code: "TOO_MANY_REQUESTS", message: "Daily Minds limit reached" };
+    expect(getMindsErrorNotice(error)).toContain("try again tomorrow");
+    expect(shouldRetryMindsError(error)).toBe(false);
+  });
 });
