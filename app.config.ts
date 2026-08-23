@@ -50,8 +50,16 @@ const config: ExpoConfig = {
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   ios: {
-    supportsTablet: false,
+    supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
+    privacyManifests: {
+      NSPrivacyAccessedAPITypes: [
+        {
+          NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
+          NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
+        },
+      ],
+    },
     buildNumber: "1",
     "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
