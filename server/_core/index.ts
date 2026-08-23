@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { getTrustedCorsOrigins, isCorsPreflightAllowed, isTrustedCorsOrigin } from "../cors";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -27,22 +28,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-const normalizeOrigin = (value: string | undefined): string | null => {
-  if (!value) return null;
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-};
-
-const trustedCorsOrigins = new Set(
-  [
-    "http://localhost:8081",
-    "http://127.0.0.1:8081",
-    normalizeOrigin(process.env.EXPO_WEB_PREVIEW_URL),
-    normalizeOrigin(process.env.EXPO_PACKAGER_PROXY_URL),
-  ].filter((origin): origin is string => Boolean(origin)),
+const trustedCorsOrigins = getTrustedCorsOrigins(
+  process.env.EXPO_WEB_PREVIEW_URL,
+  process.env.EXPO_PACKAGER_PROXY_URL,
 );
 
 async function startServer() {
@@ -52,7 +40,7 @@ async function startServer() {
   // Credentialed browser access is limited to the local and configured Expo origins.
   app.use((req, res, next) => {
     const origin = typeof req.headers.origin === "string" ? req.headers.origin : undefined;
-    const isTrustedOrigin = origin ? trustedCorsOrigins.has(origin) : false;
+    const isTrustedOrigin = isTrustedCorsOrigin(origin, trustedCorsOrigins);
 
     if (isTrustedOrigin) {
       res.header("Access-Control-Allow-Origin", origin);
@@ -67,7 +55,7 @@ async function startServer() {
 
     // Reject browser preflights from origins that are not trusted.
     if (req.method === "OPTIONS") {
-      if (origin && !isTrustedOrigin) {
+      if (!isCorsPreflightAllowed(origin, trustedCorsOrigins)) {
         res.sendStatus(403);
         return;
       }
