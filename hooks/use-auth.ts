@@ -20,9 +20,7 @@ export function useAuth(options?: UseAuthOptions) {
 
       // Web platform: use cookie-based auth, fetch user from API
       if (Platform.OS === "web") {
-        console.log("[useAuth] Fetching web session", { platform: Platform.OS });
         const apiUser = await Api.getMe();
-        console.log("[useAuth] Web session lookup completed", { authenticated: Boolean(apiUser) });
 
         if (apiUser) {
             const userInfo: Auth.User = {
@@ -37,9 +35,7 @@ export function useAuth(options?: UseAuthOptions) {
           setUser(userInfo);
           // Cache user info in localStorage for faster subsequent loads
           await Auth.setUserInfo(userInfo);
-          console.log("[useAuth] Web session loaded", { role: userInfo.role });
         } else {
-          console.log("[useAuth] Web session is anonymous");
           setUser(null);
           await Auth.clearUserInfo();
         }
@@ -47,23 +43,17 @@ export function useAuth(options?: UseAuthOptions) {
       }
 
       // Native platform: use token-based auth
-      console.log("[useAuth] Checking native session");
       const sessionToken = await Auth.getSessionToken();
-      console.log("[useAuth] Native session lookup completed", { hasSessionToken: Boolean(sessionToken) });
       if (!sessionToken) {
-        console.log("[useAuth] Native session is anonymous");
         setUser(null);
         return;
       }
 
       // Use cached user info for native (token validates the session)
       const cachedUser = await Auth.getUserInfo();
-      console.log("[useAuth] Native cached profile lookup completed", { hasCachedUser: Boolean(cachedUser) });
       if (cachedUser) {
-        console.log("[useAuth] Native cached profile loaded", { role: cachedUser.role });
         setUser(cachedUser);
       } else {
-        console.log("[useAuth] Native profile cache is empty");
         setUser(null);
       }
     } catch (err) {
@@ -73,7 +63,6 @@ export function useAuth(options?: UseAuthOptions) {
       setUser(null);
     } finally {
       setLoading(false);
-      console.log("[useAuth] Session lookup completed", { loading: false });
     }
   }, []);
 
@@ -97,7 +86,6 @@ export function useAuth(options?: UseAuthOptions) {
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
 
   useEffect(() => {
-    console.log("[useAuth] Initializing auth state", { autoFetch, platform: Platform.OS });
     if (autoFetch) {
       if (Platform.OS === "web") {
         // Web: fetch user from API directly (user will login manually if needed)
@@ -105,9 +93,7 @@ export function useAuth(options?: UseAuthOptions) {
       } else {
         // Native: check for cached user info first for faster initial load
         Auth.getUserInfo().then((cachedUser) => {
-          console.log("[useAuth] Native cache check completed", { hasCachedUser: Boolean(cachedUser) });
           if (cachedUser) {
-            console.log("[useAuth] Using cached native profile", { role: cachedUser.role });
             setUser(cachedUser);
             setLoading(false);
           } else {
@@ -122,19 +108,9 @@ export function useAuth(options?: UseAuthOptions) {
         });
       }
     } else {
-      console.log("[useAuth] Automatic auth lookup disabled");
       setLoading(false);
     }
   }, [autoFetch, fetchUser]);
-
-  useEffect(() => {
-    console.log("[useAuth] Auth state updated", {
-      hasUser: Boolean(user),
-      loading,
-      isAuthenticated,
-      hasError: Boolean(error),
-    });
-  }, [user, loading, isAuthenticated, error]);
 
   return {
     user,
