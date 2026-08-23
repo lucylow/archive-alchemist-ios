@@ -26,8 +26,10 @@ export function registerStorageProxy(app: Express) {
       });
 
       if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[StorageProxy] forge error: ${forgeResp.status} ${body}`);
+        console.error("[StorageProxy] Forge request failed", {
+          status: forgeResp.status,
+          statusText: forgeResp.statusText,
+        });
         res.status(502).send("Storage backend error");
         return;
       }
@@ -40,8 +42,10 @@ export function registerStorageProxy(app: Express) {
 
       res.set("Cache-Control", "no-store");
       res.redirect(307, url);
-    } catch (err) {
-      console.error("[StorageProxy] failed:", err);
+    } catch (error) {
+      console.error("[StorageProxy] request failed", {
+        errorType: error instanceof Error ? error.name : "unknown",
+      });
       res.status(502).send("Storage proxy error");
     }
   });

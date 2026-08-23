@@ -101,3 +101,4 @@
 - [x] Make server OAuth and session diagnostics metadata-only
 - [x] Make SDK session verification and OAuth sync diagnostics metadata-only
 - [x] Make owner-notification diagnostics metadata-only
+- [x] Make storage proxy diagnostics metadata-only
