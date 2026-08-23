@@ -69,3 +69,4 @@
 - [x] Show timeout-specific guidance for structured Minds timeout codes in the mobile client
 - [x] Add deterministic tests for Minds request-state reset and stale-insight prevention
 - [x] Add a conservative authenticated per-user daily Minds usage limit with deterministic quota tests
+- [x] Persist authenticated Minds daily quota counters in the database with a safe fallback

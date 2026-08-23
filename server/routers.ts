@@ -4,7 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "./_core/trpc";
 import { mindsDiscoveryInput, runMindsDiscovery } from "./minds-agent";
-import { getMindsQuotaSubject, reserveMindsSlot } from "./minds-quota";
+import { reservePersistedMindsSlot } from "./db";
+import { MINDS_DAILY_LIMIT, getMindsQuotaSubject, reserveMindsSlot } from "./minds-quota";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -21,8 +22,17 @@ export const appRouter = router({
   }),
 
   minds: router({
-    discover: publicProcedure.input(mindsDiscoveryInput).mutation(({ ctx, input }) => {
-      const quota = reserveMindsSlot(getMindsQuotaSubject(ctx.user?.id));
+    discover: publicProcedure.input(mindsDiscoveryInput).mutation(async ({ ctx, input }) => {
+      let quota = null;
+      if (ctx.user) {
+        try {
+          quota = await reservePersistedMindsSlot(ctx.user.id, new Date(), MINDS_DAILY_LIMIT);
+        } catch (error) {
+          console.warn("[Minds] Persistent quota unavailable; using in-memory fallback", error);
+        }
+      }
+      quota ??= reserveMindsSlot(getMindsQuotaSubject(ctx.user?.id));
+
       if (!quota.allowed) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",

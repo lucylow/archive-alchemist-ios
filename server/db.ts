@@ -1,6 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, mindsUsage, users } from "../drizzle/schema";
+import type { MindsQuotaResult } from "./minds-quota";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +90,51 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function reservePersistedMindsSlot(
+  userId: number,
+  now: Date,
+  limit: number,
+): Promise<MindsQuotaResult | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const dateKey = now.toISOString().slice(0, 10);
+
+  return db.transaction(async (tx) => {
+    await tx
+      .insert(mindsUsage)
+      .values({ userId, usageDate: dateKey, requestCount: 0 })
+      .onDuplicateKeyUpdate({ set: { updatedAt: now } });
+
+    const rows = await tx
+      .select()
+      .from(mindsUsage)
+      .where(and(eq(mindsUsage.userId, userId), eq(mindsUsage.usageDate, dateKey)))
+      .limit(1);
+    const current = rows[0];
+    const used = current?.requestCount ?? 0;
+
+    if (!current || used >= limit) {
+      return {
+        allowed: false,
+        limit,
+        used,
+        remaining: 0,
+        dateKey,
+      };
+    }
+
+    await tx
+      .update(mindsUsage)
+      .set({ requestCount: used + 1, updatedAt: now })
+      .where(eq(mindsUsage.id, current.id));
+
+    return {
+      allowed: true,
+      limit,
+      used: used + 1,
+      remaining: Math.max(limit - used - 1, 0),
+      dateKey,
+    };
+  });
+}
