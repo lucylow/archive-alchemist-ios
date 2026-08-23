@@ -150,3 +150,5 @@
 
 - [x] Preserve partial-save warnings instead of replacing them with a misleading Auto-Post success message
 
+- [x] Add pure, deterministic coverage for Auto-Post persistence result messaging
+

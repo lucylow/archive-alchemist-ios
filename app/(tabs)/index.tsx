@@ -11,6 +11,7 @@ import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
+import { getAutoPostNotice } from "@/lib/save-notice";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -864,11 +865,8 @@ export default function HomeScreen() {
               onPress={async () => {
                 const result = await saveMemory();
                 if (!result.saved) return;
-                setNotice(
-                  result.historySaved
-                    ? "The Conductor scheduled the approved content batch and stored the workflow in Mind memory."
-                    : "The workflow was saved to Mind memory, but recent-workflow history could not be updated.",
-                );
+                const saveNotice = getAutoPostNotice(result);
+                if (saveNotice) setNotice(saveNotice);
                 setPhase("results");
               }}
             />
