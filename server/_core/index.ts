@@ -10,6 +10,7 @@ import { createContext } from "./context";
 import { getTrustedCorsOrigins, isCorsPreflightAllowed, isTrustedCorsOrigin } from "../cors";
 import { normalizeApiError } from "../api-errors";
 import { parsePreferredPort } from "../ports";
+import { applyApiSecurityHeaders } from "../security-headers";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -38,6 +39,11 @@ const trustedCorsOrigins = getTrustedCorsOrigins(
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  app.use((_req, res, next) => {
+    applyApiSecurityHeaders(res);
+    next();
+  });
 
   // Credentialed browser access is limited to the local and configured Expo origins.
   app.use((req, res, next) => {
