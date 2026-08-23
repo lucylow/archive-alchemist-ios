@@ -20,7 +20,9 @@ export async function getDb() {
     try {
       _db = drizzle(process.env.DATABASE_URL);
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.warn("[Database] Failed to connect", {
+        errorType: error instanceof Error ? error.name : "unknown",
+      });
       _db = null;
     }
   }
@@ -81,7 +83,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       set: updateSet,
     });
   } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
+    console.error("[Database] Failed to upsert user", {
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
     throw error;
   }
 }
@@ -147,7 +151,9 @@ export async function getMindsAnalyticsSummary(days: number, now: Date = new Dat
       ...rates,
     };
   } catch (error) {
-    console.warn("[Minds] Analytics summary query unavailable", error);
+    console.warn("[Minds] Analytics summary query unavailable", {
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
     return null;
   }
 }
@@ -196,13 +202,19 @@ export async function recordMindsEvent(event: Omit<InsertMindsEvent, "createdAt"
     void db
       .delete(mindsEvents)
       .where(lt(mindsEvents.createdAt, getMindsAnalyticsRetentionCutoff(new Date(nowMs))))
-      .catch((error) => console.warn("[Minds] Analytics retention cleanup failed", error));
+      .catch((error) =>
+        console.warn("[Minds] Analytics retention cleanup failed", {
+          errorType: error instanceof Error ? error.name : "unknown",
+        }),
+      );
   }
 
   try {
     await db.insert(mindsEvents).values(sanitizeMindsEvent(event));
   } catch (error) {
-    console.warn("[Minds] Analytics event could not be recorded", error);
+    console.warn("[Minds] Analytics event could not be recorded", {
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
   }
 }
 

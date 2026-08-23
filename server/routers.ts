@@ -40,7 +40,9 @@ export const appRouter = router({
           const persisted = await getPersistedMindsQuotaStatus(ctx.user.id, now, MINDS_DAILY_LIMIT);
           if (persisted) return persisted;
         } catch (error) {
-          console.warn("[Minds] Persistent quota status unavailable; using in-memory fallback", error);
+          console.warn("[Minds] Persistent quota status unavailable; using in-memory fallback", {
+            errorType: error instanceof Error ? error.name : "unknown",
+          });
         }
       }
       return getMindsQuotaStatus(getMindsQuotaSubject(ctx.user?.id), now, MINDS_DAILY_LIMIT);
@@ -55,7 +57,9 @@ export const appRouter = router({
         try {
           quota = await reservePersistedMindsSlot(ctx.user.id, new Date(), MINDS_DAILY_LIMIT);
         } catch (error) {
-          console.warn("[Minds] Persistent quota unavailable; using in-memory fallback", error);
+          console.warn("[Minds] Persistent quota unavailable; using in-memory fallback", {
+            errorType: error instanceof Error ? error.name : "unknown",
+          });
         }
       }
       quota ??= reserveMindsSlot(getMindsQuotaSubject(userId));
