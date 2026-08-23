@@ -22,7 +22,7 @@ function getMindsErrorText(error: unknown): string {
 
 export function getMindsErrorNotice(error: unknown): string {
   const message = getMindsErrorText(error);
-  return message.toLowerCase().includes("timed out") || message.toLowerCase().includes("timeout")
+  return ["timed out", "timeout", "408"].some((signal) => message.toLowerCase().includes(signal))
     ? MINDS_TIMEOUT_NOTICE
     : MINDS_GENERIC_NOTICE;
 }

@@ -45,4 +45,8 @@ describe("Minds request notices", () => {
     expect(shouldRetryMindsError({ code: "TIMEOUT" })).toBe(true);
     expect(shouldRetryMindsError({ code: "408" })).toBe(true);
   });
+
+  it("uses timeout guidance for a structured 408 failure", () => {
+    expect(getMindsErrorNotice({ code: "408" })).toContain("Try again");
+  });
 });
