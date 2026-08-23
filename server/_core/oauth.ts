@@ -3,6 +3,7 @@ import type { Express, Request, Response } from "express";
 import { getUserByOpenId, upsertUser } from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { markPrivateResponse } from "../private-response";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -38,11 +39,6 @@ async function syncUser(userInfo: {
       lastSignedIn,
     }
   );
-}
-
-function markPrivateResponse(res: Response) {
-  res.set("Cache-Control", "no-store");
-  res.set("Pragma", "no-cache");
 }
 
 function buildUserResponse(
