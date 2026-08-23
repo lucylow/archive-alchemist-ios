@@ -90,18 +90,18 @@ export async function notifyOwner(payload: NotificationPayload): Promise<boolean
     });
 
     if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      console.warn(
-        `[Notification] Failed to notify owner (${response.status} ${response.statusText})${
-          detail ? `: ${detail}` : ""
-        }`,
-      );
+      console.warn("[Notification] Failed to notify owner", {
+        status: response.status,
+        statusText: response.statusText,
+      });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.warn("[Notification] Error calling notification service:", error);
+    console.warn("[Notification] Error calling notification service", {
+      errorType: error instanceof Error ? error.name : "unknown",
+    });
     return false;
   }
 }

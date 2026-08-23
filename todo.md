@@ -100,3 +100,4 @@
 - [x] Make server database and quota diagnostics metadata-only
 - [x] Make server OAuth and session diagnostics metadata-only
 - [x] Make SDK session verification and OAuth sync diagnostics metadata-only
+- [x] Make owner-notification diagnostics metadata-only
