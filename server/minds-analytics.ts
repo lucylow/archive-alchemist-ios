@@ -1,10 +1,20 @@
 import { z } from "zod";
+import type { InsertMindsEvent } from "../drizzle/schema";
 
 export type MindsFailureCode = "TIMEOUT" | "NETWORK" | "STRUCTURED_OUTPUT" | "UPSTREAM";
 
 export const mindsAnalyticsSummaryInput = z.object({
   windowDays: z.union([z.literal(1), z.literal(7), z.literal(30)]).default(7),
 });
+
+export function sanitizeMindsEvent(event: Omit<InsertMindsEvent, "createdAt">): Omit<InsertMindsEvent, "createdAt"> {
+  return {
+    ...event,
+    durationMs: clampMindsDurationMs(normalizeMindsAnalyticsMetric(event.durationMs)),
+    retryCount: Math.min(Math.round(normalizeMindsAnalyticsMetric(event.retryCount)), 1),
+    platformCount: Math.round(normalizeMindsAnalyticsMetric(event.platformCount)),
+  };
+}
 
 export function normalizeMindsAnalyticsMetric(value: unknown): number {
   const parsed = Number(value ?? 0);

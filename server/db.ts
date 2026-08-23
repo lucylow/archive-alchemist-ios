@@ -6,6 +6,7 @@ import {
   getMindsAnalyticsRetentionCutoff,
   calculateMindsAnalyticsRates,
   normalizeMindsAnalyticsMetric,
+  sanitizeMindsEvent,
   shouldRunMindsAnalyticsCleanup,
 } from "./minds-analytics";
 import { ENV } from "./_core/env";
@@ -189,7 +190,7 @@ export async function recordMindsEvent(event: Omit<InsertMindsEvent, "createdAt"
   }
 
   try {
-    await db.insert(mindsEvents).values(event);
+    await db.insert(mindsEvents).values(sanitizeMindsEvent(event));
   } catch (error) {
     console.warn("[Minds] Analytics event could not be recorded", error);
   }

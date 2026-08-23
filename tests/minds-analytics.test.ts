@@ -4,6 +4,7 @@ import {
   classifyMindsFailure,
   calculateMindsAnalyticsRates,
   normalizeMindsAnalyticsMetric,
+  sanitizeMindsEvent,
   clampMindsDurationMs,
   getMindsAnalyticsRetentionCutoff,
   mindsAnalyticsSummaryInput,
@@ -22,6 +23,25 @@ describe("Minds analytics helpers", () => {
     expect(clampMindsDurationMs(-10)).toBe(0);
     expect(clampMindsDurationMs(12.8)).toBe(13);
     expect(clampMindsDurationMs(Number.MAX_SAFE_INTEGER)).toBe(2_147_483_647);
+  });
+
+  it("sanitizes persisted event metrics without changing categorical metadata", () => {
+    const event = sanitizeMindsEvent({
+      userId: 7,
+      outcome: "failure",
+      durationMs: Number.POSITIVE_INFINITY,
+      retryCount: 8,
+      platformCount: -2,
+      errorCode: "TIMEOUT",
+    });
+    expect(event).toMatchObject({
+      userId: 7,
+      outcome: "failure",
+      durationMs: 0,
+      retryCount: 1,
+      platformCount: 0,
+      errorCode: "TIMEOUT",
+    });
   });
 
   it("normalizes malformed analytics metrics safely", () => {
