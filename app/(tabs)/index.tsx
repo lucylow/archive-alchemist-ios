@@ -828,6 +828,7 @@ export default function HomeScreen() {
             <PrimaryButton
               label={isSaving ? "Saving Mind memory…" : reviewMode && approvedOutputs.length < selectedOutputs.length ? `Approve ${selectedOutputs.length - approvedOutputs.length} more` : "Auto-Post"}
               accessibilityHint={isSaving ? "Wait while Mind memory is being saved." : reviewMode && approvedOutputs.length < selectedOutputs.length ? "Approve the remaining outputs before auto-posting." : "Schedules the approved content and saves this workflow to Mind memory."}
+              accessibilityState={{ busy: isSaving }}
               disabled={isSaving || !canAutoPost(reviewMode, approvedOutputs, selectedOutputs.map(([, output]) => output))}
               onPress={async () => {
                 const saved = await saveMemory();

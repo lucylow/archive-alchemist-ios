@@ -132,3 +132,5 @@
 
 - [x] Prevent rapid duplicate Auto-Post taps from writing the same workflow more than once
 
+- [x] Announce Auto-Post persistence busy state to assistive technologies
+
