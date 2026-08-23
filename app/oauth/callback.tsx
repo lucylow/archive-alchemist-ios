@@ -1,6 +1,7 @@
 import { ThemedView } from "@/components/themed-view";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
+import { isSafeOAuthUserPayload } from "@/shared/oauth";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -34,7 +35,7 @@ export default function OAuthCallback() {
           await Auth.setSessionToken(params.sessionToken);
 
           // Decode and store user info if available
-          if (params.user) {
+          if (isSafeOAuthUserPayload(params.user)) {
             try {
               // Use atob for base64 decoding (works in both web and React Native)
               const userJson =
@@ -55,6 +56,8 @@ export default function OAuthCallback() {
             } catch {
               console.warn("[OAuth] User profile payload could not be parsed");
             }
+          } else if (params.user) {
+            console.warn("[OAuth] User profile payload exceeded safe bounds");
           }
 
           setStatus("success");
