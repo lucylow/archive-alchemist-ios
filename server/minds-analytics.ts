@@ -1,5 +1,23 @@
 export type MindsFailureCode = "TIMEOUT" | "NETWORK" | "STRUCTURED_OUTPUT" | "UPSTREAM";
 
+export const MINDS_ANALYTICS_RETENTION_DAYS = 90;
+export const MINDS_ANALYTICS_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+
+export function getMindsAnalyticsRetentionCutoff(
+  now: Date = new Date(),
+  retentionDays: number = MINDS_ANALYTICS_RETENTION_DAYS,
+): Date {
+  return new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000);
+}
+
+export function shouldRunMindsAnalyticsCleanup(
+  nowMs: number,
+  lastRunMs: number,
+  intervalMs: number = MINDS_ANALYTICS_CLEANUP_INTERVAL_MS,
+): boolean {
+  return nowMs - lastRunMs >= intervalMs;
+}
+
 export function classifyMindsFailure(error: unknown): MindsFailureCode {
   const message = (() => {
     if (error instanceof Error) return error.message;

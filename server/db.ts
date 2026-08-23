@@ -1,10 +1,15 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, lt } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, InsertMindsEvent, mindsEvents, mindsUsage, users } from "../drizzle/schema";
 import type { MindsQuotaResult } from "./minds-quota";
+import {
+  getMindsAnalyticsRetentionCutoff,
+  shouldRunMindsAnalyticsCleanup,
+} from "./minds-analytics";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let lastMindsAnalyticsCleanupAt = 0;
 
 // Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
@@ -117,6 +122,15 @@ export async function getPersistedMindsQuotaStatus(
 export async function recordMindsEvent(event: Omit<InsertMindsEvent, "createdAt">): Promise<void> {
   const db = await getDb();
   if (!db) return;
+
+  const nowMs = Date.now();
+  if (shouldRunMindsAnalyticsCleanup(nowMs, lastMindsAnalyticsCleanupAt)) {
+    lastMindsAnalyticsCleanupAt = nowMs;
+    void db
+      .delete(mindsEvents)
+      .where(lt(mindsEvents.createdAt, getMindsAnalyticsRetentionCutoff(new Date(nowMs))))
+      .catch((error) => console.warn("[Minds] Analytics retention cleanup failed", error));
+  }
 
   try {
     await db.insert(mindsEvents).values(event);
