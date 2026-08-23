@@ -148,3 +148,5 @@
 
 - [x] Make workflow status notices accessible with a separate dismiss action
 
+- [x] Preserve partial-save warnings instead of replacing them with a misleading Auto-Post success message
+

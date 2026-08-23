@@ -346,7 +346,7 @@ export default function HomeScreen() {
   };
 
   const saveMemory = async () => {
-    if (!saveRequestGate.tryStart()) return false;
+    if (!saveRequestGate.tryStart()) return { saved: false, historySaved: false };
 
     const record: Memory = {
       title: "How to Edit Like a Pro",
@@ -359,18 +359,19 @@ export default function HomeScreen() {
       setIsSaving(true);
       await AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(record));
       const nextHistory = [record, ...history.filter((item) => item.savedAt !== record.savedAt)].slice(0, 5);
+      let historySaved = true;
       try {
         await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
       } catch {
-        setNotice("Mind memory was saved, but the recent-workflow history could not be updated.");
+        historySaved = false;
       }
       setMemory(record);
       setHistory(nextHistory);
       haptic.success();
-      return true;
+      return { saved: true, historySaved };
     } catch {
       setNotice("Mind memory could not be saved. Your workflow is still available for this session.");
-      return false;
+      return { saved: false, historySaved: false };
     } finally {
       saveRequestGate.finish();
       setIsSaving(false);
@@ -861,9 +862,13 @@ export default function HomeScreen() {
               accessibilityState={{ busy: isSaving }}
               disabled={isSaving || !canAutoPost(reviewMode, approvedOutputs, selectedOutputs.map(([, output]) => output))}
               onPress={async () => {
-                const saved = await saveMemory();
-                if (!saved) return;
-                setNotice("The Conductor scheduled the approved content batch and stored the workflow in Mind memory.");
+                const result = await saveMemory();
+                if (!result.saved) return;
+                setNotice(
+                  result.historySaved
+                    ? "The Conductor scheduled the approved content batch and stored the workflow in Mind memory."
+                    : "The workflow was saved to Mind memory, but recent-workflow history could not be updated.",
+                );
                 setPhase("results");
               }}
             />
