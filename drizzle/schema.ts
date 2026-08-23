@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
+import { index, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -43,16 +43,23 @@ export const mindsUsage = mysqlTable(
 export type MindsUsage = typeof mindsUsage.$inferSelect;
 export type InsertMindsUsage = typeof mindsUsage.$inferInsert;
 
-export const mindsEvents = mysqlTable("minds_events", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
-  outcome: mysqlEnum("outcome", ["success", "failure", "quota_blocked"]).notNull(),
-  durationMs: int("durationMs").notNull(),
-  retryCount: int("retryCount").notNull().default(0),
-  platformCount: int("platformCount").notNull(),
-  errorCode: varchar("errorCode", { length: 64 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const mindsEvents = mysqlTable(
+  "minds_events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId"),
+    outcome: mysqlEnum("outcome", ["success", "failure", "quota_blocked"]).notNull(),
+    durationMs: int("durationMs").notNull(),
+    retryCount: int("retryCount").notNull().default(0),
+    platformCount: int("platformCount").notNull(),
+    errorCode: varchar("errorCode", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    userCreatedIndex: index("minds_events_user_created_index").on(table.userId, table.createdAt),
+    outcomeCreatedIndex: index("minds_events_outcome_created_index").on(table.outcome, table.createdAt),
+  }),
+);
 
 export type MindsEvent = typeof mindsEvents.$inferSelect;
 export type InsertMindsEvent = typeof mindsEvents.$inferInsert;

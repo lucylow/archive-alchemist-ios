@@ -1,0 +1,2 @@
+CREATE INDEX `minds_events_user_created_index` ON `minds_events` (`userId`,`createdAt`);--> statement-breakpoint
+CREATE INDEX `minds_events_outcome_created_index` ON `minds_events` (`outcome`,`createdAt`);
