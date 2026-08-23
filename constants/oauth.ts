@@ -113,14 +113,14 @@ export async function startOAuthLogin(): Promise<string | null> {
     return null;
   }
 
-  const supported = await Linking.canOpenURL(loginUrl);
-  if (!supported) {
-    console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
-    // The caller remains on the current screen and can retry the login action.
-    return null;
-  }
-
   try {
+    const supported = await Linking.canOpenURL(loginUrl);
+    if (!supported) {
+      console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
+      // The caller remains on the current screen and can retry the login action.
+      return null;
+    }
+
     await Linking.openURL(loginUrl);
   } catch (error) {
     console.error("[OAuth] Failed to open login URL", {

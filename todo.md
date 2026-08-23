@@ -95,3 +95,4 @@
 - [x] Remove user profile and exception payloads from auth hook diagnostics
 - [x] Align OAuth deep-link scheme derivation with the production bundle identifier
 - [x] Handle native auth-cache read failures without leaving startup hydration unresolved
+- [x] Handle rejected OAuth URL capability checks without unhandled login promises
