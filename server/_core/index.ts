@@ -27,26 +27,51 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+const normalizeOrigin = (value: string | undefined): string | null => {
+  if (!value) return null;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
+const trustedCorsOrigins = new Set(
+  [
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    normalizeOrigin(process.env.EXPO_WEB_PREVIEW_URL),
+    normalizeOrigin(process.env.EXPO_PACKAGER_PROXY_URL),
+  ].filter((origin): origin is string => Boolean(origin)),
+);
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Enable CORS for all routes - reflect the request origin to support credentials
+  // Credentialed browser access is limited to the local and configured Expo origins.
   app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (origin) {
-      res.header("Access-Control-Allow-Origin", origin);
-    }
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization",
-    );
-    res.header("Access-Control-Allow-Credentials", "true");
+    const origin = typeof req.headers.origin === "string" ? req.headers.origin : undefined;
+    const isTrustedOrigin = origin ? trustedCorsOrigins.has(origin) : false;
 
-    // Handle preflight requests
+    if (isTrustedOrigin) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Vary", "Origin");
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+      );
+      res.header("Access-Control-Allow-Credentials", "true");
+    }
+
+    // Reject browser preflights from origins that are not trusted.
     if (req.method === "OPTIONS") {
-      res.sendStatus(200);
+      if (origin && !isTrustedOrigin) {
+        res.sendStatus(403);
+        return;
+      }
+      res.sendStatus(204);
       return;
     }
     next();
