@@ -5,6 +5,7 @@ import type { MindsQuotaResult } from "./minds-quota";
 import {
   getMindsAnalyticsRetentionCutoff,
   calculateMindsAnalyticsRates,
+  normalizeMindsAnalyticsMetric,
   shouldRunMindsAnalyticsCleanup,
 } from "./minds-analytics";
 import { ENV } from "./_core/env";
@@ -127,7 +128,7 @@ export async function getMindsAnalyticsSummary(days: number, now: Date = new Dat
       WHERE createdAt >= ${since}
     `) as unknown as [Record<string, unknown>[], unknown];
     const row = rows[0] ?? {};
-    const toCount = (value: unknown) => Number(value ?? 0);
+    const toCount = normalizeMindsAnalyticsMetric;
     const totalRequests = toCount(row.totalRequests);
     const successCount = toCount(row.successCount);
     const retriedRequestCount = toCount(row.retriedRequestCount);

@@ -6,6 +6,11 @@ export const mindsAnalyticsSummaryInput = z.object({
   windowDays: z.union([z.literal(1), z.literal(7), z.literal(30)]).default(7),
 });
 
+export function normalizeMindsAnalyticsMetric(value: unknown): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
 export type MindsAnalyticsRates = {
   successRate: number;
   retryRate: number;

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   classifyMindsFailure,
   calculateMindsAnalyticsRates,
+  normalizeMindsAnalyticsMetric,
   clampMindsDurationMs,
   getMindsAnalyticsRetentionCutoff,
   mindsAnalyticsSummaryInput,
@@ -21,6 +22,13 @@ describe("Minds analytics helpers", () => {
     expect(clampMindsDurationMs(-10)).toBe(0);
     expect(clampMindsDurationMs(12.8)).toBe(13);
     expect(clampMindsDurationMs(Number.MAX_SAFE_INTEGER)).toBe(2_147_483_647);
+  });
+
+  it("normalizes malformed analytics metrics safely", () => {
+    expect(normalizeMindsAnalyticsMetric("12")).toBe(12);
+    expect(normalizeMindsAnalyticsMetric(-4)).toBe(0);
+    expect(normalizeMindsAnalyticsMetric("not-a-number")).toBe(0);
+    expect(normalizeMindsAnalyticsMetric(Number.POSITIVE_INFINITY)).toBe(0);
   });
 
   it("calculates stable zero-safe success and retry rates", () => {

@@ -81,3 +81,4 @@
 - [x] Add normalized Minds success/retry rates and explicit summary outage handling
 - [x] Add authorization regression tests for the admin-only Minds analytics summary
 - [x] Cover the authorized administrator path and safe analytics-storage outage response
+- [x] Normalize malformed Minds analytics metrics to finite non-negative values
