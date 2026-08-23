@@ -114,6 +114,11 @@ export function useAuth(options?: UseAuthOptions) {
             // No cached user, check session token
             fetchUser();
           }
+        }).catch((err) => {
+          console.warn("[useAuth] Native cache lookup failed; retrying session lookup", {
+            errorType: err instanceof Error ? err.name : "unknown",
+          });
+          void fetchUser();
         });
       }
     } else {
