@@ -17,7 +17,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs",
-    "release:check": "node scripts/check-release.mjs"
+    "release:check": "node scripts/check-release.mjs",
+    "submit:check": "node scripts/check-submit.mjs --strict"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

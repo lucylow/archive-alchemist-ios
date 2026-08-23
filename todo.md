@@ -142,3 +142,5 @@
 
 - [x] Explain local-memory recovery when corrupted or oversized persisted data is discarded
 
+- [x] Add a dedicated App Store submission preflight for unresolved App Store Connect metadata
+
