@@ -16,5 +16,14 @@ describe("iOS App Store privacy configuration", () => {
       NSPrivacyAccessedAPITypeReasons: ["CA92.1"],
     });
   });
+
+  it("does not declare unused audio or video native capabilities", () => {
+    const plugins = (config.plugins ?? []).map((plugin) =>
+      Array.isArray(plugin) ? plugin[0] : plugin,
+    );
+
+    expect(plugins).not.toContain("expo-audio");
+    expect(plugins).not.toContain("expo-video");
+  });
 });
 

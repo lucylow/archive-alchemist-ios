@@ -118,3 +118,5 @@
 - [x] Consolidate repetitive auth-hook diagnostics to essential metadata-only events
 - [x] Bound OAuth callback profile payload decoding to a safe parameter size
 - [x] Make client API transport diagnostics metadata-only and bound error parsing
+- [x] Remove unused audio/video native capabilities and permission declarations from the iOS release build
+
