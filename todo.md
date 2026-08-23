@@ -144,3 +144,5 @@
 
 - [x] Add a dedicated App Store submission preflight for unresolved App Store Connect metadata
 
+- [x] Document the strict App Store submission preflight in the release guide
+

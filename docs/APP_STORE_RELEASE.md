@@ -29,11 +29,14 @@ Install the preview build through TestFlight or an internal distribution link an
 npx eas build --platform ios --profile production
 ```
 
-After the App Store Connect app record exists, replace `ascAppId` in `eas.json` with its numeric App Store Connect ID and submit:
+After the App Store Connect app record exists, replace `ascAppId` in `eas.json` with its numeric App Store Connect ID. Run the strict submission preflight before uploading:
 
 ```bash
+pnpm submit:check
 npx eas submit --platform ios --profile production
 ```
+
+The preflight intentionally blocks while the placeholder remains, preventing an accidental submission with unresolved App Store Connect metadata.
 
 When EAS prompts for credentials, allow it to manage distribution certificates and provisioning profiles unless the organization requires manually managed credentials. The first production build creates or links the iOS application using the stable bundle identifier `com.archivealchemist.mobile`. If automated submit is not configured yet, upload the generated `.ipa` through Transporter or the App Store Connect web interface.
 
@@ -84,6 +87,7 @@ Capture portrait screenshots on a current iPhone simulator or device showing the
 | App Store Connect app record | Owner action required |
 | Apple signing credentials | Owner action required at first EAS build |
 | `ascAppId` in `eas.json` | Owner action required |
+| Strict `pnpm submit:check` passes | Pending App Store Connect ID |
 | Production EAS build | Pending Apple credentials |
 | TestFlight smoke test | Pending production or preview build |
 | App Store review submission | Owner action required |
