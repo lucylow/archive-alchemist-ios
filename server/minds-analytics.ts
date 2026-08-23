@@ -1,4 +1,10 @@
+import { z } from "zod";
+
 export type MindsFailureCode = "TIMEOUT" | "NETWORK" | "STRUCTURED_OUTPUT" | "UPSTREAM";
+
+export const mindsAnalyticsSummaryInput = z.object({
+  windowDays: z.union([z.literal(1), z.literal(7), z.literal(30)]).default(7),
+});
 
 export const MINDS_ANALYTICS_RETENTION_DAYS = 90;
 export const MINDS_ANALYTICS_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;

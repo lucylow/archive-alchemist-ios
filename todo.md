@@ -77,3 +77,4 @@
 - [x] Prevent hidden React Query retries from duplicating the explicit Minds retry
 - [x] Add query indexes for user-scoped and outcome/time-based Minds analytics
 - [x] Bound Minds analytics retention to a privacy-safe rolling window
+- [x] Add an admin-only aggregated Minds analytics summary endpoint

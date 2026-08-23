@@ -4,6 +4,7 @@ import {
   classifyMindsFailure,
   clampMindsDurationMs,
   getMindsAnalyticsRetentionCutoff,
+  mindsAnalyticsSummaryInput,
   shouldRunMindsAnalyticsCleanup,
 } from "../server/minds-analytics";
 
@@ -29,5 +30,12 @@ describe("Minds analytics helpers", () => {
   it("runs cleanup only after the configured interval", () => {
     expect(shouldRunMindsAnalyticsCleanup(3_600_000, 0)).toBe(true);
     expect(shouldRunMindsAnalyticsCleanup(3_599_999, 0)).toBe(false);
+  });
+
+  it("accepts bounded analytics windows and defaults to seven days", () => {
+    expect(mindsAnalyticsSummaryInput.parse({})).toEqual({ windowDays: 7 });
+    expect(mindsAnalyticsSummaryInput.parse({ windowDays: 1 })).toEqual({ windowDays: 1 });
+    expect(mindsAnalyticsSummaryInput.parse({ windowDays: 30 })).toEqual({ windowDays: 30 });
+    expect(() => mindsAnalyticsSummaryInput.parse({ windowDays: 2 })).toThrow();
   });
 });

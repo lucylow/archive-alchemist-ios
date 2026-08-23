@@ -1,4 +1,4 @@
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, InsertMindsEvent, mindsEvents, mindsUsage, users } from "../drizzle/schema";
 import type { MindsQuotaResult } from "./minds-quota";
@@ -93,6 +93,48 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export type MindsAnalyticsSummary = {
+  windowDays: number;
+  since: Date;
+  totalRequests: number;
+  successCount: number;
+  failureCount: number;
+  quotaBlockedCount: number;
+  averageDurationMs: number;
+  retriedRequestCount: number;
+};
+
+export async function getMindsAnalyticsSummary(days: number, now: Date = new Date()): Promise<MindsAnalyticsSummary | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const since = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const [rows] = await db.execute(sql`
+    SELECT
+      COUNT(*) AS totalRequests,
+      SUM(CASE WHEN outcome = 'success' THEN 1 ELSE 0 END) AS successCount,
+      SUM(CASE WHEN outcome = 'failure' THEN 1 ELSE 0 END) AS failureCount,
+      SUM(CASE WHEN outcome = 'quota_blocked' THEN 1 ELSE 0 END) AS quotaBlockedCount,
+      COALESCE(AVG(durationMs), 0) AS averageDurationMs,
+      SUM(CASE WHEN retryCount > 0 THEN 1 ELSE 0 END) AS retriedRequestCount
+    FROM minds_events
+    WHERE createdAt >= ${since}
+  `) as unknown as [Record<string, unknown>[], unknown];
+  const row = rows[0] ?? {};
+  const toCount = (value: unknown) => Number(value ?? 0);
+
+  return {
+    windowDays: days,
+    since,
+    totalRequests: toCount(row.totalRequests),
+    successCount: toCount(row.successCount),
+    failureCount: toCount(row.failureCount),
+    quotaBlockedCount: toCount(row.quotaBlockedCount),
+    averageDurationMs: Math.round(toCount(row.averageDurationMs)),
+    retriedRequestCount: toCount(row.retriedRequestCount),
+  };
 }
 
 export async function getPersistedMindsQuotaStatus(
