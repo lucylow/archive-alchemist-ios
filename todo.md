@@ -136,3 +136,5 @@
 
 - [x] Require iOS privacy manifest and encryption declarations in release preflight
 
+- [x] Bound local Mind hydration payloads before JSON parsing
+

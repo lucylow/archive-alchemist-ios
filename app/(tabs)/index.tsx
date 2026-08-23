@@ -13,6 +13,12 @@ import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-reques
 import { createSaveRequestGate } from "@/lib/save-request";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
+import {
+  isWithinStorageLimit,
+  MAX_HISTORY_STORAGE_LENGTH,
+  MAX_MEMORY_STORAGE_LENGTH,
+  MAX_PLATFORMS_STORAGE_LENGTH,
+} from "@/shared/storage-bounds";
 
 type Phase = "home" | "connect" | "scan" | "discoveries" | "repurpose" | "results";
 type Platform = "YouTube" | "Spotify" | "Substack" | "Twitter" | "Instagram" | "TikTok";
@@ -209,7 +215,7 @@ export default function HomeScreen() {
           setTimeout(() => resolve([null, null, null]), 1500);
         });
         const [memoryValue, historyValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
-        if (memoryValue) {
+        if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
             if (isValidMemory(restoredMemory)) {
@@ -222,7 +228,7 @@ export default function HomeScreen() {
             await AsyncStorage.removeItem(MEMORY_KEY);
           }
         }
-        if (historyValue) {
+        if (historyValue && isWithinStorageLimit(historyValue, MAX_HISTORY_STORAGE_LENGTH)) {
           try {
             const restoredHistory = JSON.parse(historyValue) as Memory[];
             if (Array.isArray(restoredHistory) && restoredHistory.every(isValidMemory)) {
@@ -234,7 +240,7 @@ export default function HomeScreen() {
             await AsyncStorage.removeItem(HISTORY_KEY);
           }
         }
-        if (platformsValue) {
+        if (platformsValue && isWithinStorageLimit(platformsValue, MAX_PLATFORMS_STORAGE_LENGTH)) {
           try {
             const restored = JSON.parse(platformsValue) as Platform[];
             if (Array.isArray(restored) && restored.length > 0 && restored.every((item) => platforms.includes(item))) {
