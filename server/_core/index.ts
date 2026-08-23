@@ -9,6 +9,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { getTrustedCorsOrigins, isCorsPreflightAllowed, isTrustedCorsOrigin } from "../cors";
 import { normalizeApiError } from "../api-errors";
+import { parsePreferredPort } from "../ports";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -100,7 +101,7 @@ async function startServer() {
     res.status(safeError.statusCode).json({ error: safeError.message });
   });
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
+  const preferredPort = parsePreferredPort(process.env.PORT);
   const port = await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
