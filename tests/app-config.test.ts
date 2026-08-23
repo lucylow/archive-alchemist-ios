@@ -25,5 +25,13 @@ describe("iOS App Store privacy configuration", () => {
     expect(plugins).not.toContain("expo-audio");
     expect(plugins).not.toContain("expo-video");
   });
+
+  it("does not request notifications without a notification workflow", () => {
+    expect(config.android?.permissions ?? []).not.toContain("POST_NOTIFICATIONS");
+    const plugins = (config.plugins ?? []).map((plugin) =>
+      Array.isArray(plugin) ? plugin[0] : plugin,
+    );
+    expect(plugins).not.toContain("expo-notifications");
+  });
 });
 

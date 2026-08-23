@@ -120,3 +120,5 @@
 - [x] Make client API transport diagnostics metadata-only and bound error parsing
 - [x] Remove unused audio/video native capabilities and permission declarations from the iOS release build
 
+- [x] Remove unused notification capability and Android notification permission from the release build
+
