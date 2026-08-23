@@ -4,9 +4,9 @@ import { systemRouter } from "./_core/systemRouter";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "./_core/trpc";
 import { mindsDiscoveryInput, runMindsDiscovery } from "./minds-agent";
-import { recordMindsEvent, reservePersistedMindsSlot } from "./db";
+import { getPersistedMindsQuotaStatus, recordMindsEvent, reservePersistedMindsSlot } from "./db";
 import { classifyMindsFailure, clampMindsDurationMs } from "./minds-analytics";
-import { MINDS_DAILY_LIMIT, getMindsQuotaSubject, reserveMindsSlot } from "./minds-quota";
+import { MINDS_DAILY_LIMIT, getMindsQuotaSubject, getMindsQuotaStatus, reserveMindsSlot } from "./minds-quota";
 
 export const appRouter = router({
   // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -23,6 +23,19 @@ export const appRouter = router({
   }),
 
   minds: router({
+    quota: publicProcedure.query(async ({ ctx }) => {
+      const now = new Date();
+      if (ctx.user) {
+        try {
+          const persisted = await getPersistedMindsQuotaStatus(ctx.user.id, now, MINDS_DAILY_LIMIT);
+          if (persisted) return persisted;
+        } catch (error) {
+          console.warn("[Minds] Persistent quota status unavailable; using in-memory fallback", error);
+        }
+      }
+      return getMindsQuotaStatus(getMindsQuotaSubject(ctx.user?.id), now, MINDS_DAILY_LIMIT);
+    }),
+
     discover: publicProcedure.input(mindsDiscoveryInput).mutation(async ({ ctx, input }) => {
       const startedAt = Date.now();
       const userId = ctx.user?.id;

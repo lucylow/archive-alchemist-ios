@@ -23,6 +23,23 @@ export type MindsQuotaResult = {
  * Atomically reserves one Minds analysis slot for a subject in the current UTC day.
  * The subject should be a stable authenticated user identifier when available.
  */
+export function getMindsQuotaStatus(
+  subject: string,
+  now: Date = new Date(),
+  limit: number = MINDS_DAILY_LIMIT,
+): MindsQuotaResult {
+  const dateKey = getDateKey(now);
+  const current = usageBySubject.get(subject);
+  const used = current?.dateKey === dateKey ? current.count : 0;
+  return {
+    allowed: used < limit,
+    limit,
+    used,
+    remaining: Math.max(limit - used, 0),
+    dateKey,
+  };
+}
+
 export function reserveMindsSlot(
   subject: string,
   now: Date = new Date(),

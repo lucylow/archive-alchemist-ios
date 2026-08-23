@@ -90,6 +90,30 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getPersistedMindsQuotaStatus(
+  userId: number,
+  now: Date,
+  limit: number,
+): Promise<MindsQuotaResult | null> {
+  const db = await getDb();
+  if (!db) return null;
+
+  const dateKey = now.toISOString().slice(0, 10);
+  const rows = await db
+    .select()
+    .from(mindsUsage)
+    .where(and(eq(mindsUsage.userId, userId), eq(mindsUsage.usageDate, dateKey)))
+    .limit(1);
+  const used = rows[0]?.requestCount ?? 0;
+  return {
+    allowed: used < limit,
+    limit,
+    used,
+    remaining: Math.max(limit - used, 0),
+    dateKey,
+  };
+}
+
 export async function recordMindsEvent(event: Omit<InsertMindsEvent, "createdAt">): Promise<void> {
   const db = await getDb();
   if (!db) return;

@@ -148,9 +148,12 @@ export default function HomeScreen() {
       setNotice("Minds returned an insight, but it could not be saved to local memory.");
     }
   };
+  const mindsQuota = trpc.minds.quota.useQuery(undefined, {
+    enabled: phase === "discoveries",
+    staleTime: 30_000,
+  });
   const mindsDiscovery = trpc.minds.discover.useMutation({
-    retry: (failureCount, error) => failureCount < 1 && shouldRetryMindsError(error),
-    retryDelay: 800,
+    retry: false,
   });
 
   useEffect(() => {
@@ -287,6 +290,7 @@ export default function HomeScreen() {
           onSuccess: (data) => {
             if (!mindsRequestGate.isCurrent(requestId)) return;
             setMindsInsight(data);
+            void mindsQuota.refetch();
             setNotice("Minds returned a structured follow-up plan for this archive item.");
             void persistInsightToMemory(data);
           },
@@ -297,6 +301,7 @@ export default function HomeScreen() {
               submitAttempt(1);
               return;
             }
+            void mindsQuota.refetch();
             setNotice(getMindsErrorNotice(error));
           },
         },
@@ -687,11 +692,36 @@ export default function HomeScreen() {
                 </View>
               </View>
             ))}
+            <View
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={
+                mindsQuota.isLoading
+                  ? "Daily Minds analysis availability is loading."
+                  : mindsQuota.data
+                    ? `${mindsQuota.data.remaining} of ${mindsQuota.data.limit} Minds analyses remaining today.`
+                    : "Daily Minds analysis availability is currently unknown."
+              }
+              style={styles.panel}
+            >
+              <Text style={styles.sectionTitle}>Minds availability</Text>
+              <Text style={styles.bodyText}>
+                {mindsQuota.isLoading
+                  ? "Checking today's analysis allowance…"
+                  : mindsQuota.data
+                    ? `${mindsQuota.data.remaining} of ${mindsQuota.data.limit} analyses remaining today.`
+                    : "Availability will be checked when you ask Minds to analyze this item."}
+              </Text>
+            </View>
             <PrimaryButton
-              label={mindsDiscovery.isPending ? "Minds is thinking…" : "Ask Minds for a smarter follow-up"}
-              accessibilityHint="Sends the selected archive item to the server-side Minds strategist for a structured recommendation."
+              label={mindsDiscovery.isPending ? "Minds is thinking…" : mindsQuota.data?.remaining === 0 ? "Daily Minds limit reached" : "Ask Minds for a smarter follow-up"}
+              accessibilityHint={
+                mindsQuota.data?.remaining === 0
+                  ? "Daily Minds analyses are exhausted. Try again tomorrow."
+                  : "Sends the selected archive item to the server-side Minds strategist for a structured recommendation."
+              }
               accessibilityState={{ busy: mindsDiscovery.isPending }}
-              disabled={mindsDiscovery.isPending}
+              disabled={mindsDiscovery.isPending || mindsQuota.data?.remaining === 0}
               onPress={requestMindsInsight}
             />
             {mindsDiscovery.isPending && (

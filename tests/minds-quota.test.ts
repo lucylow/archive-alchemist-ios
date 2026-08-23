@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   getMindsQuotaSubject,
+  getMindsQuotaStatus,
   MINDS_DAILY_LIMIT,
   reserveMindsSlot,
   resetMindsQuotaForTests,
@@ -36,6 +37,15 @@ describe("Minds daily quota", () => {
     expect(reserveMindsSlot(otherAuthenticated, now).used).toBe(1);
     expect(reserveMindsSlot(anonymous, now).used).toBe(1);
     expect(getMindsQuotaSubject(null)).toBe("anonymous");
+  });
+
+  it("reports usage without consuming a slot", () => {
+    const now = new Date("2026-08-23T12:00:00.000Z");
+    const subject = getMindsQuotaSubject(42);
+
+    expect(getMindsQuotaStatus(subject, now)).toMatchObject({ used: 0, remaining: MINDS_DAILY_LIMIT });
+    reserveMindsSlot(subject, now);
+    expect(getMindsQuotaStatus(subject, now)).toMatchObject({ used: 1, remaining: MINDS_DAILY_LIMIT - 1 });
   });
 
   it("resets a subject's usage at the next UTC day", () => {
