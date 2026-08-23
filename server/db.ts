@@ -105,6 +105,8 @@ export type MindsAnalyticsSummary = {
   quotaBlockedCount: number;
   averageDurationMs: number;
   retriedRequestCount: number;
+  successRate: number;
+  retryRate: number;
 };
 
 export async function getMindsAnalyticsSummary(days: number, now: Date = new Date()): Promise<MindsAnalyticsSummary | null> {
