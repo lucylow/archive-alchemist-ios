@@ -42,3 +42,17 @@ export const mindsUsage = mysqlTable(
 
 export type MindsUsage = typeof mindsUsage.$inferSelect;
 export type InsertMindsUsage = typeof mindsUsage.$inferInsert;
+
+export const mindsEvents = mysqlTable("minds_events", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  outcome: mysqlEnum("outcome", ["success", "failure", "quota_blocked"]).notNull(),
+  durationMs: int("durationMs").notNull(),
+  retryCount: int("retryCount").notNull().default(0),
+  platformCount: int("platformCount").notNull(),
+  errorCode: varchar("errorCode", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MindsEvent = typeof mindsEvents.$inferSelect;
+export type InsertMindsEvent = typeof mindsEvents.$inferInsert;

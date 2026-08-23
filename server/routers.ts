@@ -4,7 +4,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { TRPCError } from "@trpc/server";
 import { publicProcedure, router } from "./_core/trpc";
 import { mindsDiscoveryInput, runMindsDiscovery } from "./minds-agent";
-import { reservePersistedMindsSlot } from "./db";
+import { recordMindsEvent, reservePersistedMindsSlot } from "./db";
+import { classifyMindsFailure, clampMindsDurationMs } from "./minds-analytics";
 import { MINDS_DAILY_LIMIT, getMindsQuotaSubject, reserveMindsSlot } from "./minds-quota";
 
 export const appRouter = router({
@@ -23,6 +24,8 @@ export const appRouter = router({
 
   minds: router({
     discover: publicProcedure.input(mindsDiscoveryInput).mutation(async ({ ctx, input }) => {
+      const startedAt = Date.now();
+      const userId = ctx.user?.id;
       let quota = null;
       if (ctx.user) {
         try {
@@ -31,15 +34,45 @@ export const appRouter = router({
           console.warn("[Minds] Persistent quota unavailable; using in-memory fallback", error);
         }
       }
-      quota ??= reserveMindsSlot(getMindsQuotaSubject(ctx.user?.id));
+      quota ??= reserveMindsSlot(getMindsQuotaSubject(userId));
 
       if (!quota.allowed) {
+        void recordMindsEvent({
+          userId,
+          outcome: "quota_blocked",
+          durationMs: clampMindsDurationMs(Date.now() - startedAt),
+          retryCount: 0,
+          platformCount: input.platforms.length,
+          errorCode: "TOO_MANY_REQUESTS",
+        });
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
           message: `Daily Minds limit reached (${quota.limit} analyses). Try again tomorrow.`,
         });
       }
-      return runMindsDiscovery(input);
+
+      try {
+        const result = await runMindsDiscovery(input);
+        void recordMindsEvent({
+          userId,
+          outcome: "success",
+          durationMs: clampMindsDurationMs(Date.now() - startedAt),
+          retryCount: 0,
+          platformCount: input.platforms.length,
+          errorCode: null,
+        });
+        return result;
+      } catch (error) {
+        void recordMindsEvent({
+          userId,
+          outcome: "failure",
+          durationMs: clampMindsDurationMs(Date.now() - startedAt),
+          retryCount: 0,
+          platformCount: input.platforms.length,
+          errorCode: classifyMindsFailure(error),
+        });
+        throw error;
+      }
     }),
   }),
 

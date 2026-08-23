@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, mindsUsage, users } from "../drizzle/schema";
+import { InsertUser, InsertMindsEvent, mindsEvents, mindsUsage, users } from "../drizzle/schema";
 import type { MindsQuotaResult } from "./minds-quota";
 import { ENV } from "./_core/env";
 
@@ -88,6 +88,17 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function recordMindsEvent(event: Omit<InsertMindsEvent, "createdAt">): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db.insert(mindsEvents).values(event);
+  } catch (error) {
+    console.warn("[Minds] Analytics event could not be recorded", error);
+  }
 }
 
 export async function reservePersistedMindsSlot(
