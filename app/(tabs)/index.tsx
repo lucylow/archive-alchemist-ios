@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -685,9 +685,18 @@ export default function HomeScreen() {
     }
   };
 
-  const shareImportedArchive = async (format: "json" | "csv", items = archiveItems, exportLabel = "archive") => {
+  const shareImportedArchive = async (format: "json" | "csv", items = archiveItems, exportLabel = "archive", warningConfirmed = false) => {
     if (items.length === 0) {
       if (screenActiveRef.current) setNotice("There are no matching archive items to export.");
+      return;
+    }
+    const previewContents = format === "json" ? serializeArchiveManifest(items) : serializeArchiveCsv(items);
+    const largeExportWarning = getLargeExportWarningLabel(format, previewContents.length);
+    if (largeExportWarning && !warningConfirmed) {
+      Alert.alert("Large export", largeExportWarning, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Continue", onPress: () => { void shareImportedArchive(format, items, exportLabel, true); } },
+      ]);
       return;
     }
     if (!archiveExportRequestGate.tryStart()) return;
@@ -701,7 +710,7 @@ export default function HomeScreen() {
       }
       const extension = format === "json" ? "json" : "csv";
       const mimeType = format === "json" ? "application/json" : "text/csv";
-      const contents = format === "json" ? serializeArchiveManifest(items) : serializeArchiveCsv(items);
+      const contents = previewContents;
       const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-${exportLabel}-${items.length}.${extension}`;
       await FileSystem.writeAsStringAsync(fileUri, contents, { encoding: FileSystem.EncodingType.UTF8 });
       if (archiveExportRequestIdRef.current !== requestId) return;

@@ -328,3 +328,6 @@
 - [x] Add a lightweight size estimate for the current selected export
 - [x] Keep the estimate derived in memory without persisting archive contents
 - [x] Add deterministic coverage for export-size estimate wording
+- [x] Add an explicit warning for unusually large selected exports
+- [x] Preserve selection and provide a deliberate proceed-or-cancel path
+- [x] Add deterministic coverage for large-export warning wording
