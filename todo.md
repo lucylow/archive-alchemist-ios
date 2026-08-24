@@ -178,3 +178,5 @@
 - [x] Add deterministic coverage for metadata-only OAuth callback diagnostics
 - [x] Cancel the OAuth success redirect timer when the callback screen unmounts
 - [x] Add deterministic coverage for OAuth redirect timer cleanup
+- [x] Suppress late OAuth error-state updates after callback unmount
+- [x] Add deterministic coverage for OAuth callback lifecycle invalidation

@@ -169,10 +169,12 @@ export default function OAuthCallback() {
             if (active) router.replace("/(tabs)");
           }, 1000);
         } else {
+          if (!active) return;
           setStatus("error");
           setErrorMessage("No session token received");
         }
       } catch {
+        if (!active) return;
         setStatus("error");
         setErrorMessage("Authentication could not be completed. Please try again.");
       }
