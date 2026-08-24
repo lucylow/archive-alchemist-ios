@@ -319,3 +319,6 @@
 - [x] Add a one-tap export action for the temporary recommended format
 - [x] Preserve selected rows and review state while starting the recommended export
 - [x] Add deterministic coverage for recommended-format action wording
+- [x] Add precise visible-versus-selected count feedback to export review
+- [x] Clarify when the review list is capped while all selected rows still export
+- [x] Add deterministic coverage for bounded review count wording

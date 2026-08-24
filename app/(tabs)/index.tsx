@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -1461,9 +1461,9 @@ export default function HomeScreen() {
             <Text style={styles.bodyText} accessibilityLiveRegion="polite">{isExportingArchive ? "Preparing your archive export…" : getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
             {preferredExportFormat && <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getLastExportFormatPresetLabel(latestExport)}</Text>}
             <Text style={styles.sourceSummary} accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. This review contains archive rows, while export history stores metadata only.`}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No previous exports · metadata history is empty"}</Text>
+            <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getExportReviewWindowLabel(selectedBrowserItems.length, selectedBrowserItems.length)}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
               {selectedBrowserItems.slice(0, 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
-              {selectedBrowserItems.length > 20 && <Text style={styles.sourceSummary}>Showing the first 20 selected rows.</Text>}
             </ScrollView>
             <View style={styles.actionRow}>
               {preferredExportFormat && <SecondaryButton label={getRecommendedExportActionLabel(latestExport)} accessibilityHint="Shares the selected archive rows using the temporary format recommendation from the last export." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={exportRecommendedFormat} />}

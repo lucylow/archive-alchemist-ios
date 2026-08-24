@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -35,6 +35,12 @@ describe("export history", () => {
     expect(getLastExportShortcutLabel(null)).toBe("Open archive browser");
     expect(getLastExportShortcutLabel({ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last JSON export · 1 item");
     expect(getLastExportShortcutLabel({ format: "csv", itemCount: 4, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last CSV export · 4 items");
+  });
+
+  it("formats bounded export-review window labels consistently", () => {
+    expect(getExportReviewWindowLabel(1, 1)).toBe("Reviewing all 1 selected row before export.");
+    expect(getExportReviewWindowLabel(3, 3)).toBe("Reviewing all 3 selected rows before export.");
+    expect(getExportReviewWindowLabel(25, 25)).toBe("Showing 20 of 25 selected rows. All 25 selected rows will be exported.");
   });
 
   it("formats recommended-export action labels consistently", () => {
