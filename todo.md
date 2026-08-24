@@ -298,3 +298,6 @@
 - [x] Add a cancellable export-preparation flow for large selections
 - [x] Preserve the current selection and show a cancellation notice
 - [x] Add deterministic coverage for export cancellation state
+- [x] Persist a bounded local history of successful archive exports
+- [x] Show recent export format, count, and timestamp without archive contents
+- [x] Add deterministic coverage for export-history normalization and bounds

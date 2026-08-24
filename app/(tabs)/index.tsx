@@ -19,6 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
+import { appendExportHistory, formatExportHistoryLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -38,6 +39,7 @@ const HISTORY_KEY = "archive-alchemist-mind-history";
 const PLATFORMS_KEY = "archive-alchemist-selected-platforms";
 const ARCHIVE_KEY = "archive-items";
 const ARCHIVE_PREVIEW_KEY = "archive-preview";
+const EXPORT_HISTORY_KEY = "archive-export-history";
 const platforms: Platform[] = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"];
 const discoveries = [
   { title: "How to Edit Like a Pro", year: 2023, score: 94, views: "12.4K", icon: "🎬" },
@@ -167,6 +169,7 @@ export default function HomeScreen() {
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
   const [history, setHistory] = useState<Memory[]>([]);
+  const [exportHistory, setExportHistory] = useState<ExportHistoryEntry[]>([]);
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -284,11 +287,12 @@ export default function HomeScreen() {
           AsyncStorage.getItem(PLATFORMS_KEY),
           AsyncStorage.getItem(ARCHIVE_KEY),
           AsyncStorage.getItem(ARCHIVE_PREVIEW_KEY),
+          AsyncStorage.getItem(EXPORT_HISTORY_KEY),
         ]);
-        const storageTimeout = new Promise<[string | null, string | null, string | null, string | null, string | null]>((resolve) => {
-          hydrationTimeout = setTimeout(() => resolve([null, null, null, null, null]), 1500);
+        const storageTimeout = new Promise<[string | null, string | null, string | null, string | null, string | null, string | null]>((resolve) => {
+          hydrationTimeout = setTimeout(() => resolve([null, null, null, null, null, null]), 1500);
         });
-        const [memoryValue, historyValue, platformsValue, archiveValue, previewValue] = await Promise.race([storageRead, storageTimeout]);
+        const [memoryValue, historyValue, platformsValue, archiveValue, previewValue, exportHistoryValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
@@ -317,6 +321,17 @@ export default function HomeScreen() {
           }
         } else if (historyValue) {
           await discardStoredValue(HISTORY_KEY);
+        }
+        if (exportHistoryValue && isWithinStorageLimit(exportHistoryValue, MAX_HISTORY_STORAGE_LENGTH)) {
+          try {
+            const restoredExportHistory = normalizeExportHistory(JSON.parse(exportHistoryValue));
+            if (restoredExportHistory.length > 0) setExportHistory(restoredExportHistory);
+            else await discardStoredValue(EXPORT_HISTORY_KEY);
+          } catch {
+            await discardStoredValue(EXPORT_HISTORY_KEY);
+          }
+        } else if (exportHistoryValue) {
+          await discardStoredValue(EXPORT_HISTORY_KEY);
         }
         if (archiveValue && isWithinStorageLimit(archiveValue, MAX_ARCHIVE_STORAGE_LENGTH)) {
           try {
@@ -639,7 +654,18 @@ export default function HomeScreen() {
       await FileSystem.writeAsStringAsync(fileUri, contents, { encoding: FileSystem.EncodingType.UTF8 });
       if (archiveExportRequestIdRef.current !== requestId) return;
       await Sharing.shareAsync(fileUri, { mimeType, dialogTitle: `Share Archive Alchemist ${format.toUpperCase()} export` });
-      if (screenActiveRef.current) setNotice(`Archive ${format.toUpperCase()} export is ready to share.`);
+      const completedExport: ExportHistoryEntry = { format, itemCount: items.length, exportedAt: new Date().toISOString() };
+      const nextExportHistory = appendExportHistory(exportHistory, completedExport);
+      let historySaved = true;
+      try {
+        await AsyncStorage.setItem(EXPORT_HISTORY_KEY, JSON.stringify(nextExportHistory));
+      } catch {
+        historySaved = false;
+      }
+      if (screenActiveRef.current) {
+        setExportHistory(nextExportHistory);
+        setNotice(historySaved ? `Archive ${format.toUpperCase()} export is ready to share.` : `Archive ${format.toUpperCase()} export is ready to share, but local export history could not be saved.`);
+      }
     } catch {
       if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) setNotice("Archive export could not be prepared. Your selection is preserved; try sharing again.");
     } finally {
@@ -894,6 +920,13 @@ export default function HomeScreen() {
                     onPress={() => router.push("/admin/analytics")}
                   />
                 </View>
+              </View>
+            )}
+            {exportHistory.length > 0 && (
+              <View style={styles.panel} accessible accessibilityLabel={`Recent exports: ${exportHistory.length}`}>
+                <View style={styles.rowBetween}><Text style={styles.sectionTitle}>Recent exports</Text><Text style={styles.livePill}>LOCAL ONLY</Text></View>
+                {exportHistory.slice(0, 3).map((entry) => <View key={`${entry.exportedAt}-${entry.format}`} style={styles.mindRow}><View style={styles.flexOne}><Text style={styles.mindName}>{formatExportHistoryLabel(entry)}</Text><Text style={styles.mindDescription}>Shared {formatSavedAt(entry.exportedAt)}</Text></View></View>)}
+                <Text style={styles.sourceSummary}>Only format, item count, and time are saved. Archive contents are not stored in this history.</Text>
               </View>
             )}
             {archiveItems.length > 0 && (
