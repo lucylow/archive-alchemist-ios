@@ -163,7 +163,9 @@ export default function HomeScreen() {
       setMemory(updatedMemory);
       setHistory(nextHistory);
     } catch {
-      setNotice("Minds returned an insight, but it could not be saved to local memory.");
+      if (mindsRequestGate.isCurrent(requestId) && screenActiveRef.current) {
+        setNotice("Minds returned an insight, but it could not be saved to local memory.");
+      }
     }
   };
   const mindsQuota = trpc.minds.quota.useQuery(undefined, {

@@ -198,3 +198,5 @@
 - [x] Add deterministic coverage for malformed optional OAuth profile payloads
 - [x] Prevent duplicate local-memory reset operations while a reset is in flight
 - [x] Add deterministic coverage for the reset action gate
+- [x] Suppress late Minds persistence failure notices after request invalidation
+- [x] Add deterministic coverage for stale Minds persistence error handling
