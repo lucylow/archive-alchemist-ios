@@ -202,3 +202,6 @@
 - [x] Add deterministic coverage for stale Minds persistence error handling
 - [x] Cancel the Minds request lifecycle gate when the workflow screen unmounts
 - [x] Add deterministic coverage for unmount-level Minds callback invalidation
+- [x] Add a real local archive import entry point for JSON/CSV manifests
+- [x] Add deterministic coverage for archive manifest parsing and size limits
+- [x] Replace hardcoded archive overview metrics with imported archive metrics when available

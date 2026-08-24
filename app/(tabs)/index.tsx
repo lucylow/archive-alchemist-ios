@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -13,6 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
+import { parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -135,6 +137,8 @@ export default function HomeScreen() {
   const { isAdmin } = useAuth();
   const [phase, setPhase] = useState<Phase>("home");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["YouTube", "Instagram", "TikTok"]);
+  const [archiveItems, setArchiveItems] = useState<ArchiveItem[]>([]);
+  const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
   const [history, setHistory] = useState<Memory[]>([]);
@@ -146,6 +150,10 @@ export default function HomeScreen() {
   const screenActiveRef = useRef(true);
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const activeDiscoveries = useMemo(
+    () => archiveItems.length > 0 ? archiveItems.map((item) => ({ ...item, score: 90, icon: "✦" })) : discoveries,
+    [archiveItems],
+  );
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
@@ -332,14 +340,36 @@ export default function HomeScreen() {
     [selectedPlatforms],
   );
 
+  const importArchive = async () => {
+    if (isImportingArchive) return;
+    setIsImportingArchive(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/json", "text/csv", "text/plain"],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled) return;
+      const asset = result.assets[0];
+      const response = await fetch(asset.uri);
+      const items = parseArchiveManifest(await response.text(), asset.name);
+      setArchiveItems(items);
+      setNotice(`Imported ${items.length} archive item${items.length === 1 ? "" : "s"} from ${asset.name}.`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Archive import failed. Choose a JSON or CSV manifest and try again.");
+    } finally {
+      if (screenActiveRef.current) setIsImportingArchive(false);
+    }
+  };
+
   const requestMindsInsight = () => {
     if (!canStartMindsRequest(mindsDiscovery.isPending)) return;
     const requestId = mindsRequestGate.begin();
     const payload: Omit<MindsDiscoveryRequest, "retryAttempt"> = {
       platforms: selectedPlatforms,
-      archiveTitle: discoveries[0].title,
-      sourceYear: discoveries[0].year,
-      sourceViews: discoveries[0].views,
+      archiveTitle: activeDiscoveries[0].title,
+      sourceYear: activeDiscoveries[0].year,
+      sourceViews: activeDiscoveries[0].views,
     };
     setMindsInsight(null);
     mindsDiscovery.reset();
@@ -597,9 +627,9 @@ export default function HomeScreen() {
               </View>
             )}
             <View style={styles.statsRow}>
-              <Stat label="Archive items" value="412" />
-              <Stat label="Dormant gold" value="37" />
-              <Stat label="Saved hours" value="18.6" />
+              <Stat label="Archive items" value={archiveItems.length > 0 ? String(archiveItems.length) : "Demo"} />
+              <Stat label="Dormant gold" value={archiveItems.length > 0 ? String(Math.min(archiveItems.length, 37)) : "Demo"} />
+              <Stat label="Saved hours" value={archiveItems.length > 0 ? "—" : "Demo"} />
             </View>
             <View style={styles.panel}>
               <View style={styles.rowBetween}>
@@ -674,10 +704,16 @@ export default function HomeScreen() {
 
         {phase === "connect" && (
           <View style={styles.stack}>
-            <Text style={styles.screenTitle}>Choose your source archive</Text>
-            <Text style={styles.bodyText}>Select the channels the Archaeologist should scan for dormant gold.</Text>
+                              <Text style={styles.screenTitle}>Choose your source archive</Text>
+
+            <Text style={styles.bodyText}>Select the channels the Archaeologist should scan for dormant gold, or import a JSON/CSV manifest from Files.</Text>
+            <SecondaryButton
+              label={isImportingArchive ? "Importing archive…" : "Import archive manifest"}
+              accessibilityHint="Opens Files so you can select a JSON or CSV archive manifest from this device."
+              onPress={importArchive}
+            />
             <View style={styles.rowBetween}>
-              <Text style={styles.selectionSummary}>{selectedPlatforms.length} selected</Text>
+              <Text style={styles.selectionSummary}>{selectedPlatforms.length} selected · {archiveItems.length > 0 ? `${archiveItems.length} imported items` : "demo archive"}</Text>
               <View style={styles.actionGroup}>
                 <Pressable
                   accessibilityRole="button"
@@ -776,7 +812,8 @@ export default function HomeScreen() {
           <View style={styles.stack}>
             <Text style={styles.screenTitle}>Dormant gold</Text>
             <Text style={styles.bodyText}>The Strategist found three archive items worth another life.</Text>
-            {discoveries.map((item) => (
+                          {activeDiscoveries.slice(0, 3).map((item) => (
+
               <View
                 key={item.title}
                 accessible
