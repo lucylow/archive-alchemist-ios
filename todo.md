@@ -170,3 +170,5 @@
 - [x] Add deterministic coverage for platform preference persistence failure handling
 - [x] Clear stale review approvals when starting a new archive dig
 - [x] Add deterministic coverage for fresh-dig transient workflow state
+- [x] Safely handle rejected non-blocking Minds quota refreshes
+- [x] Add deterministic coverage for ignored quota-refresh failures

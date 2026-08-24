@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { canAutoPost, estimateTimeSaved, formatTimeSaved, getFreshReviewState, getPlatformPerformance } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
-import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
+import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { trpc } from "@/lib/trpc";
@@ -326,7 +326,7 @@ export default function HomeScreen() {
           onSuccess: (data) => {
             if (!mindsRequestGate.isCurrent(requestId)) return;
             setMindsInsight(data);
-            void mindsQuota.refetch();
+            ignorePromiseRejection(mindsQuota.refetch());
             setNotice("Minds returned a structured follow-up plan for this archive item.");
             void persistInsightToMemory(data);
           },
@@ -337,7 +337,7 @@ export default function HomeScreen() {
               submitAttempt(1);
               return;
             }
-            void mindsQuota.refetch();
+            ignorePromiseRejection(mindsQuota.refetch());
             setNotice(getMindsErrorNotice(error));
           },
         },

@@ -1,8 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { canStartMindsRequest, createMindsRequestGate } from "../lib/minds-request";
+import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "../lib/minds-request";
 
 describe("canStartMindsRequest", () => {
+  it("swallows rejected non-blocking promises", async () => {
+    let failureCalled = false;
+    ignorePromiseRejection(Promise.reject(new Error("quota refresh failed")), () => {
+      failureCalled = true;
+    });
+    await Promise.resolve();
+    expect(failureCalled).toBe(true);
+  });
+
   it("allows a request when no analysis is pending", () => {
     expect(canStartMindsRequest(false)).toBe(true);
   });

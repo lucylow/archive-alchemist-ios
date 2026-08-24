@@ -2,6 +2,12 @@ export function canStartMindsRequest(isPending: boolean): boolean {
   return !isPending;
 }
 
+export function ignorePromiseRejection<T>(promise: Promise<T>, onFailure?: () => void) {
+  void promise.catch(() => {
+    onFailure?.();
+  });
+}
+
 export function createMindsRequestGate() {
   let activeRequestId = 0;
 
