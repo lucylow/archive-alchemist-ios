@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLatestExportStatusLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -617,6 +617,16 @@ export default function HomeScreen() {
     }
   };
 
+  const openLastExportContext = () => {
+    setExportHistoryVisible(false);
+    setArchiveBrowserVisible(true);
+    setBrowserQuery("");
+    setBrowserYear("");
+    setBrowserSort("newest");
+    setSelectedBrowserKeys([]);
+    if (screenActiveRef.current) setNotice(latestExport ? `${getLastExportShortcutLabel(latestExport)}. Showing the bounded archive browser; no archive contents are stored in export history.` : "Opening the bounded archive browser.");
+  };
+
   const clearLocalExportHistory = async () => {
     if (!exportHistoryResetGate.tryStart()) return;
     try {
@@ -953,6 +963,7 @@ export default function HomeScreen() {
                 <Text style={styles.sourceSummary}>Only format, item count, and time are saved. Archive contents are not stored in this history.</Text>
                 <View style={styles.actionRow}>
                   <SecondaryButton label="View export history" accessibilityHint="Opens local export metadata including format, item count, and timestamp." onPress={() => setExportHistoryVisible(true)} />
+                  <SecondaryButton label={getLastExportShortcutLabel(latestExport)} accessibilityHint="Opens the bounded archive browser without storing archive contents or previous row selections." disabled={!latestExport} onPress={openLastExportContext} />
                   <SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} />
                 </View>
               </View>
@@ -1458,7 +1469,7 @@ export default function HomeScreen() {
               {exportHistory.length === 0 && <Text style={styles.emptyStateText}>No local export history yet.</Text>}
               {exportHistory.map((entry) => <View key={`${entry.exportedAt}-${entry.format}`} style={styles.mindRow}><View style={styles.flexOne}><Text style={styles.mindName}>{formatExportHistoryLabel(entry)}</Text><Text style={styles.mindDescription}>Shared {formatSavedAt(entry.exportedAt)}</Text></View></View>)}
             </ScrollView>
-            {exportHistory.length > 0 && <SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} />}
+            {exportHistory.length > 0 && <View style={styles.actionRow}><SecondaryButton label={getLastExportShortcutLabel(latestExport)} accessibilityHint="Closes this sheet and opens the bounded archive browser without restoring archive contents." onPress={openLastExportContext} /><SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} /></View>}
           </View>
         </View>
       </Modal>

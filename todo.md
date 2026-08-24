@@ -310,3 +310,6 @@
 - [x] Add a compact export-history detail modal from the archive browser
 - [x] Provide clear-history access and local-only privacy copy in the detail modal
 - [x] Add deterministic coverage for export-history detail wording
+- [x] Add a last-export shortcut from local export history
+- [x] Restore only bounded browser context without storing archive contents
+- [x] Add deterministic coverage for last-export context wording

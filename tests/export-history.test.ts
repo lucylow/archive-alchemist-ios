@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLatestExportStatusLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -29,6 +29,12 @@ describe("export history", () => {
   it("formats export-history detail labels consistently", () => {
     expect(getExportHistoryDetailLabel([])).toBe("Export history: 0 records");
     expect(getExportHistoryDetailLabel([{ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" }])).toBe("Export history: 1 record");
+  });
+
+  it("formats last-export shortcut labels consistently", () => {
+    expect(getLastExportShortcutLabel(null)).toBe("Open archive browser");
+    expect(getLastExportShortcutLabel({ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last JSON export · 1 item");
+    expect(getLastExportShortcutLabel({ format: "csv", itemCount: 4, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last CSV export · 4 items");
   });
 
   it("formats latest-export status consistently", () => {
