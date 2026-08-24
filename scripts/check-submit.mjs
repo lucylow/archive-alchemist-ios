@@ -27,6 +27,13 @@ if (!issue) {
   const isConfigured = typeof ascAppId === "string" && /^\d{6,12}$/.test(ascAppId);
   if (!isConfigured) {
     issue = "set eas.json submit.production.ios.ascAppId to the numeric App Store Connect App ID.";
+  } else {
+    const production = easConfig?.build?.production;
+    if (production?.distribution !== "store") {
+      issue = 'eas.json build.production must use "store" distribution before submitting to the App Store.';
+    } else if (production?.ios?.simulator !== false) {
+      issue = "eas.json build.production.ios.simulator must be false before submitting to the App Store.";
+    }
   }
 }
 

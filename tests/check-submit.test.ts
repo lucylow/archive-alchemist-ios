@@ -33,10 +33,35 @@ function withConfig(contents: string, callback: (configPath: string) => void) {
 
 describe("App Store submission preflight", () => {
   it("passes for a numeric App Store Connect ID", () => {
-    withConfig(JSON.stringify({ submit: { production: { ios: { ascAppId: "123456789" } } } }), (configPath) => {
+    withConfig(JSON.stringify({
+      build: { production: { distribution: "store", ios: { simulator: false } } },
+      submit: { production: { ios: { ascAppId: "123456789" } } },
+    }), (configPath) => {
       const result = runPreflight(configPath);
       expect(result.status).toBe(0);
       expect(result.output).toContain("preflight passed");
+    });
+  });
+
+  it("blocks a non-store production build profile", () => {
+    withConfig(JSON.stringify({
+      build: { production: { distribution: "internal", ios: { simulator: false } } },
+      submit: { production: { ios: { ascAppId: "123456789" } } },
+    }), (configPath) => {
+      const result = runPreflight(configPath);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain('build.production must use "store" distribution');
+    });
+  });
+
+  it("blocks a production simulator build", () => {
+    withConfig(JSON.stringify({
+      build: { production: { distribution: "store", ios: { simulator: true } } },
+      submit: { production: { ios: { ascAppId: "123456789" } } },
+    }), (configPath) => {
+      const result = runPreflight(configPath);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("build.production.ios.simulator must be false");
     });
   });
 

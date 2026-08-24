@@ -247,3 +247,5 @@
 - [x] Expand sensitive private-file detection to cover common Android and iOS signing artifacts such as `.p12` and `.jks`
 - [x] Add deterministic regression coverage for expanded signing-artifact detection
 
+- [x] Require strict App Store submission preflight to validate the production EAS store profile
+- [x] Add deterministic coverage for invalid production submission profile settings
