@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -881,7 +881,7 @@ export default function HomeScreen() {
                   <SecondaryButton label={previewSort === "views" ? "Highest views" : "Sort by views"} accessibilityHint="Sorts preview rows by highest view count first." onPress={() => setPreviewSort("views")} />
                 </View>
                 <View style={styles.actionRow}>
-                  <SecondaryButton label={selectedPreviewItems.length > 0 ? `${selectedPreviewItems.length} selected` : "Select rows"} accessibilityHint="Selects visible preview rows for export." onPress={() => setSelectedPreviewKeys(previewMatches.map(getArchiveItemKey))} />
+                  <SecondaryButton label={selectedPreviewItems.length > 0 ? `${selectedPreviewItems.length} selected` : "Select rows"} accessibilityHint="Selects or deselects all currently visible preview rows while preserving selections outside the active filter." onPress={() => setSelectedPreviewKeys((current) => toggleArchiveSelection(current, previewMatches))} />
                   <SecondaryButton label="Clear selection" accessibilityHint="Clears all preview row selections." onPress={() => setSelectedPreviewKeys([])} />
                 </View>
                 <View accessible accessibilityLabel={`Preview rows: ${previewMatches.slice(0, 3).map((item) => `${selectedPreviewKeys.includes(getArchiveItemKey(item)) ? "Selected " : ""}${formatArchivePreviewRow(item)}`).join("; ") || "No matching rows"}`}>

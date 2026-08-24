@@ -234,3 +234,6 @@
 - [x] Add row-level selection to the imported archive preview
 - [x] Export only selected archive preview rows
 - [x] Add deterministic coverage for selection and selected-result behavior
+- [x] Preserve selected archive rows while search, year, and sort controls change
+- [x] Reconcile selected keys when a preview is replaced or discarded
+- [x] Add deterministic coverage for selection reconciliation

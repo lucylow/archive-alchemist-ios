@@ -57,6 +57,14 @@ export const getSelectedArchiveItems = (items: ArchiveItem[], selectedKeys: stri
   return items.filter((item) => selected.has(getArchiveItemKey(item)));
 };
 
+export const toggleArchiveSelection = (selectedKeys: string[], visibleItems: ArchiveItem[]) => {
+  const visibleKeys = visibleItems.map(getArchiveItemKey);
+  const selected = new Set(selectedKeys);
+  const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every((key) => selected.has(key));
+  if (allVisibleSelected) return selectedKeys.filter((key) => !visibleKeys.includes(key));
+  return [...new Set([...selectedKeys, ...visibleKeys])];
+};
+
 const viewCount = (value: string) => {
   const normalized = value.trim().toLowerCase();
   const amount = Number.parseFloat(normalized.replace(/[^0-9.]/g, "")) || 0;

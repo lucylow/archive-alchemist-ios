@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -26,6 +26,15 @@ describe("parseArchiveManifest", () => {
     ];
     expect(getSelectedArchiveItems(items, [getArchiveItemKey(items[1])])).toEqual([items[1]]);
     expect(getSelectedArchiveItems(items, [])).toEqual([]);
+  });
+
+  it("toggles visible selections without dropping hidden selections", () => {
+    const first = { title: "First", year: 2024, views: "1K" };
+    const second = { title: "Second", year: 2023, views: "2K" };
+    const firstKey = getArchiveItemKey(first);
+    const secondKey = getArchiveItemKey(second);
+    expect(toggleArchiveSelection([firstKey], [second])).toEqual([firstKey, secondKey]);
+    expect(toggleArchiveSelection([firstKey, secondKey], [second])).toEqual([firstKey]);
   });
 
   it("serializes normalized archive data as quoted CSV", () => {
