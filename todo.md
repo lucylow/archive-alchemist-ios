@@ -243,3 +243,6 @@
 - [x] Announce when a pending archive preview is restored after startup
 - [x] Preserve higher-priority invalid-storage recovery notices over preview-restored messaging
 - [x] Add deterministic coverage for restored-preview notice selection
+- [x] Add a home-screen card for a restored pending archive preview
+- [x] Provide an accessible action to resume the preview workflow
+- [x] Add deterministic coverage for resume-preview card messaging

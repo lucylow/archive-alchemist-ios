@@ -24,6 +24,8 @@ export const clearArchiveItems = (): ArchiveItem[] => [];
 
 export const getArchivePreviewRestoredNotice = (items: ArchiveItem[], fileName: string) => `Restored ${items.length} archive item${items.length === 1 ? "" : "s"} from ${fileName}. Review the preview before using this archive.`;
 
+export const getArchivePreviewResumeLabel = (items: ArchiveItem[], fileName: string) => `Resume ${items.length} item${items.length === 1 ? "" : "s"} from ${fileName}`;
+
 export const getArchivePreviewLabel = (items: ArchiveItem[], fileName: string | null) =>
   `${items.length} item${items.length === 1 ? "" : "s"} ready from ${fileName}`;
 

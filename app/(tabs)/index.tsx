@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -789,6 +789,17 @@ export default function HomeScreen() {
                 }}
               />
             </View>
+            {pendingArchiveItems.length > 0 && pendingArchiveName && (
+              <View style={styles.panel} accessible accessibilityLabel={`Pending archive preview: ${getArchivePreviewResumeLabel(pendingArchiveItems, pendingArchiveName)}`}>
+                <View style={styles.rowBetween}>
+                  <View style={styles.flexOne}>
+                    <Text style={styles.sectionTitle}>Preview waiting</Text>
+                    <Text style={styles.bodyText}>{getArchivePreviewResumeLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
+                  </View>
+                  <SecondaryButton label="Review preview" accessibilityHint="Returns to the source archive screen to review and confirm this pending archive preview." onPress={() => setPhase("connect")} />
+                </View>
+              </View>
+            )}
             {isAdmin && (
               <View style={styles.panel}>
                 <View style={styles.rowBetween}>
