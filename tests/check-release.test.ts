@@ -17,6 +17,31 @@ const requiredFiles = [
   "assets/images/android-icon-monochrome.png",
 ];
 
+function createFixture(directory: string, production: Record<string, unknown>) {
+  const appConfig = [
+    "Archive Alchemist",
+    "com.archivealchemist.mobile",
+    'version: "1.0.0"',
+    "NSPrivacyAccessedAPICategoryUserDefaults",
+    'NSPrivacyAccessedAPITypeReasons: ["CA92.1"]',
+    'ITSAppUsesNonExemptEncryption": false',
+  ].join("\n");
+  const easConfig = {
+    build: {
+      development: {},
+      preview: {},
+      production,
+    },
+  };
+
+  for (const relativePath of requiredFiles) {
+    const absolutePath = join(directory, relativePath);
+    const parent = absolutePath.slice(0, absolutePath.lastIndexOf("/"));
+    if (parent) mkdirSync(parent, { recursive: true });
+    writeFileSync(absolutePath, relativePath === "app.config.ts" ? appConfig : relativePath === "eas.json" ? JSON.stringify(easConfig) : "placeholder");
+  }
+}
+
 function runPreflight(cwd: string) {
   try {
     execFileSync(process.execPath, [scriptPath], { cwd, encoding: "utf8", stdio: "pipe" });
@@ -55,6 +80,30 @@ describe("release preflight failures", () => {
       expect(result.status).toBe(1);
       expect(result.output).toContain("eas.json is not valid JSON");
       expect(result.output).not.toContain("SyntaxError");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a non-store production distribution", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "internal", ios: { simulator: false } });
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain('production profile must use "store" distribution');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a production iOS simulator build", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: true } });
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("production iOS build must set simulator to false");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

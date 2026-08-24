@@ -170,3 +170,7 @@
 
 - [x] Bound cached-user identity string fields during normalization
 
+- [x] Require EAS production to use store distribution and a non-simulator iOS build
+
+- [x] Add regression coverage for EAS production store and simulator settings
+

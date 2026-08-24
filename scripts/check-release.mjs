@@ -50,6 +50,12 @@ for (const expected of [
 for (const profile of ["development", "preview", "production"]) {
   if (!easConfig.build?.[profile]) failures.push(`eas.json is missing the ${profile} build profile`);
 }
+if (easConfig.build?.production?.distribution !== "store") {
+  failures.push('eas.json production profile must use "store" distribution');
+}
+if (easConfig.build?.production?.ios?.simulator !== false) {
+  failures.push("eas.json production iOS build must set simulator to false");
+}
 
 for (const forbidden of ["expo-audio", "expo-video", "expo-notifications", "POST_NOTIFICATIONS"]) {
   if (appConfig.includes(forbidden)) {
