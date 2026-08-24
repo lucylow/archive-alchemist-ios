@@ -183,3 +183,6 @@
 - [x] Detect drift between the primary logo and required copied branding assets
 - [x] Add regression coverage for mismatched branding asset contents
 
+- [x] Verify Expo configuration points to every validated branding asset path
+- [x] Add regression coverage for stale or mismatched Expo branding references
+

@@ -53,6 +53,12 @@ for (const expected of [
   "NSPrivacyAccessedAPICategoryUserDefaults",
   'NSPrivacyAccessedAPITypeReasons: ["CA92.1"]',
   'ITSAppUsesNonExemptEncryption": false',
+  'icon: "./assets/images/icon.png"',
+  'image: "./assets/images/splash-icon.png"',
+  'favicon: "./assets/images/favicon.png"',
+  'foregroundImage: "./assets/images/android-icon-foreground.png"',
+  'backgroundImage: "./assets/images/android-icon-background.png"',
+  'monochromeImage: "./assets/images/android-icon-monochrome.png"',
 ]) {
   if (!appConfig.includes(expected)) failures.push(`app.config.ts does not contain ${expected}`);
 }

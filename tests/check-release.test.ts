@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -31,6 +31,12 @@ function createFixture(directory: string, production: Record<string, unknown>) {
     "NSPrivacyAccessedAPICategoryUserDefaults",
     'NSPrivacyAccessedAPITypeReasons: ["CA92.1"]',
     'ITSAppUsesNonExemptEncryption": false',
+    'icon: "./assets/images/icon.png"',
+    'image: "./assets/images/splash-icon.png"',
+    'favicon: "./assets/images/favicon.png"',
+    'foregroundImage: "./assets/images/android-icon-foreground.png"',
+    'backgroundImage: "./assets/images/android-icon-background.png"',
+    'monochromeImage: "./assets/images/android-icon-monochrome.png"',
   ].join("\n");
   const easConfig = {
     build: {
@@ -98,6 +104,24 @@ describe("release preflight failures", () => {
       const result = runPreflight(directory);
       expect(result.status).toBe(1);
       expect(result.output).toContain('production profile must use "store" distribution');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects stale Expo branding references", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const appConfigPath = join(directory, "app.config.ts");
+      const appConfig = readFileSync(appConfigPath, "utf8").replace(
+        'icon: "./assets/images/icon.png"',
+        'icon: "./assets/images/old-icon.png"',
+      );
+      writeFileSync(appConfigPath, appConfig);
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain('app.config.ts does not contain icon: "./assets/images/icon.png"');
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
