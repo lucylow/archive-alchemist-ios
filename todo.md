@@ -231,3 +231,6 @@
 - [x] Export the currently filtered and sorted archive preview results
 - [x] Label filtered exports with the result count for user clarity
 - [x] Add deterministic coverage for preview-result export selection
+- [x] Add row-level selection to the imported archive preview
+- [x] Export only selected archive preview rows
+- [x] Add deterministic coverage for selection and selected-result behavior

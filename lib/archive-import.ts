@@ -50,6 +50,13 @@ export const filterArchiveItems = (items: ArchiveItem[], query: string, year: st
 
 export type ArchiveSort = "newest" | "views";
 
+export const getArchiveItemKey = (item: ArchiveItem) => `${item.title}\u0000${item.year}`;
+
+export const getSelectedArchiveItems = (items: ArchiveItem[], selectedKeys: string[]) => {
+  const selected = new Set(selectedKeys);
+  return items.filter((item) => selected.has(getArchiveItemKey(item)));
+};
+
 const viewCount = (value: string) => {
   const normalized = value.trim().toLowerCase();
   const amount = Number.parseFloat(normalized.replace(/[^0-9.]/g, "")) || 0;

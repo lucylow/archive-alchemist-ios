@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -147,6 +147,7 @@ export default function HomeScreen() {
   const [previewQuery, setPreviewQuery] = useState("");
   const [previewYear, setPreviewYear] = useState("");
   const [previewSort, setPreviewSort] = useState<ArchiveSort>("newest");
+  const [selectedPreviewKeys, setSelectedPreviewKeys] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -390,6 +391,7 @@ export default function HomeScreen() {
       setPreviewQuery("");
       setPreviewYear("");
       setPreviewSort("newest");
+      setSelectedPreviewKeys([]);
       setNotice(`${getArchivePreviewLabel(items, asset.name)}. Review and confirm before replacing the current archive.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Archive import failed. Choose a JSON or CSV manifest and try again.");
@@ -399,6 +401,7 @@ export default function HomeScreen() {
   };
 
   const previewMatches = useMemo(() => sortArchiveItems(filterArchiveItems(pendingArchiveItems, previewQuery, previewYear), previewSort), [pendingArchiveItems, previewQuery, previewYear, previewSort]);
+  const selectedPreviewItems = useMemo(() => getSelectedArchiveItems(previewMatches, selectedPreviewKeys), [previewMatches, selectedPreviewKeys]);
 
   const commitPendingArchive = () => {
     if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
@@ -425,8 +428,9 @@ export default function HomeScreen() {
     setPendingArchiveName(null);
     setPreviewQuery("");
     setPreviewYear("");
-    setPreviewSort("newest");
-    setNotice("Archive preview discarded. Your current archive is unchanged.");
+          setPreviewSort("newest");
+      setSelectedPreviewKeys([]);
+      setNotice("Archive preview discarded. Your current archive is unchanged.");
   };
 
   const requestMindsInsight = () => {
@@ -564,14 +568,14 @@ export default function HomeScreen() {
   };
 
   const exportPreviewResults = () => {
-    if (previewMatches.length === 0) {
-      setNotice("There are no matching archive items to export.");
+    if (selectedPreviewItems.length === 0) {
+      setNotice("Select at least one matching archive item to export.");
       return;
     }
-    Alert.alert("Export preview results", `${previewMatches.length} matching item${previewMatches.length === 1 ? "" : "s"} will be shared.`, [
+    Alert.alert("Export selected preview rows", `${selectedPreviewItems.length} selected item${selectedPreviewItems.length === 1 ? "" : "s"} will be shared.`, [
       { text: "Cancel", style: "cancel" },
-      { text: "JSON", onPress: () => { void shareImportedArchive("json", previewMatches, "preview"); } },
-      { text: "CSV", onPress: () => { void shareImportedArchive("csv", previewMatches, "preview"); } },
+      { text: "JSON", onPress: () => { void shareImportedArchive("json", selectedPreviewItems, "selected-preview"); } },
+      { text: "CSV", onPress: () => { void shareImportedArchive("csv", selectedPreviewItems, "selected-preview"); } },
     ]);
   };
 
@@ -586,6 +590,7 @@ export default function HomeScreen() {
       setPreviewQuery("");
       setPreviewYear("");
       setPreviewSort("newest");
+      setSelectedPreviewKeys([]);
       setNotice("Imported archive cleared. Mind memory is still available.");
     } catch {
       if (screenActiveRef.current) setNotice("Imported archive could not be cleared. Try again from this device.");
@@ -875,13 +880,19 @@ export default function HomeScreen() {
                   <SecondaryButton label={previewSort === "newest" ? "Newest first" : "Sort by newest"} accessibilityHint="Sorts preview rows by publication year, newest first." onPress={() => setPreviewSort("newest")} />
                   <SecondaryButton label={previewSort === "views" ? "Highest views" : "Sort by views"} accessibilityHint="Sorts preview rows by highest view count first." onPress={() => setPreviewSort("views")} />
                 </View>
-                <View accessible accessibilityLabel={`Preview rows: ${previewMatches.slice(0, 3).map(formatArchivePreviewRow).join("; ") || "No matching rows"}`}>
-                  {previewMatches.slice(0, 3).map((item) => (
-                    <Text key={`${item.title}-${item.year}`} style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
-                  ))}
+                <View style={styles.actionRow}>
+                  <SecondaryButton label={selectedPreviewItems.length > 0 ? `${selectedPreviewItems.length} selected` : "Select rows"} accessibilityHint="Selects visible preview rows for export." onPress={() => setSelectedPreviewKeys(previewMatches.map(getArchiveItemKey))} />
+                  <SecondaryButton label="Clear selection" accessibilityHint="Clears all preview row selections." onPress={() => setSelectedPreviewKeys([])} />
+                </View>
+                <View accessible accessibilityLabel={`Preview rows: ${previewMatches.slice(0, 3).map((item) => `${selectedPreviewKeys.includes(getArchiveItemKey(item)) ? "Selected " : ""}${formatArchivePreviewRow(item)}`).join("; ") || "No matching rows"}`}>
+                  {previewMatches.slice(0, 3).map((item) => {
+                    const key = getArchiveItemKey(item);
+                    const selected = selectedPreviewKeys.includes(key);
+                    return <Pressable key={key} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel={formatArchivePreviewRow(item)} onPress={() => setSelectedPreviewKeys((current) => current.includes(key) ? current.filter((value) => value !== key) : [...current, key])} style={({ pressed }) => [styles.previewRow, selected && styles.previewRowSelected, pressed && styles.pressed]}><Text style={styles.previewCheck}>{selected ? "✓" : "○"}</Text><Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text></Pressable>;
+                  })}
                 </View>
                 <View style={styles.actionRow}>
-                  <SecondaryButton label={previewMatches.length > 0 ? `Export ${previewMatches.length} result${previewMatches.length === 1 ? "" : "s"}` : "Export results"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls." onPress={exportPreviewResults} />
+                  <SecondaryButton label={selectedPreviewItems.length > 0 ? `Export ${selectedPreviewItems.length} selected` : "Export selected"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls." onPress={exportPreviewResults} />
                 </View>
                 <View style={styles.actionRow}>
                   <SecondaryButton label="Use this archive" accessibilityHint="Replaces the current imported archive with this reviewed preview." onPress={confirmPendingArchive} />
@@ -1275,4 +1286,7 @@ const styles = StyleSheet.create({
   noticeDismiss: { borderColor: "#6C5B9D", borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
   noticeDismissText: { color: "#F8F4FF", fontSize: 12, fontWeight: "800" },
   input: { backgroundColor: "#100B24", borderColor: "#403365", borderWidth: 1, borderRadius: 12, color: "#F8F4FF", fontSize: 15, paddingHorizontal: 14, paddingVertical: 11 },
+  previewRow: { flexDirection: "row", alignItems: "center", gap: 9, borderBottomColor: "#302451", borderBottomWidth: 1, paddingVertical: 8 },
+  previewRowSelected: { backgroundColor: "#241842", borderRadius: 8, paddingHorizontal: 8 },
+  previewCheck: { color: "#F4C95D", fontSize: 18, fontWeight: "800", width: 20 },
 });
