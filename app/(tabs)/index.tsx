@@ -7,7 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
 import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
-import { canAutoPost, estimateTimeSaved, formatTimeSaved } from "@/lib/workflow";
+import { canAutoPost, estimateTimeSaved, formatTimeSaved, getPlatformPerformance } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
@@ -902,7 +902,7 @@ export default function HomeScreen() {
               {selectedPlatforms.map((platform) => (
                 <View key={platform} style={styles.mindRow}>
                   <Text style={styles.platformName}>{platform}</Text>
-                  <Text style={styles.goldText}>{platform === "Spotify" ? "18K listens" : platform === "Substack" ? "6.4K reads" : "37K views"}</Text>
+                  <Text style={styles.goldText}>{getPlatformPerformance(platform)}</Text>
                 </View>
               ))}
             </View>

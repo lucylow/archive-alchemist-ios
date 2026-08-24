@@ -9,6 +9,19 @@ export const outputCatalog: Record<WorkflowPlatform, string> = {
   TikTok: "TikTok / Reels Clip (0:58)",
 };
 
+export const platformPerformance: Record<WorkflowPlatform, string> = {
+  YouTube: "37K views",
+  Spotify: "18K listens",
+  Substack: "6.4K reads",
+  Twitter: "22K impressions",
+  Instagram: "28K views",
+  TikTok: "41K views",
+};
+
+export function getPlatformPerformance(platform: WorkflowPlatform) {
+  return platformPerformance[platform];
+}
+
 export function getSelectedOutputs(platforms: WorkflowPlatform[]) {
   return platforms.map((platform) => outputCatalog[platform]);
 }

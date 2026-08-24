@@ -162,3 +162,5 @@
 - [x] Confirm the OAuth callback has no independent unguarded accessibility read; cover the shared fallback helper deterministically
 - [x] Derive estimated time saved from the selected output deliverables
 - [x] Add deterministic coverage for selected-output time-saved formatting
+- [x] Replace generic per-platform performance copy with platform-specific performance metadata
+- [x] Add deterministic coverage for platform performance labels

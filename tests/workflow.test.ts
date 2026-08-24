@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canAutoPost, estimateTimeSaved, formatTimeSaved, getSelectedOutputs, platformCountLabel } from "../lib/workflow";
+import { canAutoPost, estimateTimeSaved, formatTimeSaved, getPlatformPerformance, getSelectedOutputs, platformCountLabel } from "../lib/workflow";
 
 describe("Archive Alchemist workflow rules", () => {
   it("maps selected platforms to platform-specific outputs", () => {
@@ -15,6 +15,12 @@ describe("Archive Alchemist workflow rules", () => {
     expect(canAutoPost(true, [selected[0]], selected)).toBe(false);
     expect(canAutoPost(true, selected, selected)).toBe(true);
     expect(canAutoPost(false, [], selected)).toBe(true);
+  });
+
+  it("returns platform-specific performance labels", () => {
+    expect(getPlatformPerformance("Spotify")).toBe("18K listens");
+    expect(getPlatformPerformance("Twitter")).toBe("22K impressions");
+    expect(getPlatformPerformance("TikTok")).toBe("41K views");
   });
 
   it("estimates time from the selected platform outputs", () => {
