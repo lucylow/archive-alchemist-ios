@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
+import { clearArchiveItems, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -17,6 +17,10 @@ describe("parseArchiveManifest", () => {
     expect(parseArchiveManifest('title,year,views\n"A, B",2022,8.7K', "archive.csv")).toEqual([
       { title: "A, B", year: 2022, views: "8.7K" },
     ]);
+  });
+
+  it("formats a concise import preview label", () => {
+    expect(getArchivePreviewLabel([{ title: "Video", year: 2024, views: "1K" }], "archive.csv")).toBe("1 item ready from archive.csv");
   });
 
   it("returns a fresh empty state for imported-archive clearing", () => {

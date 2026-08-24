@@ -210,3 +210,6 @@
 - [x] Add deterministic coverage for imported archive persistence and invalid-storage handling
 - [x] Add a user-confirmed action to clear imported archive items without clearing Mind memory
 - [x] Add deterministic coverage for imported-archive clear-state behavior
+- [x] Preview imported archive items before replacing the current archive
+- [x] Require explicit confirmation before committing a new imported archive
+- [x] Add deterministic coverage for import preview state and replacement behavior

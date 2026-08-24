@@ -22,6 +22,9 @@ const normalizeViews = (value: unknown) => {
 
 export const clearArchiveItems = (): ArchiveItem[] => [];
 
+export const getArchivePreviewLabel = (items: ArchiveItem[], filename: string) =>
+  `${items.length} item${items.length === 1 ? "" : "s"} ready from ${filename}`;
+
 export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<ArchiveItem>;

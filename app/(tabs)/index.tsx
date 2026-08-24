@@ -14,7 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
+import { clearArchiveItems, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -140,6 +140,8 @@ export default function HomeScreen() {
   const [phase, setPhase] = useState<Phase>("home");
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["YouTube", "Instagram", "TikTok"]);
   const [archiveItems, setArchiveItems] = useState<ArchiveItem[]>([]);
+  const [pendingArchiveItems, setPendingArchiveItems] = useState<ArchiveItem[]>([]);
+  const [pendingArchiveName, setPendingArchiveName] = useState<string | null>(null);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -378,13 +380,40 @@ export default function HomeScreen() {
       const asset = result.assets[0];
       const response = await fetch(asset.uri);
       const items = parseArchiveManifest(await response.text(), asset.name);
-      setArchiveItems(items);
-      setNotice(`Imported ${items.length} archive item${items.length === 1 ? "" : "s"} from ${asset.name}.`);
+      setPendingArchiveItems(items);
+      setPendingArchiveName(asset.name);
+      setNotice(`${getArchivePreviewLabel(items, asset.name)}. Review and confirm before replacing the current archive.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Archive import failed. Choose a JSON or CSV manifest and try again.");
     } finally {
       if (screenActiveRef.current) setIsImportingArchive(false);
     }
+  };
+
+  const commitPendingArchive = () => {
+    if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
+    setArchiveItems(pendingArchiveItems);
+    setPendingArchiveItems([]);
+    setNotice(`Imported ${pendingArchiveItems.length} archive item${pendingArchiveItems.length === 1 ? "" : "s"} from ${pendingArchiveName}.`);
+    setPendingArchiveName(null);
+  };
+
+  const confirmPendingArchive = () => {
+    if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
+    Alert.alert(
+      "Use this archive?",
+      `${getArchivePreviewLabel(pendingArchiveItems, pendingArchiveName)}. This will replace the current imported archive, if present.`,
+      [
+        { text: "Keep current", style: "cancel" },
+        { text: "Use archive", onPress: commitPendingArchive },
+      ],
+    );
+  };
+
+  const discardPendingArchive = () => {
+    setPendingArchiveItems([]);
+    setPendingArchiveName(null);
+    setNotice("Archive preview discarded. Your current archive is unchanged.");
   };
 
   const requestMindsInsight = () => {
@@ -497,6 +526,8 @@ export default function HomeScreen() {
       await AsyncStorage.removeItem(ARCHIVE_KEY);
       if (!screenActiveRef.current) return;
       setArchiveItems(clearArchiveItems());
+      setPendingArchiveItems([]);
+      setPendingArchiveName(null);
       setNotice("Imported archive cleared. Mind memory is still available.");
     } catch {
       if (screenActiveRef.current) setNotice("Imported archive could not be cleared. Try again from this device.");
@@ -769,6 +800,17 @@ export default function HomeScreen() {
               accessibilityHint="Opens Files so you can select a JSON or CSV archive manifest from this device."
               onPress={importArchive}
             />
+            {pendingArchiveItems.length > 0 && pendingArchiveName && (
+              <View style={styles.panel} accessible accessibilityLiveRegion="polite">
+                <Text style={styles.sectionTitle}>Import preview</Text>
+                <Text style={styles.bodyText}>{getArchivePreviewLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
+                <Text style={styles.mindDescription}>{pendingArchiveItems.slice(0, 3).map((item) => item.title).join(" · ")}</Text>
+                <View style={styles.actionRow}>
+                  <SecondaryButton label="Use this archive" accessibilityHint="Replaces the current imported archive with this reviewed preview." onPress={confirmPendingArchive} />
+                  <SecondaryButton label="Discard preview" accessibilityHint="Discards this preview and keeps the current imported archive unchanged." onPress={discardPendingArchive} />
+                </View>
+              </View>
+            )}
             <View style={styles.rowBetween}>
               <Text style={styles.selectionSummary}>{selectedPlatforms.length} selected · {archiveItems.length > 0 ? `${archiveItems.length} imported items` : "demo archive"}</Text>
               <View style={styles.actionGroup}>
