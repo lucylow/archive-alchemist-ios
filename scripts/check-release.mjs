@@ -18,7 +18,7 @@ const assetFiles = requiredFiles.slice(3);
 const forbiddenProductionPaths = ["app/dev"];
 const sensitiveRootFilePatterns = [
   /^\.env(?:\.(?:local|development|preview|production))?$/i,
-  /\.(?:pem|p8|key|mobileprovision|cer)$/i,
+  /\.(?:pem|p8|key|p12|pfx|jks|keystore|mobileprovision|cer)$/i,
   /^credentials(?:\..*)?\.json$/i,
 ];
 const approvedRouteFiles = new Set([

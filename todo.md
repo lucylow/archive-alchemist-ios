@@ -244,3 +244,6 @@
 - [x] Detect sensitive private files in production release inputs
 - [x] Add deterministic release-preflight coverage for forbidden private artifacts
 
+- [x] Expand sensitive private-file detection to cover common Android and iOS signing artifacts such as `.p12` and `.jks`
+- [x] Add deterministic regression coverage for expanded signing-artifact detection
+

@@ -264,10 +264,14 @@ describe("release preflight failures", () => {
       createFixture(directory, { distribution: "store", ios: { simulator: false } });
       writeFileSync(join(directory, ".env.production"), "EXPO_PUBLIC_API_BASE_URL=https://api.example.com");
       writeFileSync(join(directory, "signing.p8"), "private-key");
+      writeFileSync(join(directory, "distribution.p12"), "certificate");
+      writeFileSync(join(directory, "upload-key.jks"), "keystore");
       const result = runPreflight(directory);
       expect(result.status).toBe(1);
       expect(result.output).toContain("Sensitive root file .env.production must be removed before release");
       expect(result.output).toContain("Sensitive root file signing.p8 must be removed before release");
+      expect(result.output).toContain("Sensitive root file distribution.p12 must be removed before release");
+      expect(result.output).toContain("Sensitive root file upload-key.jks must be removed before release");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
