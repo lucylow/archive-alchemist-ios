@@ -30,6 +30,15 @@ describe("save request gate", () => {
     expect(gate.tryStart()).toBe(true);
   });
 
+  it("allows export gate cleanup to be repeated during unmount and completion", () => {
+    const exportGate = createSaveRequestGate();
+
+    expect(exportGate.tryStart()).toBe(true);
+    exportGate.finish();
+    exportGate.finish();
+    expect(exportGate.tryStart()).toBe(true);
+  });
+
   it("keeps repeated finish calls harmless", () => {
     const gate = createSaveRequestGate();
 

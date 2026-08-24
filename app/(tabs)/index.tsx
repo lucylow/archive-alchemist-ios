@@ -232,8 +232,9 @@ export default function HomeScreen() {
     return () => {
       screenActiveRef.current = false;
       mindsRequestGate.cancel();
+      archiveExportRequestGate.finish();
     };
-  }, [mindsRequestGate]);
+  }, [mindsRequestGate, archiveExportRequestGate]);
 
   useEffect(() => {
     let mounted = true;

@@ -292,3 +292,6 @@
 - [x] Add explicit export-preparation busy state to archive sharing
 - [x] Prevent duplicate export taps while a share file is being prepared
 - [x] Add deterministic coverage for the export request gate
+- [x] Make export busy-state cleanup safe when the screen unmounts
+- [x] Prevent stale export completion notices after navigation or unmount
+- [x] Add deterministic coverage for export lifecycle invalidation
