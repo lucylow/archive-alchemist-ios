@@ -283,3 +283,6 @@
 - [x] Reconcile full-browser selections when filtered records leave the archive
 - [x] Show accessible selected-count and empty-state feedback in the full browser
 - [x] Add deterministic coverage for full-browser selection reconciliation
+- [x] Add a dedicated review step for selected full-browser rows before export
+- [x] Show selected row details and a clear cancel path before sharing
+- [x] Add deterministic coverage for selected-row review wording and counts

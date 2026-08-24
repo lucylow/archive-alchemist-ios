@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, getArchiveBrowserItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_BROWSER_ITEMS, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, getArchiveBrowserItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_BROWSER_ITEMS, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("archive browser window", () => {
   it("caps large imports without mutating the source list", () => {
@@ -54,6 +54,11 @@ describe("parseArchiveManifest", () => {
     const secondKey = getArchiveItemKey(second);
     expect(toggleArchiveSelection([firstKey], [second])).toEqual([firstKey, secondKey]);
     expect(toggleArchiveSelection([firstKey, secondKey], [second])).toEqual([firstKey]);
+  });
+
+  it("formats selected-row export review wording with correct singular and plural counts", () => {
+    expect(getArchiveExportReviewLabel(1)).toBe("1 selected item will be exported. Review the visible rows before choosing a format.");
+    expect(getArchiveExportReviewLabel(2)).toBe("2 selected items will be exported. Review the visible rows before choosing a format.");
   });
 
   it("formats a restored-preview notice with the source name and count", () => {

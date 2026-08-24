@@ -17,7 +17,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -156,6 +156,7 @@ export default function HomeScreen() {
   const [browserYear, setBrowserYear] = useState("");
   const [browserSort, setBrowserSort] = useState<ArchiveSort>("newest");
   const [selectedBrowserKeys, setSelectedBrowserKeys] = useState<string[]>([]);
+  const [selectedBrowserReviewVisible, setSelectedBrowserReviewVisible] = useState(false);
   const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -656,11 +657,7 @@ export default function HomeScreen() {
       setNotice("Select at least one visible archive item to export.");
       return;
     }
-    Alert.alert("Export selected archive rows", `${selectedBrowserItems.length} selected item${selectedBrowserItems.length === 1 ? "" : "s"} will be shared.`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "JSON", onPress: () => { void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); } },
-      { text: "CSV", onPress: () => { void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); } },
-    ]);
+    setSelectedBrowserReviewVisible(true);
   };
 
   const clearImportedArchive = async () => {
@@ -1341,6 +1338,25 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
+      <Modal visible={selectedBrowserReviewVisible} transparent animationType="slide" onRequestClose={() => setSelectedBrowserReviewVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.detailCard} accessible accessibilityLabel={`Review ${selectedBrowserItems.length} selected archive item${selectedBrowserItems.length === 1 ? "" : "s"} before export`}>
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitle}>Review export</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Cancel archive export review" onPress={() => setSelectedBrowserReviewVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Cancel</Text></Pressable>
+            </View>
+            <Text style={styles.bodyText}>{getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
+            <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
+              {selectedBrowserItems.slice(0, 20).map((item) => <Text key={getArchiveItemKey(item)} style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text>)}
+              {selectedBrowserItems.length > 20 && <Text style={styles.sourceSummary}>Showing the first 20 selected rows.</Text>}
+            </ScrollView>
+            <View style={styles.actionRow}>
+              <SecondaryButton label="Share JSON" accessibilityHint="Shares the reviewed selected archive rows as a normalized JSON file." onPress={() => { setSelectedBrowserReviewVisible(false); void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); }} />
+              <SecondaryButton label="Share CSV" accessibilityHint="Shares the reviewed selected archive rows as a normalized CSV file." onPress={() => { setSelectedBrowserReviewVisible(false); void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); }} />
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={archiveDetail !== null} transparent animationType="slide" onRequestClose={() => setArchiveDetail(null)}>
         <View style={styles.modalBackdrop}>
           {archiveDetail && (
@@ -1465,6 +1481,7 @@ const styles = StyleSheet.create({
   browserList: { flexGrow: 0 },
   browserListContent: { gap: 10, paddingBottom: 12 },
   emptyStateText: { color: "#B8A8D6", fontSize: 14, paddingVertical: 18, textAlign: "center" },
+  reviewRow: { color: "#D8D0EA", fontSize: 13, lineHeight: 19, paddingVertical: 7, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
   browserRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
   browserCheck: { alignItems: "center", justifyContent: "center", minWidth: 28, minHeight: 36, borderRadius: 8 },
   browserCheckSelected: { backgroundColor: "#241842" },

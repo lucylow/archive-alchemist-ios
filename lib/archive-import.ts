@@ -45,6 +45,9 @@ export const getArchivePreviewContextLabel = (items: ArchiveItem[], selectedCoun
 export const getArchivePreviewLabel = (items: ArchiveItem[], fileName: string | null) =>
   `${items.length} item${items.length === 1 ? "" : "s"} ready from ${fileName}`;
 
+export const getArchiveExportReviewLabel = (count: number) =>
+  `${count} selected item${count === 1 ? "" : "s"} will be exported. Review the visible rows before choosing a format.`;
+
 export const formatArchivePreviewRow = (item: ArchiveItem) =>
   `${item.title} · ${item.year} · ${item.views} views${item.sourceUrl ? ` · ${item.sourceUrl}` : ""}`;
 
