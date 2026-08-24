@@ -50,7 +50,6 @@ export default function OAuthCallback() {
               await Auth.setUserInfo(userInfo);
             } catch {
             }
-          } else if (params.user) {
           }
 
           if (!active) return;
@@ -160,7 +159,6 @@ export default function OAuthCallback() {
               lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
             };
             await Auth.setUserInfo(userInfo);
-          } else {
           }
 
           if (!active) return;

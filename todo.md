@@ -194,3 +194,5 @@
 - [x] Add deterministic coverage for hydration notice lifecycle invalidation
 - [x] Skip invalid-storage cleanup writes after hydration screen unmount
 - [x] Add deterministic coverage for hydration cleanup-write invalidation
+- [x] Remove empty OAuth callback branches while preserving safe profile parsing
+- [x] Add deterministic coverage for malformed optional OAuth profile payloads
