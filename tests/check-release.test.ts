@@ -272,6 +272,20 @@ describe("release preflight failures", () => {
     }
   });
 
+  it("rejects an unexpected nested JavaScript Expo Router route file", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      mkdirSync(join(directory, "app/tools/nested"), { recursive: true });
+      writeFileSync(join(directory, "app/tools/nested/diagnostics.js"), "export default function Diagnostics() { return null; }");
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("Unexpected Expo Router production route file app/tools/nested/diagnostics.js");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("rejects a development-only Expo route directory", () => {
     const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
     try {

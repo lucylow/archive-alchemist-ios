@@ -100,7 +100,7 @@ for (const relativePath of forbiddenProductionPaths) {
     failures.push(`Production build must not include development-only route path ${relativePath}`);
   }
 }
-for (const routeFile of collectRouteFiles(resolve(root, "app"))) {
+for (const routeFile of collectRouteFiles(resolve(root, "app")).sort()) {
   if (!approvedRouteFiles.has(routeFile)) failures.push(`Unexpected Expo Router production route file ${routeFile}`);
 }
 reportFailures();

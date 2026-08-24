@@ -238,3 +238,6 @@
 - [x] Detect unapproved Expo Router production route files during release preflight
 - [x] Add deterministic coverage for unexpected production routes
 
+- [x] Make production route allowlist validation deterministic for nested and alternate route file extensions
+- [x] Add regression coverage for unexpected nested route extensions
+
