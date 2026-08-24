@@ -274,3 +274,6 @@
 - [x] Add a bounded full-archive browser for imported records
 - [x] Add accessible navigation between the overview and full archive list
 - [x] Add deterministic coverage for full-archive item-window behavior
+- [x] Add title search and year filtering inside the full archive browser
+- [x] Add newest-year and highest-view sorting inside the full archive browser
+- [x] Add deterministic coverage for full-browser filtering and sorting

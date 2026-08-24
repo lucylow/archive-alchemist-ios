@@ -152,6 +152,9 @@ export default function HomeScreen() {
   const [selectedPreviewKeys, setSelectedPreviewKeys] = useState<string[]>([]);
   const [archiveDetail, setArchiveDetail] = useState<ArchiveItem | null>(null);
   const [archiveBrowserVisible, setArchiveBrowserVisible] = useState(false);
+  const [browserQuery, setBrowserQuery] = useState("");
+  const [browserYear, setBrowserYear] = useState("");
+  const [browserSort, setBrowserSort] = useState<ArchiveSort>("newest");
   const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -169,6 +172,7 @@ export default function HomeScreen() {
     () => archiveItems.length > 0 ? archiveItems.map((item) => ({ ...item, score: 90, icon: "✦" })) : discoveries,
     [archiveItems],
   );
+  const browserItems = useMemo(() => sortArchiveItems(filterArchiveItems(getArchiveBrowserItems(archiveItems), browserQuery, browserYear), browserSort), [archiveItems, browserQuery, browserSort, browserYear]);
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
@@ -1288,9 +1292,15 @@ export default function HomeScreen() {
               <Text style={styles.sectionTitle}>Archive browser</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Close archive browser" onPress={() => setArchiveBrowserVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
             </View>
-            <Text style={styles.sourceSummary}>Showing {getArchiveBrowserItems(archiveItems).length} of {archiveItems.length} imported items.</Text>
+            <Text style={styles.sourceSummary}>Showing {browserItems.length} matching items from a bounded window of {getArchiveBrowserItems(archiveItems).length}.</Text>
+            <TextInput value={browserQuery} onChangeText={setBrowserQuery} placeholder="Search titles" placeholderTextColor="#7D7099" accessibilityLabel="Search full archive titles" style={styles.input} returnKeyType="search" />
+            <TextInput value={browserYear} onChangeText={(value) => setBrowserYear(value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Filter year" placeholderTextColor="#7D7099" accessibilityLabel="Filter full archive by year" keyboardType="number-pad" style={styles.input} />
+            <View style={styles.rowWrap}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Sort full archive by newest year" accessibilityState={{ selected: browserSort === "newest" }} onPress={() => setBrowserSort("newest")} style={({ pressed }) => [styles.filterChip, browserSort === "newest" && styles.filterChipActive, pressed && styles.pressed]}><Text style={styles.filterChipText}>Newest</Text></Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Sort full archive by most views" accessibilityState={{ selected: browserSort === "views" }} onPress={() => setBrowserSort("views")} style={({ pressed }) => [styles.filterChip, browserSort === "views" && styles.filterChipActive, pressed && styles.pressed]}><Text style={styles.filterChipText}>Most views</Text></Pressable>
+            </View>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent}>
-              {getArchiveBrowserItems(archiveItems).map((item) => (
+              {browserItems.map((item) => (
                 <View key={getArchiveItemKey(item)} style={styles.browserRow}>
                   {renderArchiveThumbnail(item)}
                   <View style={styles.flexOne}><Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text><View style={styles.rowWrap}><Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}</View></View>
@@ -1425,6 +1435,9 @@ const styles = StyleSheet.create({
   browserListContent: { gap: 10, paddingBottom: 12 },
   browserRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
   rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  filterChip: { borderColor: "#3B2C62", borderWidth: 1, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 12 },
+  filterChipActive: { backgroundColor: "#F4C95D", borderColor: "#F4C95D" },
+  filterChipText: { color: "#F8F4FF", fontSize: 12, fontWeight: "800" },
   detailCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10 },
   detailTitle: { color: "#F8F4FF", fontSize: 24, fontWeight: "800", lineHeight: 30 },
   archiveThumbnail: { width: 56, height: 40, borderRadius: 8, backgroundColor: "#100B24" },
