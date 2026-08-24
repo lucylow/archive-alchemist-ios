@@ -7,16 +7,9 @@ import {
   writeRequiredStorageValue,
   writeStorageValue,
 } from "./storage-safety";
+import { normalizeCachedUser, type CachedUser } from "./user-cache";
 
-export type User = {
-  id: number;
-  role?: "user" | "admin";
-  openId: string;
-  name: string | null;
-  email: string | null;
-  loginMethod: string | null;
-  lastSignedIn: Date;
-};
+export type User = CachedUser;
 
 export async function getSessionToken(): Promise<string | null> {
   if (Platform.OS === "web") {
@@ -55,7 +48,7 @@ export async function getUserInfo(): Promise<User | null> {
   }
 
   try {
-    return JSON.parse(info) as User;
+    return normalizeCachedUser(JSON.parse(info));
   } catch {
     return null;
   }

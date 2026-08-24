@@ -166,3 +166,5 @@
 
 - [x] Add deterministic coverage for SecureStore read, write, and delete failure paths
 
+- [x] Normalize cached user date fields after JSON deserialization
+
