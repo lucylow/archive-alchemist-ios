@@ -21,6 +21,8 @@ export default function OAuthCallback() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
     const handleCallback = async () => {
       try {
         // Check for sessionToken in params first (web OAuth callback from server redirect)
@@ -159,11 +161,12 @@ export default function OAuthCallback() {
           } else {
           }
 
+          if (!active) return;
           setStatus("success");
 
           // Redirect to home after a short delay
-          setTimeout(() => {
-            router.replace("/(tabs)");
+          redirectTimer = setTimeout(() => {
+            if (active) router.replace("/(tabs)");
           }, 1000);
         } else {
           setStatus("error");
@@ -175,7 +178,11 @@ export default function OAuthCallback() {
       }
     };
 
-    handleCallback();
+    void handleCallback();
+    return () => {
+      active = false;
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [params.code, params.state, params.error, params.sessionToken, params.user, router]);
 
   return (

@@ -176,3 +176,5 @@
 - [x] Add deterministic coverage for late insight persistence invalidation
 - [x] Remove routine OAuth callback logs from the production mobile bundle
 - [x] Add deterministic coverage for metadata-only OAuth callback diagnostics
+- [x] Cancel the OAuth success redirect timer when the callback screen unmounts
+- [x] Add deterministic coverage for OAuth redirect timer cleanup
