@@ -533,8 +533,11 @@ export default function HomeScreen() {
     }
   };
 
-  const shareImportedArchive = async (format: "json" | "csv") => {
-    if (archiveItems.length === 0) return;
+  const shareImportedArchive = async (format: "json" | "csv", items = archiveItems, exportLabel = "archive") => {
+    if (items.length === 0) {
+      if (screenActiveRef.current) setNotice("There are no matching archive items to export.");
+      return;
+    }
     try {
       if (!(await Sharing.isAvailableAsync())) {
         if (screenActiveRef.current) setNotice("Sharing is not available on this device.");
@@ -542,8 +545,8 @@ export default function HomeScreen() {
       }
       const extension = format === "json" ? "json" : "csv";
       const mimeType = format === "json" ? "application/json" : "text/csv";
-      const contents = format === "json" ? serializeArchiveManifest(archiveItems) : serializeArchiveCsv(archiveItems);
-      const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-export.${extension}`;
+      const contents = format === "json" ? serializeArchiveManifest(items) : serializeArchiveCsv(items);
+      const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-${exportLabel}-${items.length}.${extension}`;
       await FileSystem.writeAsStringAsync(fileUri, contents, { encoding: FileSystem.EncodingType.UTF8 });
       await Sharing.shareAsync(fileUri, { mimeType, dialogTitle: `Share Archive Alchemist ${format.toUpperCase()} export` });
       if (screenActiveRef.current) setNotice(`Archive ${format.toUpperCase()} export is ready to share.`);
@@ -557,6 +560,18 @@ export default function HomeScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "JSON", onPress: () => { void shareImportedArchive("json"); } },
       { text: "CSV", onPress: () => { void shareImportedArchive("csv"); } },
+    ]);
+  };
+
+  const exportPreviewResults = () => {
+    if (previewMatches.length === 0) {
+      setNotice("There are no matching archive items to export.");
+      return;
+    }
+    Alert.alert("Export preview results", `${previewMatches.length} matching item${previewMatches.length === 1 ? "" : "s"} will be shared.`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "JSON", onPress: () => { void shareImportedArchive("json", previewMatches, "preview"); } },
+      { text: "CSV", onPress: () => { void shareImportedArchive("csv", previewMatches, "preview"); } },
     ]);
   };
 
@@ -864,6 +879,9 @@ export default function HomeScreen() {
                   {previewMatches.slice(0, 3).map((item) => (
                     <Text key={`${item.title}-${item.year}`} style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
                   ))}
+                </View>
+                <View style={styles.actionRow}>
+                  <SecondaryButton label={previewMatches.length > 0 ? `Export ${previewMatches.length} result${previewMatches.length === 1 ? "" : "s"}` : "Export results"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls." onPress={exportPreviewResults} />
                 </View>
                 <View style={styles.actionRow}>
                   <SecondaryButton label="Use this archive" accessibilityHint="Replaces the current imported archive with this reviewed preview." onPress={confirmPendingArchive} />

@@ -228,3 +228,6 @@
 - [x] Add CSV serialization for normalized imported archive data
 - [x] Let users choose JSON or CSV from the archive export action
 - [x] Add deterministic coverage for CSV quoting and export formatting
+- [x] Export the currently filtered and sorted archive preview results
+- [x] Label filtered exports with the result count for user clarity
+- [x] Add deterministic coverage for preview-result export selection
