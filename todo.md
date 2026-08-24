@@ -258,3 +258,6 @@
 - [x] Add tappable HTTPS source links to confirmed archive records
 - [x] Keep confirmed source-link failures user-facing and metadata-only
 - [x] Add deterministic coverage for confirmed archive link eligibility
+- [x] Add a focused detail view for confirmed archive records
+- [x] Provide accessible back navigation and source-link access in the detail view
+- [x] Add deterministic coverage for archive detail summary formatting

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -58,6 +58,11 @@ describe("parseArchiveManifest", () => {
   it("rejects insecure or malformed source URLs from persisted records", () => {
     expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1K", sourceUrl: "http://example.com" })).toBe(false);
     expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1K", sourceUrl: "https://example.com/video" })).toBe(true);
+  });
+
+  it("formats an archive detail summary with source availability", () => {
+    expect(getArchiveDetailSummary({ title: "Video", year: 2024, views: "1K", sourceUrl: "https://example.com/video" })).toBe("Video. Published 2024. 1K views. Source link available.");
+    expect(getArchiveDetailSummary({ title: "Essay", year: 2023, views: "—" })).toBe("Essay. Published 2023. — views. No source link available.");
   });
 
   it("serializes normalized archive data as quoted CSV with source URLs", () => {

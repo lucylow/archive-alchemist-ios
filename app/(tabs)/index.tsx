@@ -4,7 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -149,6 +149,7 @@ export default function HomeScreen() {
   const [previewYear, setPreviewYear] = useState("");
   const [previewSort, setPreviewSort] = useState<ArchiveSort>("newest");
   const [selectedPreviewKeys, setSelectedPreviewKeys] = useState<string[]>([]);
+  const [archiveDetail, setArchiveDetail] = useState<ArchiveItem | null>(null);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -813,7 +814,7 @@ export default function HomeScreen() {
                     {pendingArchiveItems.slice(0, 2).map((item) => (
                       <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
                         <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
-                        {item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
+                        <Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} accessibilityHint="Opens archive metadata and available source actions." onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
                       </View>
                     ))}
                   </View>
@@ -842,7 +843,7 @@ export default function HomeScreen() {
                 {archiveItems.slice(0, 3).map((item) => (
                   <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
                     <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
-                    {item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
+                    <Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} accessibilityHint="Opens archive metadata and available source actions." onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
                   </View>
                 ))}
                 {archiveItems.length > 3 && <Text style={styles.sourceSummary}>Showing 3 of {archiveItems.length} imported items.</Text>}
@@ -1268,6 +1269,22 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+      <Modal visible={archiveDetail !== null} transparent animationType="slide" onRequestClose={() => setArchiveDetail(null)}>
+        <View style={styles.modalBackdrop}>
+          {archiveDetail && (
+            <View style={styles.detailCard} accessible accessibilityLabel={getArchiveDetailSummary(archiveDetail)}>
+              <View style={styles.rowBetween}>
+                <Text style={styles.sectionTitle}>Archive detail</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Close archive detail" onPress={() => setArchiveDetail(null)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
+              </View>
+              <Text style={styles.detailTitle}>{archiveDetail.title}</Text>
+              <Text style={styles.bodyText}>Published {archiveDetail.year}</Text>
+              <Text style={styles.bodyText}>{archiveDetail.views} views</Text>
+              {archiveDetail.sourceUrl ? <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${archiveDetail.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(archiveDetail.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable> : <Text style={styles.sourceSummary}>No source link available.</Text>}
+            </View>
+          )}
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -1370,4 +1387,7 @@ const styles = StyleSheet.create({
   previewSampleRow: { gap: 4, paddingTop: 4 },
   sourceLink: { alignSelf: "flex-start", paddingVertical: 3 },
   sourceLinkText: { color: "#F4C95D", fontSize: 12, fontWeight: "800" },
+  modalBackdrop: { flex: 1, backgroundColor: "rgba(16, 11, 36, 0.72)", justifyContent: "flex-end" },
+  detailCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10 },
+  detailTitle: { color: "#F8F4FF", fontSize: 24, fontWeight: "800", lineHeight: 30 },
 });
