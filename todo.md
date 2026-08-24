@@ -226,3 +226,6 @@
 - [x] Prevent duplicate OAuth retry launches while the sign-in window is opening
 - [x] Add deterministic coverage for retry-action busy-state messaging
 
+- [x] Cover OAuth launch success and failure return values for retry-state recovery
+- [x] Ensure malformed or unavailable OAuth configuration never leaves retry UI stuck
+
