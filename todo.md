@@ -207,3 +207,6 @@
 - [x] Validate OAuth session-token bounds and required response identity fields before storage
 - [x] Add deterministic coverage for malformed OAuth token and profile responses
 
+- [x] Cancel OAuth callback redirect timers and late state updates on unmount
+- [x] Add deterministic coverage for OAuth callback lifecycle invalidation
+

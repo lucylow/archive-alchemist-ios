@@ -3,9 +3,10 @@ import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import { isSafeOAuthSessionToken, isSafeOAuthUserPayload } from "@/shared/oauth";
 import { normalizeCachedUser } from "@/lib/_core/user-cache";
+import { createOAuthCallbackGate } from "@/lib/oauth-callback";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -20,8 +21,17 @@ export default function OAuthCallback() {
   }>();
   const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const callbackGate = useRef(createOAuthCallbackGate()).current;
 
   useEffect(() => {
+    const callbackId = callbackGate.begin();
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null;
+    const isCurrent = () => callbackGate.isCurrent(callbackId);
+    const scheduleRedirect = () => {
+      redirectTimer = setTimeout(() => {
+        if (isCurrent()) router.replace("/(tabs)");
+      }, 1000);
+    };
     const handleCallback = async () => {
       console.log("[OAuth] Callback handler triggered", {
         hasCode: Boolean(params.code),
@@ -56,10 +66,9 @@ export default function OAuthCallback() {
             console.warn("[OAuth] User profile payload exceeded safe bounds");
           }
 
+          if (!isCurrent()) return;
           setStatus("success");
-          setTimeout(() => {
-            router.replace("/(tabs)");
-          }, 1000);
+          scheduleRedirect();
           return;
         }
 
@@ -87,6 +96,7 @@ export default function OAuthCallback() {
           params.error || (url ? new URL(url, "http://dummy").searchParams.get("error") : null);
         if (error) {
           console.warn("[OAuth] Provider returned an error parameter");
+          if (!isCurrent()) return;
           setStatus("error");
           setErrorMessage("The sign-in provider could not complete authentication. Please try again.");
           return;
@@ -132,10 +142,9 @@ export default function OAuthCallback() {
           await Auth.setSessionToken(sessionToken);
           // User info is already in the OAuth callback response
           // No need to fetch from API
+          if (!isCurrent()) return;
           setStatus("success");
-          setTimeout(() => {
-            router.replace("/(tabs)");
-          }, 1000);
+          scheduleRedirect();
           return;
         }
 
@@ -145,6 +154,7 @@ export default function OAuthCallback() {
             hasCode: !!code,
             hasState: !!state,
           });
+          if (!isCurrent()) return;
           setStatus("error");
           setErrorMessage("Missing code or state parameter");
           return;
@@ -161,14 +171,14 @@ export default function OAuthCallback() {
           await Auth.setUserInfo(result.user);
           console.log("[OAuth] User profile stored");
 
+          if (!isCurrent()) return;
           setStatus("success");
 
           // Redirect to home after a short delay
-          setTimeout(() => {
-            router.replace("/(tabs)");
-          }, 1000);
+          scheduleRedirect();
         } else {
           console.error("[OAuth] Authentication response did not include a session token");
+          if (!isCurrent()) return;
           setStatus("error");
           setErrorMessage("No session token received");
         }
@@ -176,13 +186,18 @@ export default function OAuthCallback() {
         console.error("[OAuth] Callback processing failed", {
           errorType: error instanceof Error ? error.name : "unknown",
         });
+        if (!isCurrent()) return;
         setStatus("error");
         setErrorMessage("Authentication could not be completed. Please try again.");
       }
     };
 
-    handleCallback();
-  }, [params.code, params.state, params.error, params.sessionToken, params.user, router]);
+    void handleCallback();
+    return () => {
+      callbackGate.invalidate();
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
+  }, [params.code, params.state, params.error, params.sessionToken, params.user, router, callbackGate]);
 
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom", "left", "right"]}>
