@@ -28,6 +28,8 @@ export const getArchivePreviewLabel = (items: ArchiveItem[], filename: string) =
 export const formatArchivePreviewRow = (item: ArchiveItem) =>
   `${item.title} · ${item.year} · ${item.views} views`;
 
+export const serializeArchiveManifest = (items: ArchiveItem[]) => `${JSON.stringify(items, null, 2)}\n`;
+
 export const filterArchiveItems = (items: ArchiveItem[], query: string, year: string) => {
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedYear = year.trim();

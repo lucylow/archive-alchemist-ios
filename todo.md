@@ -222,3 +222,6 @@
 - [x] Add sort controls for imported archive preview rows
 - [x] Support sorting by newest year and highest views
 - [x] Add deterministic coverage for archive preview sorting
+- [x] Add export of normalized imported archive data
+- [x] Provide a share-sheet action for the exported archive manifest
+- [x] Add deterministic coverage for archive export formatting

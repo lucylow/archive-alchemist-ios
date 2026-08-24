@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
+import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -14,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, serializeArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -531,6 +533,22 @@ export default function HomeScreen() {
     }
   };
 
+  const exportImportedArchive = async () => {
+    if (archiveItems.length === 0) return;
+    try {
+      if (!(await Sharing.isAvailableAsync())) {
+        if (screenActiveRef.current) setNotice("Sharing is not available on this device.");
+        return;
+      }
+      const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-export.json`;
+      await FileSystem.writeAsStringAsync(fileUri, serializeArchiveManifest(archiveItems), { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(fileUri, { mimeType: "application/json", dialogTitle: "Share Archive Alchemist export" });
+      if (screenActiveRef.current) setNotice("Archive export is ready to share.");
+    } catch {
+      if (screenActiveRef.current) setNotice("Archive export could not be prepared. Try again from this device.");
+    }
+  };
+
   const clearImportedArchive = async () => {
     if (!archiveResetRequestGate.tryStart()) return;
     try {
@@ -737,11 +755,18 @@ export default function HomeScreen() {
                   : "Your first workflow will be remembered locally on this device."}
               </Text>
               {archiveItems.length > 0 && (
-                <SecondaryButton
-                  label="Clear imported archive"
-                  accessibilityHint="Opens a confirmation dialog before removing imported archive items from this device. Mind memory remains available."
-                  onPress={confirmClearImportedArchive}
-                />
+                <View style={styles.actionRow}>
+                  <SecondaryButton
+                    label="Export archive"
+                    accessibilityHint="Creates a normalized JSON manifest and opens the device share sheet."
+                    onPress={exportImportedArchive}
+                  />
+                  <SecondaryButton
+                    label="Clear imported archive"
+                    accessibilityHint="Opens a confirmation dialog before removing imported archive items from this device. Mind memory remains available."
+                    onPress={confirmClearImportedArchive}
+                  />
+                </View>
               )}
               {memory && <Text style={styles.goldText}>Saved {formatSavedAt(memory.savedAt)} · {memory.followUp}</Text>}
               {memory && <Text style={styles.sourceSummary}>Sources: {memory.platforms.join(", ")}</Text>}
