@@ -334,3 +334,6 @@
 - [x] Remove or reduce the known Expo web shadow-style deprecation warning
 - [x] Remove or reduce the known pointerEvents prop deprecation warning
 - [x] Add deterministic or static coverage confirming warning-safe style usage
+- [x] Measure export payloads using UTF-8 byte length rather than JavaScript character count
+- [x] Keep UTF-8 size calculations derived in memory without persistence changes
+- [x] Add deterministic coverage for Unicode export-size estimates

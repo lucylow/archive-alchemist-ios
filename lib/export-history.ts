@@ -34,6 +34,10 @@ export const getLastExportFormatPresetLabel = (entry: ExportHistoryEntry | null)
 export const getRecommendedExportActionLabel = (entry: ExportHistoryEntry | null) => entry ? `Share ${entry.format.toUpperCase()} now` : "Share recommended format";
 export const getExportReviewWindowLabel = (selectedCount: number, visibleCount: number, windowSize = 20) => selectedCount > windowSize ? `Showing ${Math.min(visibleCount, windowSize)} of ${selectedCount} selected rows. All ${selectedCount} selected rows will be exported.` : `Reviewing all ${selectedCount} selected row${selectedCount === 1 ? "" : "s"} before export.`;
 export const getExportReviewWindowToggleLabel = (selectedCount: number, expanded: boolean) => selectedCount <= 20 ? "" : expanded ? "Show first 20 selected rows" : `Inspect up to ${Math.min(selectedCount, 100)} selected rows`;
+export const getUtf8ByteLength = (value: string) => Array.from(value).reduce((total, character) => {
+  const codePoint = character.codePointAt(0) ?? 0;
+  return total + (codePoint <= 0x7f ? 1 : codePoint <= 0x7ff ? 2 : codePoint <= 0xffff ? 3 : 4);
+}, 0);
 export const formatExportSizeEstimate = (bytes: number) => bytes < 1024 ? `${Math.max(1, Math.round(bytes))} B` : `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
 export const getExportSizeEstimateLabel = (jsonBytes: number, csvBytes: number, preferredFormat: "json" | "csv" | null) => preferredFormat ? `Approximate ${preferredFormat.toUpperCase()} size: ${formatExportSizeEstimate(preferredFormat === "json" ? jsonBytes : csvBytes)}. Calculated in memory; not saved.` : `Approximate sizes: JSON ${formatExportSizeEstimate(jsonBytes)} · CSV ${formatExportSizeEstimate(csvBytes)}. Calculated in memory; not saved.`;
 export const LARGE_EXPORT_WARNING_BYTES = 256 * 1024;

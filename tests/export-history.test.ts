@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, formatExportSizeEstimate, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, LARGE_EXPORT_WARNING_BYTES, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, formatExportSizeEstimate, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getUtf8ByteLength, LARGE_EXPORT_WARNING_BYTES, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -35,6 +35,13 @@ describe("export history", () => {
     expect(getLastExportShortcutLabel(null)).toBe("Open archive browser");
     expect(getLastExportShortcutLabel({ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last JSON export · 1 item");
     expect(getLastExportShortcutLabel({ format: "csv", itemCount: 4, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last CSV export · 4 items");
+  });
+
+  it("counts UTF-8 bytes for multilingual and emoji content", () => {
+    expect(getUtf8ByteLength("Archive" )).toBe(7);
+    expect(getUtf8ByteLength("档案" )).toBe(6);
+    expect(getUtf8ByteLength("✦" )).toBe(3);
+    expect(getUtf8ByteLength("🙂" )).toBe(4);
   });
 
   it("formats large-export warnings consistently", () => {

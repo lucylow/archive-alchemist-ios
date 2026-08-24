@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -188,8 +188,8 @@ export default function HomeScreen() {
   );
   const browserItems = useMemo(() => sortArchiveItems(filterArchiveItems(getArchiveBrowserItems(archiveItems), browserQuery, browserYear), browserSort), [archiveItems, browserQuery, browserSort, browserYear]);
   const selectedBrowserItems = useMemo(() => getSelectedArchiveItems(browserItems, selectedBrowserKeys), [browserItems, selectedBrowserKeys]);
-  const selectedJsonSize = useMemo(() => serializeArchiveManifest(selectedBrowserItems).length, [selectedBrowserItems]);
-  const selectedCsvSize = useMemo(() => serializeArchiveCsv(selectedBrowserItems).length, [selectedBrowserItems]);
+  const selectedJsonSize = useMemo(() => getUtf8ByteLength(serializeArchiveManifest(selectedBrowserItems)), [selectedBrowserItems]);
+  const selectedCsvSize = useMemo(() => getUtf8ByteLength(serializeArchiveCsv(selectedBrowserItems)), [selectedBrowserItems]);
 
   useEffect(() => {
     setSelectedBrowserKeys((current) => {
@@ -691,7 +691,7 @@ export default function HomeScreen() {
       return;
     }
     const previewContents = format === "json" ? serializeArchiveManifest(items) : serializeArchiveCsv(items);
-    const largeExportWarning = getLargeExportWarningLabel(format, previewContents.length);
+    const largeExportWarning = getLargeExportWarningLabel(format, getUtf8ByteLength(previewContents));
     if (largeExportWarning && !warningConfirmed) {
       Alert.alert("Large export", largeExportWarning, [
         { text: "Cancel", style: "cancel" },
