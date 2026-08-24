@@ -201,3 +201,6 @@
 - [x] Suppress late Minds insight persistence after cancellation or navigation
 - [x] Add deterministic coverage for stale persistence commit invalidation
 
+- [x] Prevent stale authentication hydration responses from overwriting newer session state
+- [x] Add deterministic coverage for authentication request invalidation
+

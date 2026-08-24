@@ -1,6 +1,7 @@
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { createAuthRequestGate } from "@/lib/auth-request";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
 type UseAuthOptions = {
@@ -12,8 +13,11 @@ export function useAuth(options?: UseAuthOptions) {
   const [user, setUser] = useState<Auth.User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const requestGate = useRef(createAuthRequestGate()).current;
 
   const fetchUser = useCallback(async () => {
+    const requestId = requestGate.begin();
+    const isCurrent = () => requestGate.isCurrent(requestId);
     try {
       setLoading(true);
       setError(null);
@@ -21,9 +25,10 @@ export function useAuth(options?: UseAuthOptions) {
       // Web platform: use cookie-based auth, fetch user from API
       if (Platform.OS === "web") {
         const apiUser = await Api.getMe();
+        if (!isCurrent()) return;
 
         if (apiUser) {
-            const userInfo: Auth.User = {
+          const userInfo: Auth.User = {
             id: apiUser.id,
             role: apiUser.role,
             openId: apiUser.openId,
@@ -44,6 +49,7 @@ export function useAuth(options?: UseAuthOptions) {
 
       // Native platform: use token-based auth
       const sessionToken = await Auth.getSessionToken();
+      if (!isCurrent()) return;
       if (!sessionToken) {
         setUser(null);
         return;
@@ -51,22 +57,21 @@ export function useAuth(options?: UseAuthOptions) {
 
       // Use cached user info for native (token validates the session)
       const cachedUser = await Auth.getUserInfo();
-      if (cachedUser) {
-        setUser(cachedUser);
-      } else {
-        setUser(null);
-      }
+      if (!isCurrent()) return;
+      setUser(cachedUser);
     } catch (err) {
+      if (!isCurrent()) return;
       const error = err instanceof Error ? err : new Error("Failed to fetch user");
       console.error("[useAuth] Session lookup failed", { errorType: error.name });
       setError(error);
       setUser(null);
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
-  }, []);
+  }, [requestGate]);
 
   const logout = useCallback(async () => {
+    requestGate.invalidate();
     try {
       await Api.logout();
     } catch (err) {
@@ -79,8 +84,9 @@ export function useAuth(options?: UseAuthOptions) {
       await Auth.clearUserInfo();
       setUser(null);
       setError(null);
+      setLoading(false);
     }
-  }, []);
+  }, [requestGate]);
 
   const isAuthenticated = useMemo(() => Boolean(user), [user]);
   const isAdmin = useMemo(() => user?.role === "admin", [user?.role]);
@@ -89,18 +95,21 @@ export function useAuth(options?: UseAuthOptions) {
     if (autoFetch) {
       if (Platform.OS === "web") {
         // Web: fetch user from API directly (user will login manually if needed)
-        fetchUser();
+        void fetchUser();
       } else {
         // Native: check for cached user info first for faster initial load
+        const cacheRequestId = requestGate.begin();
         Auth.getUserInfo().then((cachedUser) => {
+          if (!requestGate.isCurrent(cacheRequestId)) return;
           if (cachedUser) {
             setUser(cachedUser);
             setLoading(false);
           } else {
             // No cached user, check session token
-            fetchUser();
+            void fetchUser();
           }
         }).catch((err) => {
+          if (!requestGate.isCurrent(cacheRequestId)) return;
           console.warn("[useAuth] Native cache lookup failed; retrying session lookup", {
             errorType: err instanceof Error ? err.name : "unknown",
           });
@@ -110,7 +119,9 @@ export function useAuth(options?: UseAuthOptions) {
     } else {
       setLoading(false);
     }
-  }, [autoFetch, fetchUser]);
+
+    return () => requestGate.invalidate();
+  }, [autoFetch, fetchUser, requestGate]);
 
   return {
     user,
