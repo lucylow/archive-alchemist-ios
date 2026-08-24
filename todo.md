@@ -232,3 +232,6 @@
 - [x] Prevent production Expo builds from using development or sandbox API endpoints
 - [x] Add deterministic release-preflight coverage for unsafe production API configuration
 
+- [x] Detect debug-only or test-only artifacts that could enter the production bundle
+- [x] Add deterministic release-preflight coverage for forbidden production artifacts
+

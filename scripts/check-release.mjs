@@ -15,6 +15,7 @@ const requiredFiles = [
   "assets/images/android-icon-monochrome.png",
 ];
 const assetFiles = requiredFiles.slice(3);
+const forbiddenProductionPaths = ["app/dev"];
 const synchronizedBrandingFiles = [
   "assets/images/icon.png",
   "assets/images/splash-icon.png",
@@ -69,6 +70,13 @@ const reportFailures = () => {
 for (const relativePath of requiredFiles) {
   const absolutePath = resolve(root, relativePath);
   if (!existsSync(absolutePath)) failures.push(`Missing ${relativePath}`);
+}
+reportFailures();
+
+for (const relativePath of forbiddenProductionPaths) {
+  if (existsSync(resolve(root, relativePath))) {
+    failures.push(`Production build must not include development-only route path ${relativePath}`);
+  }
 }
 reportFailures();
 

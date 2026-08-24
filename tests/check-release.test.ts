@@ -258,6 +258,20 @@ describe("release preflight failures", () => {
     }
   });
 
+  it("rejects a development-only Expo route directory", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      mkdirSync(join(directory, "app/dev"), { recursive: true });
+      writeFileSync(join(directory, "app/dev/theme-lab.tsx"), "export default function ThemeLab() { return null; }");
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("development-only route path app/dev");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("accepts a deployed HTTPS production API endpoint", () => {
     const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
     try {
