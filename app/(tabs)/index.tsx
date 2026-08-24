@@ -143,6 +143,7 @@ export default function HomeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const screenActiveRef = useRef(true);
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const loadingPulse = useRef(new Animated.Value(0)).current;
@@ -177,6 +178,13 @@ export default function HomeScreen() {
       mindsRequestGate.cancel();
     }
   }, [phase, mindsRequestGate]);
+
+  useEffect(() => {
+    screenActiveRef.current = true;
+    return () => {
+      screenActiveRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -396,13 +404,16 @@ export default function HomeScreen() {
   const resetMemory = async () => {
     try {
       await Promise.all([AsyncStorage.removeItem(MEMORY_KEY), AsyncStorage.removeItem(HISTORY_KEY)]);
+      if (!screenActiveRef.current) return;
       setMemory(null);
       setHistory([]);
       setMindsInsight(null);
       setPhase("home");
       setNotice("Mind memory cleared. Your next dig starts fresh.");
     } catch {
-      setNotice("Mind memory could not be cleared. Try again from this device.");
+      if (screenActiveRef.current) {
+        setNotice("Mind memory could not be cleared. Try again from this device.");
+      }
     }
   };
 

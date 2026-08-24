@@ -184,3 +184,5 @@
 - [x] Add deterministic coverage for all OAuth redirect branches
 - [x] Suppress late platform-preference persistence notices after screen unmount
 - [x] Add deterministic coverage for platform persistence lifecycle cleanup
+- [x] Prevent local-memory reset from updating state after screen unmount
+- [x] Add deterministic coverage for reset lifecycle invalidation
