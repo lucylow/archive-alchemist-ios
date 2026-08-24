@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -17,6 +17,16 @@ describe("parseArchiveManifest", () => {
     expect(parseArchiveManifest('title,year,views\n"A, B",2022,8.7K', "archive.csv")).toEqual([
       { title: "A, B", year: 2022, views: "8.7K" },
     ]);
+  });
+
+  it("filters archive items by title and year", () => {
+    const items = [
+      { title: "AI Editing", year: 2024, views: "1K" },
+      { title: "Field Notes", year: 2023, views: "2K" },
+    ];
+    expect(filterArchiveItems(items, "ai", "")).toEqual([items[0]]);
+    expect(filterArchiveItems(items, "", "2023")).toEqual([items[1]]);
+    expect(filterArchiveItems(items, "notes", "2024")).toEqual([]);
   });
 
   it("formats a readable archive preview row", () => {

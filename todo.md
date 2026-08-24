@@ -216,3 +216,6 @@
 - [x] Show year and views for sample rows in the import preview
 - [x] Add an accessible combined summary for previewed archive rows
 - [x] Add deterministic coverage for archive preview row formatting
+- [x] Add search to imported archive preview browsing
+- [x] Add year filtering to imported archive preview browsing
+- [x] Add deterministic coverage for archive search and year filtering

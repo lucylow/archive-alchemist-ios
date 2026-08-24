@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
@@ -14,7 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -142,6 +142,8 @@ export default function HomeScreen() {
   const [archiveItems, setArchiveItems] = useState<ArchiveItem[]>([]);
   const [pendingArchiveItems, setPendingArchiveItems] = useState<ArchiveItem[]>([]);
   const [pendingArchiveName, setPendingArchiveName] = useState<string | null>(null);
+  const [previewQuery, setPreviewQuery] = useState("");
+  const [previewYear, setPreviewYear] = useState("");
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -382,6 +384,8 @@ export default function HomeScreen() {
       const items = parseArchiveManifest(await response.text(), asset.name);
       setPendingArchiveItems(items);
       setPendingArchiveName(asset.name);
+      setPreviewQuery("");
+      setPreviewYear("");
       setNotice(`${getArchivePreviewLabel(items, asset.name)}. Review and confirm before replacing the current archive.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Archive import failed. Choose a JSON or CSV manifest and try again.");
@@ -389,6 +393,8 @@ export default function HomeScreen() {
       if (screenActiveRef.current) setIsImportingArchive(false);
     }
   };
+
+  const previewMatches = useMemo(() => filterArchiveItems(pendingArchiveItems, previewQuery, previewYear), [pendingArchiveItems, previewQuery, previewYear]);
 
   const commitPendingArchive = () => {
     if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
@@ -413,6 +419,8 @@ export default function HomeScreen() {
   const discardPendingArchive = () => {
     setPendingArchiveItems([]);
     setPendingArchiveName(null);
+    setPreviewQuery("");
+    setPreviewYear("");
     setNotice("Archive preview discarded. Your current archive is unchanged.");
   };
 
@@ -528,6 +536,8 @@ export default function HomeScreen() {
       setArchiveItems(clearArchiveItems());
       setPendingArchiveItems([]);
       setPendingArchiveName(null);
+      setPreviewQuery("");
+      setPreviewYear("");
       setNotice("Imported archive cleared. Mind memory is still available.");
     } catch {
       if (screenActiveRef.current) setNotice("Imported archive could not be cleared. Try again from this device.");
@@ -804,8 +814,10 @@ export default function HomeScreen() {
               <View style={styles.panel} accessible accessibilityLiveRegion="polite">
                 <Text style={styles.sectionTitle}>Import preview</Text>
                 <Text style={styles.bodyText}>{getArchivePreviewLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
-                <View accessible accessibilityLabel={`Preview rows: ${pendingArchiveItems.slice(0, 3).map(formatArchivePreviewRow).join("; ")}`}>
-                  {pendingArchiveItems.slice(0, 3).map((item) => (
+                <TextInput accessibilityLabel="Search imported archive preview" accessibilityHint="Filters preview rows by title." value={previewQuery} onChangeText={setPreviewQuery} placeholder="Search titles" placeholderTextColor="#9A91B6" style={styles.input} returnKeyType="search" />
+                <TextInput accessibilityLabel="Filter imported archive preview by year" accessibilityHint="Shows only preview rows from the exact year entered." value={previewYear} onChangeText={(value) => setPreviewYear(value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Filter by year" placeholderTextColor="#9A91B6" style={styles.input} keyboardType="number-pad" />
+                <View accessible accessibilityLabel={`Preview rows: ${previewMatches.slice(0, 3).map(formatArchivePreviewRow).join("; ") || "No matching rows"}`}>
+                  {previewMatches.slice(0, 3).map((item) => (
                     <Text key={`${item.title}-${item.year}`} style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
                   ))}
                 </View>
@@ -1200,4 +1212,5 @@ const styles = StyleSheet.create({
   noticeText: { color: "#FFE8A3", fontSize: 13, lineHeight: 18, flex: 1 },
   noticeDismiss: { borderColor: "#6C5B9D", borderWidth: 1, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 },
   noticeDismissText: { color: "#F8F4FF", fontSize: 12, fontWeight: "800" },
+  input: { backgroundColor: "#100B24", borderColor: "#403365", borderWidth: 1, borderRadius: 12, color: "#F8F4FF", fontSize: 15, paddingHorizontal: 14, paddingVertical: 11 },
 });

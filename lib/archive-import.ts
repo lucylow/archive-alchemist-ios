@@ -28,6 +28,15 @@ export const getArchivePreviewLabel = (items: ArchiveItem[], filename: string) =
 export const formatArchivePreviewRow = (item: ArchiveItem) =>
   `${item.title} · ${item.year} · ${item.views} views`;
 
+export const filterArchiveItems = (items: ArchiveItem[], query: string, year: string) => {
+  const normalizedQuery = query.trim().toLowerCase();
+  const normalizedYear = year.trim();
+  return items.filter((item) =>
+    (!normalizedQuery || item.title.toLowerCase().includes(normalizedQuery))
+    && (!normalizedYear || String(item.year) === normalizedYear),
+  );
+};
+
 export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<ArchiveItem>;
