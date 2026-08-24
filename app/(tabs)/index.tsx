@@ -628,7 +628,7 @@ export default function HomeScreen() {
       await Sharing.shareAsync(fileUri, { mimeType, dialogTitle: `Share Archive Alchemist ${format.toUpperCase()} export` });
       if (screenActiveRef.current) setNotice(`Archive ${format.toUpperCase()} export is ready to share.`);
     } catch {
-      if (screenActiveRef.current) setNotice("Archive export could not be prepared. Try again from this device.");
+      if (screenActiveRef.current) setNotice("Archive export could not be prepared. Your selection is preserved; try sharing again.");
     }
   };
 
@@ -1347,7 +1347,7 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.bodyText}>{getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
-              {selectedBrowserItems.slice(0, 20).map((item) => <Text key={getArchiveItemKey(item)} style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text>)}
+              {selectedBrowserItems.slice(0, 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
               {selectedBrowserItems.length > 20 && <Text style={styles.sourceSummary}>Showing the first 20 selected rows.</Text>}
             </ScrollView>
             <View style={styles.actionRow}>
@@ -1481,7 +1481,8 @@ const styles = StyleSheet.create({
   browserList: { flexGrow: 0 },
   browserListContent: { gap: 10, paddingBottom: 12 },
   emptyStateText: { color: "#B8A8D6", fontSize: 14, paddingVertical: 18, textAlign: "center" },
-  reviewRow: { color: "#D8D0EA", fontSize: 13, lineHeight: 19, paddingVertical: 7, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
+  reviewMediaRow: { flexDirection: "row", alignItems: "center", gap: 10, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
+  reviewRow: { flex: 1, color: "#D8D0EA", fontSize: 13, lineHeight: 19, paddingVertical: 7 },
   browserRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
   browserCheck: { alignItems: "center", justifyContent: "center", minWidth: 28, minHeight: 36, borderRadius: 8 },
   browserCheckSelected: { backgroundColor: "#241842" },

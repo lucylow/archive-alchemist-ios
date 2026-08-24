@@ -286,3 +286,6 @@
 - [x] Add a dedicated review step for selected full-browser rows before export
 - [x] Show selected row details and a clear cancel path before sharing
 - [x] Add deterministic coverage for selected-row review wording and counts
+- [x] Add thumbnail previews to selected export-review rows
+- [x] Add clearer retry-oriented feedback for export preparation failures
+- [x] Add deterministic coverage for export-review media fallback wording
