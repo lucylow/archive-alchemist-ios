@@ -216,3 +216,6 @@
 - [x] Remove malformed cached-user entries after normalization failure
 - [x] Add deterministic coverage for invalid cached-user cleanup behavior
 
+- [x] Normalize web API user profiles before caching or exposing them to authenticated UI state
+- [x] Add deterministic coverage for malformed web session profiles
+

@@ -1,6 +1,7 @@
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import { createAuthRequestGate } from "@/lib/auth-request";
+import { normalizeCachedUser } from "@/lib/_core/user-cache";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
@@ -28,15 +29,11 @@ export function useAuth(options?: UseAuthOptions) {
         if (!isCurrent()) return;
 
         if (apiUser) {
-          const userInfo: Auth.User = {
-            id: apiUser.id,
-            role: apiUser.role,
-            openId: apiUser.openId,
-            name: apiUser.name,
-            email: apiUser.email,
-            loginMethod: apiUser.loginMethod,
-            lastSignedIn: new Date(apiUser.lastSignedIn),
-          };
+          const userInfo = normalizeCachedUser(apiUser);
+          if (!userInfo) {
+            await Auth.clearUserInfo();
+            throw new Error("Authenticated user profile was invalid");
+          }
           setUser(userInfo);
           // Cache user info in localStorage for faster subsequent loads
           await Auth.setUserInfo(userInfo);

@@ -25,6 +25,19 @@ describe("cached user normalization", () => {
     expect(user?.lastSignedIn).toBeInstanceOf(Date);
   });
 
+  it("rejects malformed server-shaped web profiles before caching", () => {
+    expect(
+      normalizeCachedUser({
+        id: "7",
+        openId: "web-user",
+        name: "Creator",
+        email: "creator@example.com",
+        loginMethod: "oauth",
+        lastSignedIn: "not-a-date",
+      }),
+    ).toBeNull();
+  });
+
   it("rejects malformed identity and invalid dates", () => {
     expect(normalizeCachedUser({ id: "2", openId: "user-2", lastSignedIn: Date.now() })).toBeNull();
     expect(normalizeCachedUser({ id: 2, openId: "", lastSignedIn: Date.now() })).toBeNull();
