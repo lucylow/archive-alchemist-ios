@@ -7,7 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
 import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
-import { canAutoPost, estimateTimeSaved, formatTimeSaved, getPlatformPerformance } from "@/lib/workflow";
+import { canAutoPost, estimateTimeSaved, formatTimeSaved, getFreshReviewState, getPlatformPerformance } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
@@ -532,7 +532,18 @@ export default function HomeScreen() {
               <Text style={styles.bodyText}>
                 The Minds index dormant work, match it to current signals, and keep the follow-up alive after you leave.
               </Text>
-              <PrimaryButton label="Start a new dig" onPress={() => { mindsDiscovery.reset(); setMindsInsight(null); setPhase("connect"); }} />
+              <PrimaryButton
+                label="Start a new dig"
+                onPress={() => {
+                  mindsDiscovery.reset();
+                  setMindsInsight(null);
+                  const freshReview = getFreshReviewState();
+                  setReviewMode(freshReview.reviewMode);
+                  setApprovedOutputs(freshReview.approvedOutputs);
+                  setProgress(0);
+                  setPhase("connect");
+                }}
+              />
             </View>
             {isAdmin && (
               <View style={styles.panel}>

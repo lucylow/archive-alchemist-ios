@@ -48,6 +48,10 @@ export function formatTimeSaved(totalMinutes: number) {
   return `${hours} hour${hours === 1 ? "" : "s"} ${minutes} minute${minutes === 1 ? "" : "s"}`;
 }
 
+export function getFreshReviewState() {
+  return { reviewMode: false, approvedOutputs: [] as string[] };
+}
+
 export function canAutoPost(reviewMode: boolean, approvedOutputs: string[], selectedOutputs: string[]) {
   if (selectedOutputs.length === 0) return false;
   return !reviewMode || selectedOutputs.every((output) => approvedOutputs.includes(output));

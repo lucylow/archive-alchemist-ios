@@ -168,3 +168,5 @@
 - [x] Add deterministic coverage for the empty-output Auto-Post guard
 - [x] Move platform-preference persistence out of the React state updater
 - [x] Add deterministic coverage for platform preference persistence failure handling
+- [x] Clear stale review approvals when starting a new archive dig
+- [x] Add deterministic coverage for fresh-dig transient workflow state

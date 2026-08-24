@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { canAutoPost, estimateTimeSaved, formatTimeSaved, getPlatformPerformance, getSelectedOutputs, platformCountLabel } from "../lib/workflow";
+import { canAutoPost, estimateTimeSaved, formatTimeSaved, getFreshReviewState, getPlatformPerformance, getSelectedOutputs, platformCountLabel } from "../lib/workflow";
 
 describe("Archive Alchemist workflow rules", () => {
   it("maps selected platforms to platform-specific outputs", () => {
@@ -8,6 +8,10 @@ describe("Archive Alchemist workflow rules", () => {
       "Spotify Audiogram (0:45)",
       "Blog Post (1,200 words)",
     ]);
+  });
+
+  it("returns a clean review state for a fresh dig", () => {
+    expect(getFreshReviewState()).toEqual({ reviewMode: false, approvedOutputs: [] });
   });
 
   it("rejects an Auto-Post attempt with no deliverables", () => {
