@@ -166,3 +166,5 @@
 - [x] Add deterministic coverage for platform performance labels
 - [x] Prevent Auto-Post from being considered valid when no deliverables are selected
 - [x] Add deterministic coverage for the empty-output Auto-Post guard
+- [x] Move platform-preference persistence out of the React state updater
+- [x] Add deterministic coverage for platform preference persistence failure handling

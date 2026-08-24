@@ -282,6 +282,13 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    if (!isHydrated) return;
+    AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(selectedPlatforms)).catch(() =>
+      setNotice("Platform preference could not be saved, but this session is still available."),
+    );
+  }, [isHydrated, selectedPlatforms]);
+
+  useEffect(() => {
     if (phase !== "scan") return;
     setProgress(0);
     const timer = setInterval(() => {
@@ -408,9 +415,6 @@ export default function HomeScreen() {
     haptic.selection();
     setSelectedPlatforms((current) => {
       const next = current.includes(platform) ? current.filter((item) => item !== platform) : [...current, platform];
-      AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(next)).catch(() =>
-        setNotice("Platform preference could not be saved, but this session is still available."),
-      );
       return next;
     });
   };
@@ -635,9 +639,6 @@ export default function HomeScreen() {
                     haptic.selection();
                     const recommended: Platform[] = ["YouTube", "Instagram", "TikTok"];
                     setSelectedPlatforms(recommended);
-                    AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(recommended)).catch(() =>
-                      setNotice("Platform preference could not be saved, but this session is still available."),
-                    );
                   }}
                   style={({ pressed }) => [styles.inlineAction, pressed && styles.pressed]}
                 >
@@ -650,9 +651,7 @@ export default function HomeScreen() {
                   haptic.medium();
                   const next = selectedPlatforms.length === platforms.length ? [] : platforms;
                   setSelectedPlatforms(next);
-                  AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(next)).catch(() =>
-                    setNotice("Platform preference could not be saved, but this session is still available."),
-                  );
+                  
                 }}
                 style={({ pressed }) => [styles.inlineAction, pressed && styles.pressed]}
               >
