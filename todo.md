@@ -331,3 +331,6 @@
 - [x] Add an explicit warning for unusually large selected exports
 - [x] Preserve selection and provide a deliberate proceed-or-cancel path
 - [x] Add deterministic coverage for large-export warning wording
+- [x] Remove or reduce the known Expo web shadow-style deprecation warning
+- [x] Remove or reduce the known pointerEvents prop deprecation warning
+- [x] Add deterministic or static coverage confirming warning-safe style usage

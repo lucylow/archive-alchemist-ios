@@ -1540,7 +1540,7 @@ const styles = StyleSheet.create({
   loadingTitle: { color: "#F8F4FF", fontSize: 18, fontWeight: "800" },
   loadingMark: { width: 92, height: 92, alignItems: "center", justifyContent: "center", marginBottom: 4 },
   loadingPulseRing: { position: "absolute", width: 84, height: 84, borderRadius: 42, borderWidth: 1, borderColor: "#F4C95D", backgroundColor: "#2C1D55" },
-  loadingMarkCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center", shadowColor: "#F4C95D", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
+  loadingMarkCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center", boxShadow: "0px 4px 12px rgba(244, 201, 93, 0.35)", elevation: 5 },
   loadingMarkText: { color: "#100B24", fontSize: 17, fontWeight: "900", letterSpacing: 1 },
   stack: { gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
