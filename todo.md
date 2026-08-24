@@ -198,3 +198,6 @@
 - [x] Bound persisted Minds insight text and recommendation arrays during client hydration
 - [x] Add deterministic coverage for oversized cached Minds insight rejection
 
+- [x] Suppress late Minds insight persistence after cancellation or navigation
+- [x] Add deterministic coverage for stale persistence commit invalidation
+

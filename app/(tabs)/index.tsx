@@ -128,18 +128,21 @@ export default function HomeScreen() {
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
-  const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
-    if (!memory) return;
+  const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
+    if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
     try {
       await Promise.all([
         AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(updatedMemory)),
         AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory)),
       ]);
+      if (!mindsRequestGate.isCurrent(requestId)) return;
       setMemory(updatedMemory);
       setHistory(nextHistory);
     } catch {
-      setNotice("Minds returned an insight, but it could not be saved to local memory.");
+      if (mindsRequestGate.isCurrent(requestId)) {
+        setNotice("Minds returned an insight, but it could not be saved to local memory.");
+      }
     }
   };
   const mindsQuota = trpc.minds.quota.useQuery(undefined, {
@@ -302,7 +305,7 @@ export default function HomeScreen() {
             setMindsInsight(data);
             void mindsQuota.refetch();
             setNotice("Minds returned a structured follow-up plan for this archive item.");
-            void persistInsightToMemory(data);
+            void persistInsightToMemory(data, requestId);
           },
           onError: (error) => {
             if (!mindsRequestGate.isCurrent(requestId)) return;
