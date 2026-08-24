@@ -162,3 +162,5 @@
 
 - [x] Remove residual client authentication token, user, and exception payload diagnostics
 
+- [x] Add regression coverage proving client authentication storage helpers emit no diagnostics
+
