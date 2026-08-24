@@ -103,6 +103,19 @@ describe("release preflight failures", () => {
     }
   });
 
+  it("rejects mismatched synchronized branding assets", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      writeFileSync(join(directory, "assets/images/splash-icon.png"), Buffer.concat([pngSignature, Buffer.from("different")]));
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("assets/images/splash-icon.png does not match assets/images/icon.png");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("rejects an invalid PNG signature", () => {
     const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
     try {

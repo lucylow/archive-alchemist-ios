@@ -1,4 +1,5 @@
-import { existsSync, lstatSync, readFileSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -14,6 +15,12 @@ const requiredFiles = [
   "assets/images/android-icon-monochrome.png",
 ];
 const assetFiles = requiredFiles.slice(3);
+const synchronizedBrandingFiles = [
+  "assets/images/icon.png",
+  "assets/images/splash-icon.png",
+  "assets/images/favicon.png",
+  "assets/images/android-icon-foreground.png",
+];
 const pngSignature = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 const failures = [];
@@ -65,6 +72,7 @@ for (const forbidden of ["expo-audio", "expo-video", "expo-notifications", "POST
   }
 }
 
+const assetHashes = new Map();
 for (const relativePath of assetFiles) {
   const absolutePath = resolve(root, relativePath);
   const stats = lstatSync(absolutePath);
@@ -73,11 +81,22 @@ for (const relativePath of assetFiles) {
     continue;
   }
 
-  const signature = readFileSync(absolutePath).subarray(0, pngSignature.length);
+  const contents = readFileSync(absolutePath);
+  const signature = contents.subarray(0, pngSignature.length);
   const hasPngSignature =
     signature.length === pngSignature.length && pngSignature.every((byte, index) => signature[index] === byte);
   if (!hasPngSignature) failures.push(`${relativePath} is not a valid PNG file`);
   if (stats.size > 1024 * 1024) failures.push(`${relativePath} is larger than 1 MB (${stats.size} bytes)`);
+  assetHashes.set(relativePath, createHash("sha256").update(contents).digest("hex"));
+}
+
+const primaryBrandingHash = assetHashes.get(synchronizedBrandingFiles[0]);
+if (primaryBrandingHash) {
+  for (const relativePath of synchronizedBrandingFiles.slice(1)) {
+    if (assetHashes.get(relativePath) !== primaryBrandingHash) {
+      failures.push(`${relativePath} does not match assets/images/icon.png`);
+    }
+  }
 }
 
 reportFailures();

@@ -180,3 +180,6 @@
 - [x] Validate release assets are regular PNG files, including the primary iOS icon
 - [x] Add regression coverage for invalid release asset file types and signatures
 
+- [x] Detect drift between the primary logo and required copied branding assets
+- [x] Add regression coverage for mismatched branding asset contents
+
