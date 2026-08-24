@@ -186,3 +186,6 @@
 - [x] Verify Expo configuration points to every validated branding asset path
 - [x] Add regression coverage for stale or mismatched Expo branding references
 
+- [x] Validate the iOS production version and numeric build number in release preflight
+- [x] Add regression coverage for missing or malformed iOS build metadata
+

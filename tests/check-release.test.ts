@@ -28,6 +28,7 @@ function createFixture(directory: string, production: Record<string, unknown>) {
     "Archive Alchemist",
     "com.archivealchemist.mobile",
     'version: "1.0.0"',
+    'buildNumber: "1"',
     "NSPrivacyAccessedAPICategoryUserDefaults",
     'NSPrivacyAccessedAPITypeReasons: ["CA92.1"]',
     'ITSAppUsesNonExemptEncryption": false',
@@ -92,6 +93,36 @@ describe("release preflight failures", () => {
       expect(result.status).toBe(1);
       expect(result.output).toContain("eas.json is not valid JSON");
       expect(result.output).not.toContain("SyntaxError");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a missing iOS build number", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const appConfigPath = join(directory, "app.config.ts");
+      const appConfig = readFileSync(appConfigPath, "utf8").replace('buildNumber: "1"', "");
+      writeFileSync(appConfigPath, appConfig);
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("app.config.ts must declare a positive numeric iOS buildNumber");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a non-numeric iOS build number", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const appConfigPath = join(directory, "app.config.ts");
+      const appConfig = readFileSync(appConfigPath, "utf8").replace('buildNumber: "1"', 'buildNumber: "beta"');
+      writeFileSync(appConfigPath, appConfig);
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("app.config.ts must declare a positive numeric iOS buildNumber");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

@@ -62,6 +62,13 @@ for (const expected of [
 ]) {
   if (!appConfig.includes(expected)) failures.push(`app.config.ts does not contain ${expected}`);
 }
+if (!/version:\s*["']\d+\.\d+\.\d+["']/.test(appConfig)) {
+  failures.push("app.config.ts must declare a semantic version such as version: \"1.0.0\"");
+}
+const buildNumberMatch = appConfig.match(/buildNumber:\s*["']([^"']+)["']/);
+if (!buildNumberMatch || !/^[1-9]\d*$/.test(buildNumberMatch[1])) {
+  failures.push("app.config.ts must declare a positive numeric iOS buildNumber");
+}
 for (const profile of ["development", "preview", "production"]) {
   if (!easConfig.build?.[profile]) failures.push(`eas.json is missing the ${profile} build profile`);
 }
