@@ -49,6 +49,7 @@ export function formatTimeSaved(totalMinutes: number) {
 }
 
 export function canAutoPost(reviewMode: boolean, approvedOutputs: string[], selectedOutputs: string[]) {
+  if (selectedOutputs.length === 0) return false;
   return !reviewMode || selectedOutputs.every((output) => approvedOutputs.includes(output));
 }
 

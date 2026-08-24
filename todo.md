@@ -164,3 +164,5 @@
 - [x] Add deterministic coverage for selected-output time-saved formatting
 - [x] Replace generic per-platform performance copy with platform-specific performance metadata
 - [x] Add deterministic coverage for platform performance labels
+- [x] Prevent Auto-Post from being considered valid when no deliverables are selected
+- [x] Add deterministic coverage for the empty-output Auto-Post guard

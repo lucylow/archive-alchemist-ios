@@ -10,6 +10,11 @@ describe("Archive Alchemist workflow rules", () => {
     ]);
   });
 
+  it("rejects an Auto-Post attempt with no deliverables", () => {
+    expect(canAutoPost(false, [], [])).toBe(false);
+    expect(canAutoPost(true, [], [])).toBe(false);
+  });
+
   it("requires every output to be approved in review mode", () => {
     const selected = ["YouTube Short (0:45)", "Instagram Reel (0:30)"];
     expect(canAutoPost(true, [selected[0]], selected)).toBe(false);
