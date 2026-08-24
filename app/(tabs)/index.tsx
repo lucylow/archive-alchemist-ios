@@ -149,6 +149,7 @@ export default function HomeScreen() {
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
+  const resetRequestGate = useRef(createSaveRequestGate()).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
     if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -414,6 +415,7 @@ export default function HomeScreen() {
   };
 
   const resetMemory = async () => {
+    if (!resetRequestGate.tryStart()) return;
     try {
       await Promise.all([AsyncStorage.removeItem(MEMORY_KEY), AsyncStorage.removeItem(HISTORY_KEY)]);
       if (!screenActiveRef.current) return;
@@ -426,6 +428,8 @@ export default function HomeScreen() {
       if (screenActiveRef.current) {
         setNotice("Mind memory could not be cleared. Try again from this device.");
       }
+    } finally {
+      resetRequestGate.finish();
     }
   };
 

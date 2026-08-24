@@ -196,3 +196,5 @@
 - [x] Add deterministic coverage for hydration cleanup-write invalidation
 - [x] Remove empty OAuth callback branches while preserving safe profile parsing
 - [x] Add deterministic coverage for malformed optional OAuth profile payloads
+- [x] Prevent duplicate local-memory reset operations while a reset is in flight
+- [x] Add deterministic coverage for the reset action gate
