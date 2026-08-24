@@ -5,6 +5,7 @@ import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Platform
 
 import { ScreenContainer } from "@/components/screen-container";
 import { withTimeout } from "@/lib/_core/with-timeout";
+import { readReduceMotionSetting } from "@/lib/reduce-motion";
 import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
 import { canAutoPost } from "@/lib/workflow";
@@ -161,7 +162,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+    void readReduceMotionSetting(() => AccessibilityInfo.isReduceMotionEnabled()).then((enabled) => {
       if (mounted) setReduceMotion(enabled);
     });
     const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);

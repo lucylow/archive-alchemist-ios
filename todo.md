@@ -249,3 +249,5 @@
 
 - [x] Require strict App Store submission preflight to validate the production EAS store profile
 - [x] Add deterministic coverage for invalid production submission profile settings
+- [x] Handle rejected Reduce Motion setting reads without an unhandled startup promise
+- [x] Add deterministic coverage for Reduce Motion read failure fallback
