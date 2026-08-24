@@ -1,7 +1,8 @@
 import { ThemedView } from "@/components/themed-view";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
-import { isSafeOAuthUserPayload } from "@/shared/oauth";
+import { isSafeOAuthSessionToken, isSafeOAuthUserPayload } from "@/shared/oauth";
+import { normalizeCachedUser } from "@/lib/_core/user-cache";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -32,6 +33,9 @@ export default function OAuthCallback() {
       try {
         // Check for sessionToken in params first (web OAuth callback from server redirect)
         if (params.sessionToken) {
+          if (!isSafeOAuthSessionToken(params.sessionToken)) {
+            throw new Error("Authentication response contained an invalid session token");
+          }
           await Auth.setSessionToken(params.sessionToken);
 
           // Decode and store user info if available
@@ -42,16 +46,8 @@ export default function OAuthCallback() {
                 typeof atob !== "undefined"
                   ? atob(params.user)
                   : Buffer.from(params.user, "base64").toString("utf-8");
-              const userData = JSON.parse(userJson);
-                const userInfo: Auth.User = {
-                id: userData.id,
-                role: userData.role === "admin" ? "admin" : "user",
-                openId: userData.openId,
-                name: userData.name,
-                email: userData.email,
-                loginMethod: userData.loginMethod,
-                lastSignedIn: new Date(userData.lastSignedIn || Date.now()),
-              };
+              const userInfo = normalizeCachedUser(JSON.parse(userJson));
+              if (!userInfo) throw new Error("Invalid OAuth user profile");
               await Auth.setUserInfo(userInfo);
             } catch {
               console.warn("[OAuth] User profile payload could not be parsed");
@@ -130,6 +126,9 @@ export default function OAuthCallback() {
 
         // If we have sessionToken directly from URL, use it
         if (sessionToken) {
+          if (!isSafeOAuthSessionToken(sessionToken)) {
+            throw new Error("Authentication response contained an invalid session token");
+          }
           await Auth.setSessionToken(sessionToken);
           // User info is already in the OAuth callback response
           // No need to fetch from API
@@ -158,21 +157,9 @@ export default function OAuthCallback() {
           // Store session token
           await Auth.setSessionToken(result.sessionToken);
 
-          // Store user info if available
-          if (result.user) {
-            const userInfo: Auth.User = {
-              id: result.user.id,
-              role: result.user.role === "admin" ? "admin" : "user",
-              openId: result.user.openId,
-              name: result.user.name,
-              email: result.user.email,
-              loginMethod: result.user.loginMethod,
-              lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
-            };
-            await Auth.setUserInfo(userInfo);
-            console.log("[OAuth] User profile stored");
-          } else {
-          }
+          // Store the validated user profile returned by the code exchange.
+          await Auth.setUserInfo(result.user);
+          console.log("[OAuth] User profile stored");
 
           setStatus("success");
 

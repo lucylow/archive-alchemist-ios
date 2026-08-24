@@ -2,6 +2,8 @@ import { getApiBaseUrl } from "@/constants/oauth";
 import { Platform } from "react-native";
 import { normalizeClientApiError } from "@/shared/api-errors";
 import * as Auth from "./auth";
+import { normalizeCachedUser, type CachedUser } from "./user-cache";
+import { isSafeOAuthSessionToken } from "@/shared/oauth";
 
 export async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -53,14 +55,22 @@ export async function apiCall<T>(endpoint: string, options: RequestInit = {}): P
 export async function exchangeOAuthCode(
   code: string,
   state: string,
-): Promise<{ sessionToken: string; user: any }> {
+): Promise<{ sessionToken: string; user: CachedUser }> {
   const params = new URLSearchParams({ code, state });
   const endpoint = `/api/oauth/mobile?${params.toString()}`;
-  const result = await apiCall<{ app_session_id: string; user: any }>(endpoint);
+  const result = await apiCall<{ app_session_id: unknown; user: unknown }>(endpoint);
+
+  if (!isSafeOAuthSessionToken(result.app_session_id)) {
+    throw new Error("Authentication response contained an invalid session token");
+  }
+  const user = normalizeCachedUser(result.user);
+  if (!user) {
+    throw new Error("Authentication response contained an invalid user profile");
+  }
 
   return {
     sessionToken: result.app_session_id,
-    user: result.user,
+    user,
   };
 }
 

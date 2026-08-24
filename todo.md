@@ -204,3 +204,6 @@
 - [x] Prevent stale authentication hydration responses from overwriting newer session state
 - [x] Add deterministic coverage for authentication request invalidation
 
+- [x] Validate OAuth session-token bounds and required response identity fields before storage
+- [x] Add deterministic coverage for malformed OAuth token and profile responses
+
