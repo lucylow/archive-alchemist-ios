@@ -285,9 +285,13 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!isHydrated) return;
-    AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(selectedPlatforms)).catch(() =>
-      setNotice("Platform preference could not be saved, but this session is still available."),
-    );
+    let active = true;
+    AsyncStorage.setItem(PLATFORMS_KEY, JSON.stringify(selectedPlatforms)).catch(() => {
+      if (active) setNotice("Platform preference could not be saved, but this session is still available.");
+    });
+    return () => {
+      active = false;
+    };
   }, [isHydrated, selectedPlatforms]);
 
   useEffect(() => {

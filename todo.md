@@ -182,3 +182,5 @@
 - [x] Add deterministic coverage for OAuth callback lifecycle invalidation
 - [x] Route every OAuth success redirect through the cleanup-safe timer reference
 - [x] Add deterministic coverage for all OAuth redirect branches
+- [x] Suppress late platform-preference persistence notices after screen unmount
+- [x] Add deterministic coverage for platform persistence lifecycle cleanup
