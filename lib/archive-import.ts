@@ -81,6 +81,11 @@ export const getSelectedArchiveItems = (items: ArchiveItem[], selectedKeys: stri
   return items.filter((item) => selected.has(getArchiveItemKey(item)));
 };
 
+export const reconcileArchiveSelection = (items: ArchiveItem[], selectedKeys: string[]) => {
+  const validKeys = new Set(getArchiveBrowserItems(items).map(getArchiveItemKey));
+  return [...new Set(selectedKeys)].filter((key) => validKeys.has(key));
+};
+
 export const toggleArchiveSelection = (selectedKeys: string[], visibleItems: ArchiveItem[]) => {
   const visibleKeys = visibleItems.map(getArchiveItemKey);
   const selected = new Set(selectedKeys);

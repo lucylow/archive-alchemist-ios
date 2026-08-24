@@ -17,7 +17,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -175,6 +175,14 @@ export default function HomeScreen() {
   );
   const browserItems = useMemo(() => sortArchiveItems(filterArchiveItems(getArchiveBrowserItems(archiveItems), browserQuery, browserYear), browserSort), [archiveItems, browserQuery, browserSort, browserYear]);
   const selectedBrowserItems = useMemo(() => getSelectedArchiveItems(browserItems, selectedBrowserKeys), [browserItems, selectedBrowserKeys]);
+
+  useEffect(() => {
+    setSelectedBrowserKeys((current) => {
+      const next = reconcileArchiveSelection(archiveItems, current);
+      return next.length === current.length && next.every((key, index) => key === current[index]) ? current : next;
+    });
+  }, [archiveItems]);
+
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
@@ -1306,7 +1314,7 @@ export default function HomeScreen() {
               <Text style={styles.sectionTitle}>Archive browser</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Close archive browser" onPress={() => setArchiveBrowserVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
             </View>
-            <Text style={styles.sourceSummary}>Showing {browserItems.length} matching items from a bounded window of {getArchiveBrowserItems(archiveItems).length}.</Text>
+            <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">Showing {browserItems.length} matching items from a bounded window of {getArchiveBrowserItems(archiveItems).length}. {selectedBrowserItems.length} visible item{selectedBrowserItems.length === 1 ? " is" : "s are"} selected.</Text>
             <TextInput value={browserQuery} onChangeText={setBrowserQuery} placeholder="Search titles" placeholderTextColor="#7D7099" accessibilityLabel="Search full archive titles" style={styles.input} returnKeyType="search" />
             <TextInput value={browserYear} onChangeText={(value) => setBrowserYear(value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Filter year" placeholderTextColor="#7D7099" accessibilityLabel="Filter full archive by year" keyboardType="number-pad" style={styles.input} />
             <View style={styles.rowWrap}>
@@ -1319,6 +1327,7 @@ export default function HomeScreen() {
               <SecondaryButton label="Clear selection" accessibilityHint="Clears all full-browser row selections." onPress={() => setSelectedBrowserKeys([])} />
             </View>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent}>
+              {browserItems.length === 0 && <Text style={styles.emptyStateText} accessibilityRole="text">No archive items match the current search and year filter.</Text>}
               {browserItems.map((item) => {
                 const key = getArchiveItemKey(item);
                 const selected = selectedBrowserKeys.includes(key);
@@ -1455,6 +1464,7 @@ const styles = StyleSheet.create({
   browserCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10, maxHeight: "88%" },
   browserList: { flexGrow: 0 },
   browserListContent: { gap: 10, paddingBottom: 12 },
+  emptyStateText: { color: "#B8A8D6", fontSize: 14, paddingVertical: 18, textAlign: "center" },
   browserRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
   browserCheck: { alignItems: "center", justifyContent: "center", minWidth: 28, minHeight: 36, borderRadius: 8 },
   browserCheckSelected: { backgroundColor: "#241842" },

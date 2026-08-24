@@ -280,3 +280,6 @@
 - [x] Add row selection to the full archive browser
 - [x] Export selected full-browser records as JSON or CSV
 - [x] Add deterministic coverage for full-browser selection and export behavior
+- [x] Reconcile full-browser selections when filtered records leave the archive
+- [x] Show accessible selected-count and empty-state feedback in the full browser
+- [x] Add deterministic coverage for full-browser selection reconciliation

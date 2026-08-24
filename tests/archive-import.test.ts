@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, getArchiveBrowserItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_BROWSER_ITEMS, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, getArchiveBrowserItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_BROWSER_ITEMS, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("archive browser window", () => {
   it("caps large imports without mutating the source list", () => {
@@ -34,6 +34,17 @@ describe("parseArchiveManifest", () => {
     ];
     expect(getSelectedArchiveItems(items, [getArchiveItemKey(items[1])])).toEqual([items[1]]);
     expect(getSelectedArchiveItems(items, [])).toEqual([]);
+  });
+
+  it("reconciles full-browser selections after archive replacement without mutating the input", () => {
+    const items = [
+      { title: "Keep", year: 2024, views: "1K" },
+      { title: "Also keep", year: 2023, views: "2K" },
+    ];
+    const staleKey = getArchiveItemKey({ title: "Removed", year: 2022, views: "3K" });
+    const selected = [getArchiveItemKey(items[1]), staleKey, getArchiveItemKey(items[1])];
+    expect(reconcileArchiveSelection(items, selected)).toEqual([getArchiveItemKey(items[1])]);
+    expect(selected).toEqual([getArchiveItemKey(items[1]), staleKey, getArchiveItemKey(items[1])]);
   });
 
   it("toggles visible selections without dropping hidden selections", () => {
