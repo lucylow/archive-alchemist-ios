@@ -195,3 +195,6 @@
 - [x] Cancel the bounded local hydration timeout when storage resolves first
 - [x] Add deterministic coverage for timeout resolution, success cleanup, and storage rejection
 
+- [x] Bound persisted Minds insight text and recommendation arrays during client hydration
+- [x] Add deterministic coverage for oversized cached Minds insight rejection
+

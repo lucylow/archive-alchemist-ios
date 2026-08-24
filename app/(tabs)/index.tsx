@@ -9,6 +9,7 @@ import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
+import { isValidMindsInsight } from "@/lib/minds-response";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
@@ -39,27 +40,6 @@ const discoveries = [
 const formatSavedAt = (value: string) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-};
-
-const isValidMindsInsight = (value: unknown): value is MindsDiscoveryResponse => {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<MindsDiscoveryResponse>;
-  return (
-    typeof candidate.summary === "string" &&
-    candidate.summary.length > 0 &&
-    Array.isArray(candidate.recommendations) &&
-    candidate.recommendations.length > 0 &&
-    candidate.recommendations.every((recommendation) => (
-      Boolean(recommendation) &&
-      typeof recommendation.title === "string" &&
-      typeof recommendation.rationale === "string" &&
-      Array.isArray(recommendation.formats) &&
-      recommendation.formats.length > 0 &&
-      typeof recommendation.confidence === "number" &&
-      recommendation.confidence >= 0 &&
-      recommendation.confidence <= 1
-    ))
-  );
 };
 
 const isValidMemory = (value: unknown): value is Memory => {
