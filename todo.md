@@ -301,3 +301,6 @@
 - [x] Persist a bounded local history of successful archive exports
 - [x] Show recent export format, count, and timestamp without archive contents
 - [x] Add deterministic coverage for export-history normalization and bounds
+- [x] Add a confirmed clear-history action for local export metadata
+- [x] Preserve imported archive and Mind memory when export history is cleared
+- [x] Add deterministic coverage for export-history reset behavior

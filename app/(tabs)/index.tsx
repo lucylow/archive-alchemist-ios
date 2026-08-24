@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, formatExportHistoryLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -199,6 +199,7 @@ export default function HomeScreen() {
   const archiveResetRequestGate = useRef(createSaveRequestGate()).current;
   const archiveExportRequestGate = useRef(createSaveRequestGate()).current;
   const archiveExportRequestIdRef = useRef(0);
+  const exportHistoryResetGate = useRef(createSaveRequestGate()).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
     if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -614,6 +615,27 @@ export default function HomeScreen() {
     }
   };
 
+  const clearLocalExportHistory = async () => {
+    if (!exportHistoryResetGate.tryStart()) return;
+    try {
+      await AsyncStorage.removeItem(EXPORT_HISTORY_KEY);
+      if (!screenActiveRef.current) return;
+      setExportHistory(clearExportHistory());
+      setNotice("Local export history cleared. Imported archive and Mind memory are unchanged.");
+    } catch {
+      if (screenActiveRef.current) setNotice("Local export history could not be cleared. Try again from this device.");
+    } finally {
+      exportHistoryResetGate.finish();
+    }
+  };
+
+  const confirmClearLocalExportHistory = () => {
+    Alert.alert("Clear local export history?", "This removes export format, item count, and timestamp metadata from this device. Imported archive and Mind memory remain.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Clear history", style: "destructive", onPress: clearLocalExportHistory },
+    ]);
+  };
+
   const resetMemory = async () => {
     if (!resetRequestGate.tryStart()) return;
     try {
@@ -927,6 +949,7 @@ export default function HomeScreen() {
                 <View style={styles.rowBetween}><Text style={styles.sectionTitle}>Recent exports</Text><Text style={styles.livePill}>LOCAL ONLY</Text></View>
                 {exportHistory.slice(0, 3).map((entry) => <View key={`${entry.exportedAt}-${entry.format}`} style={styles.mindRow}><View style={styles.flexOne}><Text style={styles.mindName}>{formatExportHistoryLabel(entry)}</Text><Text style={styles.mindDescription}>Shared {formatSavedAt(entry.exportedAt)}</Text></View></View>)}
                 <Text style={styles.sourceSummary}>Only format, item count, and time are saved. Archive contents are not stored in this history.</Text>
+                <SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} />
               </View>
             )}
             {archiveItems.length > 0 && (

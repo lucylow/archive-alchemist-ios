@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, formatExportHistoryLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -17,6 +17,13 @@ describe("export history", () => {
     expect(next).toHaveLength(MAX_EXPORT_HISTORY);
     expect(next[0].format).toBe("csv");
     expect(next.at(-1)?.itemCount).toBe(4);
+  });
+
+  it("clears history without mutating the previous collection", () => {
+    const history = [{ format: "json" as const, itemCount: 2, exportedAt: "2026-08-24T12:00:00.000Z" }];
+    expect(clearExportHistory()).toEqual([]);
+    expect(clearExportHistory()).not.toBe(history);
+    expect(history).toHaveLength(1);
   });
 
   it("formats a readable local-history label", () => {

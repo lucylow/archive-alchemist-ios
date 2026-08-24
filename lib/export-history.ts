@@ -24,5 +24,6 @@ export const normalizeExportHistory = (value: unknown): ExportHistoryEntry[] => 
 };
 
 export const appendExportHistory = (history: ExportHistoryEntry[], entry: ExportHistoryEntry) => [entry, ...normalizeExportHistory(history)].slice(0, MAX_EXPORT_HISTORY);
+export const clearExportHistory = (): ExportHistoryEntry[] => [];
 
 export const formatExportHistoryLabel = (entry: ExportHistoryEntry) => `${entry.format.toUpperCase()} · ${entry.itemCount} item${entry.itemCount === 1 ? "" : "s"}`;
