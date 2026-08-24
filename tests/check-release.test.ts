@@ -258,6 +258,20 @@ describe("release preflight failures", () => {
     }
   });
 
+  it("rejects an unexpected Expo Router production route file", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      mkdirSync(join(directory, "app/tools"), { recursive: true });
+      writeFileSync(join(directory, "app/tools/debug.tsx"), "export default function DebugRoute() { return null; }");
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("Unexpected Expo Router production route file app/tools/debug.tsx");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("rejects a development-only Expo route directory", () => {
     const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
     try {

@@ -235,3 +235,6 @@
 - [x] Detect debug-only or test-only artifacts that could enter the production bundle
 - [x] Add deterministic release-preflight coverage for forbidden production artifacts
 
+- [x] Detect unapproved Expo Router production route files during release preflight
+- [x] Add deterministic coverage for unexpected production routes
+

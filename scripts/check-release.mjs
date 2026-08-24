@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -16,6 +16,13 @@ const requiredFiles = [
 ];
 const assetFiles = requiredFiles.slice(3);
 const forbiddenProductionPaths = ["app/dev"];
+const approvedRouteFiles = new Set([
+  "app/_layout.tsx",
+  "app/(tabs)/_layout.tsx",
+  "app/(tabs)/index.tsx",
+  "app/oauth/callback.tsx",
+  "app/admin/analytics.tsx",
+]);
 const synchronizedBrandingFiles = [
   "assets/images/icon.png",
   "assets/images/splash-icon.png",
@@ -60,6 +67,21 @@ function getProductionApiConfigError(value) {
   }
   return null;
 }
+function collectRouteFiles(directory, prefix = "") {
+  if (!existsSync(directory)) return [];
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const absolutePath = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectRouteFiles(absolutePath, relativePath));
+    } else if (/\.(?:[cm]?[jt]sx?)$/.test(entry.name)) {
+      files.push(`app/${relativePath}`);
+    }
+  }
+  return files;
+}
+
 const reportFailures = () => {
   if (failures.length === 0) return;
   console.error("Release preflight failed:");
@@ -77,6 +99,9 @@ for (const relativePath of forbiddenProductionPaths) {
   if (existsSync(resolve(root, relativePath))) {
     failures.push(`Production build must not include development-only route path ${relativePath}`);
   }
+}
+for (const routeFile of collectRouteFiles(resolve(root, "app"))) {
+  if (!approvedRouteFiles.has(routeFile)) failures.push(`Unexpected Expo Router production route file ${routeFile}`);
 }
 reportFailures();
 
