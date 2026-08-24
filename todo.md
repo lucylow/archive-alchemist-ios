@@ -164,3 +164,5 @@
 
 - [x] Add regression coverage proving client authentication storage helpers emit no diagnostics
 
+- [x] Add deterministic coverage for SecureStore read, write, and delete failure paths
+
