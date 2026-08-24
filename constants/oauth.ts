@@ -94,18 +94,18 @@ export const getLoginUrl = () => {
  *
  * On web, this simply redirects to the login URL.
  *
- * @returns Always null, the callback is handled via deep link.
+ * @returns Whether the external sign-in flow was launched successfully.
  */
-export async function startOAuthLogin(): Promise<string | null> {
+export async function startOAuthLogin(): Promise<boolean> {
   const loginUrl = getLoginUrl();
-  if (!loginUrl) return null;
+  if (!loginUrl) return false;
 
   if (ReactNative.Platform.OS === "web") {
     // On web, just redirect
     if (typeof window !== "undefined") {
       window.location.href = loginUrl;
     }
-    return null;
+    return true;
   }
 
   try {
@@ -113,10 +113,11 @@ export async function startOAuthLogin(): Promise<string | null> {
     if (!supported) {
       console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
       // The caller remains on the current screen and can retry the login action.
-      return null;
+      return false;
     }
 
     await Linking.openURL(loginUrl);
+    return true;
   } catch (error) {
     console.error("[OAuth] Failed to open login URL", {
       errorType: error instanceof Error ? error.name : "unknown",
@@ -125,5 +126,5 @@ export async function startOAuthLogin(): Promise<string | null> {
   }
 
   // The OAuth callback will reopen the app via deep link.
-  return null;
+  return false;
 }

@@ -219,3 +219,7 @@
 - [x] Normalize web API user profiles before caching or exposing them to authenticated UI state
 - [x] Add deterministic coverage for malformed web session profiles
 
+- [x] Add an accessible animated authentication loading state
+- [x] Add retryable authentication error UI with actionable messaging
+- [x] Add deterministic coverage for authentication loading and error-state behavior
+

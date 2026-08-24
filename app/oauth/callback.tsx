@@ -1,4 +1,6 @@
 import { ThemedView } from "@/components/themed-view";
+import { getLoginUrl, startOAuthLogin } from "@/constants/oauth";
+import { getAuthStatusCopy } from "@/lib/auth-ui";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import { isSafeOAuthCode, isSafeOAuthSessionToken, isSafeOAuthState, isSafeOAuthUserPayload } from "@/shared/oauth";
@@ -7,7 +9,7 @@ import { createOAuthCallbackGate } from "@/lib/oauth-callback";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Text } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OAuthCallback() {
@@ -21,7 +23,37 @@ export default function OAuthCallback() {
   }>();
   const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const callbackGate = useRef(createOAuthCallbackGate()).current;
+  const loadingPulse = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (mounted) setReduceMotion(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      loadingPulse.stopAnimation();
+      loadingPulse.setValue(0);
+      return;
+    }
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(loadingPulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(loadingPulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [loadingPulse, reduceMotion]);
 
   useEffect(() => {
     const callbackId = callbackGate.begin();
@@ -202,38 +234,75 @@ export default function OAuthCallback() {
     };
   }, [params.code, params.state, params.error, params.sessionToken, params.user, router, callbackGate]);
 
+  const copy = getAuthStatusCopy(status, errorMessage);
+  const retryLogin = async () => {
+    const retryId = callbackGate.begin();
+    setStatus("processing");
+    setErrorMessage(null);
+    if (!getLoginUrl()) {
+      if (callbackGate.isCurrent(retryId)) {
+        setStatus("error");
+        setErrorMessage("Sign-in is not configured for this build. Please contact the app owner.");
+      }
+      return;
+    }
+    const started = await startOAuthLogin();
+    if (!started && callbackGate.isCurrent(retryId)) {
+      setStatus("error");
+      setErrorMessage("The sign-in window could not be opened. Check your connection and try again.");
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1" edges={["top", "bottom", "left", "right"]}>
-      <ThemedView className="flex-1 items-center justify-center gap-4 p-5">
-        {status === "processing" && (
-          <>
-            <ActivityIndicator size="large" />
-            <Text className="mt-4 text-base leading-6 text-center text-foreground">
-              Completing authentication...
-            </Text>
-          </>
-        )}
-        {status === "success" && (
-          <>
-            <Text className="text-base leading-6 text-center text-foreground">
-              Authentication successful!
-            </Text>
-            <Text className="text-base leading-6 text-center text-foreground">
-              Redirecting...
-            </Text>
-          </>
-        )}
-        {status === "error" && (
-          <>
-            <Text className="mb-2 text-xl font-bold leading-7 text-error">
-              Authentication failed
-            </Text>
-            <Text className="text-base leading-6 text-center text-foreground">
-              {errorMessage}
-            </Text>
-          </>
-        )}
+      <ThemedView className="flex-1 items-center justify-center p-5">
+        <View style={styles.panel} accessibilityLiveRegion="polite">
+          <View style={styles.mark} accessibilityLabel="Archive Alchemist authentication status">
+            <Animated.View
+              style={[
+                styles.pulseRing,
+                {
+                  opacity: status === "processing" ? (reduceMotion ? 0.55 : loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.85] })) : 0.25,
+                  transform: [{ scale: status === "processing" && !reduceMotion ? loadingPulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1.12] }) : 1 }],
+                },
+              ]}
+            />
+            <View style={styles.markCore}><Text style={styles.markText}>AA</Text></View>
+          </View>
+          {status === "processing" && <ActivityIndicator color="#F4C95D" size="small" />}
+          {status === "success" && <Text style={styles.successMark} accessibilityLabel="Authentication completed">✓</Text>}
+          {status === "error" && <Text style={styles.errorMark} accessibilityLabel="Authentication failed">!</Text>}
+          <Text style={[styles.title, status === "error" && styles.errorTitle]} accessibilityRole="header">{copy.title}</Text>
+          <Text style={styles.body}>{copy.body}</Text>
+          {status === "error" && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Try authentication again"
+              accessibilityHint="Reopens the secure sign-in flow"
+              onPress={() => void retryLogin()}
+              style={({ pressed }) => [styles.retryButton, pressed && styles.retryButtonPressed]}
+            >
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+          )}
+        </View>
       </ThemedView>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  panel: { width: "100%", maxWidth: 420, alignItems: "center", padding: 28, borderRadius: 28, backgroundColor: "#17112F", borderWidth: 1, borderColor: "#3A2B63", gap: 12 },
+  mark: { width: 92, height: 92, alignItems: "center", justifyContent: "center", marginBottom: 4 },
+  pulseRing: { position: "absolute", width: 84, height: 84, borderRadius: 42, borderWidth: 1, borderColor: "#F4C95D", backgroundColor: "#2C1D55" },
+  markCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center" },
+  markText: { color: "#100B24", fontSize: 17, fontWeight: "900", letterSpacing: 1 },
+  title: { color: "#F8F4FF", fontSize: 20, lineHeight: 27, fontWeight: "800", textAlign: "center" },
+  errorTitle: { color: "#FF9D9D" },
+  body: { color: "#B9AECF", fontSize: 15, lineHeight: 22, textAlign: "center" },
+  successMark: { color: "#62D8A7", fontSize: 20, fontWeight: "900" },
+  errorMark: { color: "#FF9D9D", fontSize: 20, fontWeight: "900" },
+  retryButton: { minWidth: 160, alignItems: "center", paddingHorizontal: 20, paddingVertical: 13, marginTop: 8, borderRadius: 16, backgroundColor: "#F4C95D" },
+  retryButtonPressed: { opacity: 0.78, transform: [{ scale: 0.98 }] },
+  retryText: { color: "#100B24", fontSize: 15, fontWeight: "800" },
+});
