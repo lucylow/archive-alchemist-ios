@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -47,6 +47,12 @@ describe("parseArchiveManifest", () => {
 
   it("formats recovery-card preview context with selected count", () => {
     expect(getArchivePreviewContextLabel([{ title: "Video", year: 2024, views: "1K" }], 1)).toBe("1 preview item · 1 selected for export");
+  });
+
+  it("accepts only bounded HTTPS source URLs for tappable links", () => {
+    expect(isSafeArchiveSourceUrl("https://example.com/video")).toBe(true);
+    expect(isSafeArchiveSourceUrl("http://example.com/video")).toBe(false);
+    expect(isSafeArchiveSourceUrl("javascript:alert(1)")).toBe(false);
   });
 
   it("rejects insecure or malformed source URLs from persisted records", () => {

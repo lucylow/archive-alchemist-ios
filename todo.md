@@ -252,3 +252,6 @@
 - [x] Preserve optional HTTPS source URLs in normalized archive records
 - [x] Include source URLs in JSON and CSV exports when available
 - [x] Add deterministic coverage for source-URL validation and formatting
+- [x] Add tappable HTTPS source links to archive preview rows
+- [x] Keep source-link failures user-facing and metadata-only
+- [x] Add deterministic coverage for safe source-link eligibility

@@ -4,7 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -455,6 +455,20 @@ export default function HomeScreen() {
     );
   };
 
+  const openArchiveSource = async (sourceUrl: string) => {
+    if (!isSafeArchiveSourceUrl(sourceUrl)) {
+      setNotice("This archive source link is unavailable because it is not a secure HTTPS URL.");
+      return;
+    }
+    try {
+      const canOpen = await Linking.canOpenURL(sourceUrl);
+      if (!canOpen) throw new Error("unsupported");
+      await Linking.openURL(sourceUrl);
+    } catch {
+      if (screenActiveRef.current) setNotice("The archive source link could not be opened on this device.");
+    }
+  };
+
   const discardPendingArchive = () => {
     setPendingArchiveItems([]);
     setPendingArchiveName(null);
@@ -796,7 +810,12 @@ export default function HomeScreen() {
                     <Text style={styles.sectionTitle}>Preview waiting</Text>
                     <Text style={styles.bodyText}>{getArchivePreviewResumeLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
                     <Text style={styles.sourceSummary}>{getArchivePreviewContextLabel(pendingArchiveItems, selectedPreviewKeys.length)}.</Text>
-                    <Text style={styles.mindDescription}>{pendingArchiveItems.slice(0, 2).map(formatArchivePreviewRow).join("; ")}</Text>
+                    {pendingArchiveItems.slice(0, 2).map((item) => (
+                      <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
+                        <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
+                        {item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
+                      </View>
+                    ))}
                   </View>
                   <SecondaryButton label="Review preview" accessibilityHint="Returns to the source archive screen to review and confirm this pending archive preview." onPress={() => setPhase("connect")} />
                 </View>
@@ -1336,4 +1355,7 @@ const styles = StyleSheet.create({
   previewRow: { flexDirection: "row", alignItems: "center", gap: 9, borderBottomColor: "#302451", borderBottomWidth: 1, paddingVertical: 8 },
   previewRowSelected: { backgroundColor: "#241842", borderRadius: 8, paddingHorizontal: 8 },
   previewCheck: { color: "#F4C95D", fontSize: 18, fontWeight: "800", width: 20 },
+  previewSampleRow: { gap: 4, paddingTop: 4 },
+  sourceLink: { alignSelf: "flex-start", paddingVertical: 3 },
+  sourceLinkText: { color: "#F4C95D", fontSize: 12, fontWeight: "800" },
 });

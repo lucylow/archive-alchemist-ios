@@ -8,10 +8,12 @@ export type ArchiveItem = {
   sourceUrl?: string;
 };
 
+export const isSafeArchiveSourceUrl = (value: unknown): value is string => typeof value === "string" && value.length <= 2048 && /^https:\/\/[^\s]+$/i.test(value);
+
 const normalizeSourceUrl = (value: unknown) => {
   if (typeof value !== "string") return undefined;
   const url = value.trim().slice(0, 2048);
-  return /^https:\/\/[^\s]+$/i.test(url) ? url : undefined;
+  return isSafeArchiveSourceUrl(url) ? url : undefined;
 };
 
 const normalizeTitle = (value: unknown) => typeof value === "string" ? value.trim().slice(0, 160) : "";
@@ -99,7 +101,7 @@ export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   return typeof candidate.title === "string" && candidate.title.trim().length > 0 && candidate.title.length <= 160
     && typeof year === "number" && Number.isInteger(year) && year >= 1900 && year <= 2200
     && typeof candidate.views === "string" && candidate.views.length <= 32
-    && (candidate.sourceUrl === undefined || (typeof candidate.sourceUrl === "string" && /^https:\/\/[^\s]+$/i.test(candidate.sourceUrl) && candidate.sourceUrl.length <= 2048));
+    && (candidate.sourceUrl === undefined || isSafeArchiveSourceUrl(candidate.sourceUrl));
 };
 
 const normalizeItem = (value: unknown): ArchiveItem | null => {
