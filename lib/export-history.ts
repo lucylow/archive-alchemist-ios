@@ -27,3 +27,4 @@ export const appendExportHistory = (history: ExportHistoryEntry[], entry: Export
 export const clearExportHistory = (): ExportHistoryEntry[] => [];
 
 export const formatExportHistoryLabel = (entry: ExportHistoryEntry) => `${entry.format.toUpperCase()} · ${entry.itemCount} item${entry.itemCount === 1 ? "" : "s"}`;
+export const getLatestExportStatusLabel = (entry: ExportHistoryEntry | null) => entry ? `Latest export: ${formatExportHistoryLabel(entry)}` : "No exports yet";

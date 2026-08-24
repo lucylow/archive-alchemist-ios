@@ -304,3 +304,6 @@
 - [x] Add a confirmed clear-history action for local export metadata
 - [x] Preserve imported archive and Mind memory when export history is cleared
 - [x] Add deterministic coverage for export-history reset behavior
+- [x] Surface the latest successful export status inside the archive browser
+- [x] Show privacy-safe export metadata in the selected-row review flow
+- [x] Add deterministic coverage for latest-export status wording

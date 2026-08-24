@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getLatestExportStatusLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -170,6 +170,7 @@ export default function HomeScreen() {
   const [memory, setMemory] = useState<Memory | null>(null);
   const [history, setHistory] = useState<Memory[]>([]);
   const [exportHistory, setExportHistory] = useState<ExportHistoryEntry[]>([]);
+  const latestExport = exportHistory[0] ?? null;
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -1394,6 +1395,7 @@ export default function HomeScreen() {
               <Pressable accessibilityRole="button" accessibilityLabel="Close archive browser" onPress={() => setArchiveBrowserVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
             </View>
             <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">Showing {browserItems.length} matching items from a bounded window of {getArchiveBrowserItems(archiveItems).length}. {selectedBrowserItems.length} visible item{selectedBrowserItems.length === 1 ? " is" : "s are"} selected.</Text>
+            <Text style={styles.sourceSummary} accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. Export history is local-only.`}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No exports yet · local export history is empty"}</Text>
             <TextInput value={browserQuery} onChangeText={setBrowserQuery} placeholder="Search titles" placeholderTextColor="#7D7099" accessibilityLabel="Search full archive titles" style={styles.input} returnKeyType="search" />
             <TextInput value={browserYear} onChangeText={(value) => setBrowserYear(value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Filter year" placeholderTextColor="#7D7099" accessibilityLabel="Filter full archive by year" keyboardType="number-pad" style={styles.input} />
             <View style={styles.rowWrap}>
@@ -1428,6 +1430,7 @@ export default function HomeScreen() {
               <Pressable accessibilityRole="button" accessibilityLabel={isExportingArchive ? "Cancel archive export" : "Close archive export review"} onPress={isExportingArchive ? cancelArchiveExport : () => setSelectedBrowserReviewVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>{isExportingArchive ? "Cancel export" : "Cancel"}</Text></Pressable>
             </View>
             <Text style={styles.bodyText} accessibilityLiveRegion="polite">{isExportingArchive ? "Preparing your archive export…" : getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
+            <Text style={styles.sourceSummary} accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. This review contains archive rows, while export history stores metadata only.`}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No previous exports · metadata history is empty"}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
               {selectedBrowserItems.slice(0, 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
               {selectedBrowserItems.length > 20 && <Text style={styles.sourceSummary}>Showing the first 20 selected rows.</Text>}
