@@ -22,13 +22,6 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log("[OAuth] Callback handler triggered", {
-        hasCode: Boolean(params.code),
-        hasState: Boolean(params.state),
-        hasError: Boolean(params.error),
-        hasSessionToken: Boolean(params.sessionToken),
-        hasUser: Boolean(params.user),
-      });
       try {
         // Check for sessionToken in params first (web OAuth callback from server redirect)
         if (params.sessionToken) {
@@ -54,10 +47,8 @@ export default function OAuthCallback() {
               };
               await Auth.setUserInfo(userInfo);
             } catch {
-              console.warn("[OAuth] User profile payload could not be parsed");
             }
           } else if (params.user) {
-            console.warn("[OAuth] User profile payload exceeded safe bounds");
           }
 
           setStatus("success");
@@ -90,7 +81,6 @@ export default function OAuthCallback() {
         const error =
           params.error || (url ? new URL(url, "http://dummy").searchParams.get("error") : null);
         if (error) {
-          console.warn("[OAuth] Provider returned an error parameter");
           setStatus("error");
           setErrorMessage("The sign-in provider could not complete authentication. Please try again.");
           return;
@@ -113,7 +103,6 @@ export default function OAuthCallback() {
             state = urlObj.searchParams.get("state");
             sessionToken = urlObj.searchParams.get("sessionToken");
           } catch {
-            console.warn("[OAuth] Full callback URL parsing failed; trying fallback parser");
             // Try parsing as relative URL with query params
             const match = url.match(/[?&](code|state|sessionToken)=([^&]+)/g);
             if (match) {
@@ -142,10 +131,7 @@ export default function OAuthCallback() {
 
         // Otherwise, exchange code for session token
         if (!code || !state) {
-          console.error("[OAuth] Missing code or state parameter", {
-            hasCode: !!code,
-            hasState: !!state,
-          });
+          
           setStatus("error");
           setErrorMessage("Missing code or state parameter");
           return;
@@ -170,7 +156,6 @@ export default function OAuthCallback() {
               lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
             };
             await Auth.setUserInfo(userInfo);
-            console.log("[OAuth] User profile stored");
           } else {
           }
 
@@ -181,14 +166,10 @@ export default function OAuthCallback() {
             router.replace("/(tabs)");
           }, 1000);
         } else {
-          console.error("[OAuth] Authentication response did not include a session token");
           setStatus("error");
           setErrorMessage("No session token received");
         }
-      } catch (error) {
-        console.error("[OAuth] Callback processing failed", {
-          errorType: error instanceof Error ? error.name : "unknown",
-        });
+      } catch {
         setStatus("error");
         setErrorMessage("Authentication could not be completed. Please try again.");
       }

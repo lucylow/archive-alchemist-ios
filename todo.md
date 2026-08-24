@@ -174,3 +174,5 @@
 - [x] Add deterministic coverage for ignored quota-refresh failures
 - [x] Suppress late Minds-memory persistence commits after request cancellation or navigation
 - [x] Add deterministic coverage for late insight persistence invalidation
+- [x] Remove routine OAuth callback logs from the production mobile bundle
+- [x] Add deterministic coverage for metadata-only OAuth callback diagnostics
