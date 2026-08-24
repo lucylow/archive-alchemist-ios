@@ -1,7 +1,7 @@
 import * as Linking from "expo-linking";
 import * as ReactNative from "react-native";
-import { getDeepLinkScheme } from "../shared/const";
-import { buildOAuthLoginUrl } from "../shared/oauth-config";
+import { getDeepLinkScheme } from "@/shared/const";
+import { buildOAuthLoginUrl } from "@/shared/oauth-config";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
@@ -94,18 +94,18 @@ export const getLoginUrl = () => {
  *
  * On web, this simply redirects to the login URL.
  *
- * @returns Whether the external sign-in flow was launched successfully.
+ * @returns Always null, the callback is handled via deep link.
  */
-export async function startOAuthLogin(): Promise<boolean> {
+export async function startOAuthLogin(): Promise<string | null> {
   const loginUrl = getLoginUrl();
-  if (!loginUrl) return false;
+  if (!loginUrl) return null;
 
   if (ReactNative.Platform.OS === "web") {
     // On web, just redirect
     if (typeof window !== "undefined") {
       window.location.href = loginUrl;
     }
-    return true;
+    return null;
   }
 
   try {
@@ -113,11 +113,10 @@ export async function startOAuthLogin(): Promise<boolean> {
     if (!supported) {
       console.warn("[OAuth] Cannot open login URL: URL scheme not supported");
       // The caller remains on the current screen and can retry the login action.
-      return false;
+      return null;
     }
 
     await Linking.openURL(loginUrl);
-    return true;
   } catch (error) {
     console.error("[OAuth] Failed to open login URL", {
       errorType: error instanceof Error ? error.name : "unknown",
@@ -126,5 +125,5 @@ export async function startOAuthLogin(): Promise<boolean> {
   }
 
   // The OAuth callback will reopen the app via deep link.
-  return false;
+  return null;
 }

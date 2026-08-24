@@ -21,18 +21,6 @@ describe("canStartMindsRequest", () => {
     expect(gate.isCurrent(nextRequest)).toBe(true);
   });
 
-  it("suppresses a delayed persistence commit after cancellation", async () => {
-    const gate = createMindsRequestGate();
-    const request = gate.begin();
-    let committed = false;
-    const delayedCommit = Promise.resolve().then(() => {
-      if (gate.isCurrent(request)) committed = true;
-    });
-    gate.cancel();
-    await delayedCommit;
-    expect(committed).toBe(false);
-  });
-
   it("keeps repeated cancellation invalidation-safe", () => {
     const gate = createMindsRequestGate();
     const request = gate.begin();

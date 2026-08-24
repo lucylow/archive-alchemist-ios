@@ -1,16 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Platform as RNPlatform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
-import { withTimeout } from "@/lib/_core/with-timeout";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
 import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
 import { canAutoPost } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
-import { isValidMindsInsight } from "@/lib/minds-response";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
@@ -41,6 +39,27 @@ const discoveries = [
 const formatSavedAt = (value: string) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? "recently" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+};
+
+const isValidMindsInsight = (value: unknown): value is MindsDiscoveryResponse => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<MindsDiscoveryResponse>;
+  return (
+    typeof candidate.summary === "string" &&
+    candidate.summary.length > 0 &&
+    Array.isArray(candidate.recommendations) &&
+    candidate.recommendations.length > 0 &&
+    candidate.recommendations.every((recommendation) => (
+      Boolean(recommendation) &&
+      typeof recommendation.title === "string" &&
+      typeof recommendation.rationale === "string" &&
+      Array.isArray(recommendation.formats) &&
+      recommendation.formats.length > 0 &&
+      typeof recommendation.confidence === "number" &&
+      recommendation.confidence >= 0 &&
+      recommendation.confidence <= 1
+    ))
+  );
 };
 
 const isValidMemory = (value: unknown): value is Memory => {
@@ -129,21 +148,18 @@ export default function HomeScreen() {
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
-  const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
-    if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
+  const persistInsightToMemory = async (insight: MindsDiscoveryResponse) => {
+    if (!memory) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
     try {
       await Promise.all([
         AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(updatedMemory)),
         AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory)),
       ]);
-      if (!mindsRequestGate.isCurrent(requestId)) return;
       setMemory(updatedMemory);
       setHistory(nextHistory);
     } catch {
-      if (mindsRequestGate.isCurrent(requestId)) {
-        setNotice("Minds returned an insight, but it could not be saved to local memory.");
-      }
+      setNotice("Minds returned an insight, but it could not be saved to local memory.");
     }
   };
   const mindsQuota = trpc.minds.quota.useQuery(undefined, {
@@ -203,11 +219,10 @@ export default function HomeScreen() {
           AsyncStorage.getItem(HISTORY_KEY),
           AsyncStorage.getItem(PLATFORMS_KEY),
         ]);
-        const [memoryValue, historyValue, platformsValue] = await withTimeout(
-          storageRead,
-          [null, null, null] as [string | null, string | null, string | null],
-          1500,
-        );
+        const storageTimeout = new Promise<[string | null, string | null, string | null]>((resolve) => {
+          setTimeout(() => resolve([null, null, null]), 1500);
+        });
+        const [memoryValue, historyValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
@@ -306,7 +321,7 @@ export default function HomeScreen() {
             setMindsInsight(data);
             void mindsQuota.refetch();
             setNotice("Minds returned a structured follow-up plan for this archive item.");
-            void persistInsightToMemory(data, requestId);
+            void persistInsightToMemory(data);
           },
           onError: (error) => {
             if (!mindsRequestGate.isCurrent(requestId)) return;
@@ -923,11 +938,7 @@ const styles = StyleSheet.create({
   loadingTitle: { color: "#F8F4FF", fontSize: 18, fontWeight: "800" },
   loadingMark: { width: 92, height: 92, alignItems: "center", justifyContent: "center", marginBottom: 4 },
   loadingPulseRing: { position: "absolute", width: 84, height: 84, borderRadius: 42, borderWidth: 1, borderColor: "#F4C95D", backgroundColor: "#2C1D55" },
-  loadingMarkCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center" },
-  loadingMarkShadow: RNPlatform.select({
-    web: { boxShadow: "0px 4px 12px rgba(244, 201, 93, 0.35)" },
-    default: { shadowColor: "#F4C95D", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
-  }),
+  loadingMarkCore: { width: 62, height: 62, borderRadius: 31, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center", shadowColor: "#F4C95D", shadowOpacity: 0.35, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
   loadingMarkText: { color: "#100B24", fontSize: 17, fontWeight: "900", letterSpacing: 1 },
   stack: { gap: 16 },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
