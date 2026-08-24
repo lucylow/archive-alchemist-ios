@@ -160,3 +160,5 @@
 
 - [x] Replace deprecated loading-indicator shadow props with platform-safe box shadow styling
 
+- [x] Remove residual client authentication token, user, and exception payload diagnostics
+
