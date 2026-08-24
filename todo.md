@@ -307,3 +307,6 @@
 - [x] Surface the latest successful export status inside the archive browser
 - [x] Show privacy-safe export metadata in the selected-row review flow
 - [x] Add deterministic coverage for latest-export status wording
+- [x] Add a compact export-history detail modal from the archive browser
+- [x] Provide clear-history access and local-only privacy copy in the detail modal
+- [x] Add deterministic coverage for export-history detail wording

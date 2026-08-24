@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getLatestExportStatusLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLatestExportStatusLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -24,6 +24,11 @@ describe("export history", () => {
     expect(clearExportHistory()).toEqual([]);
     expect(clearExportHistory()).not.toBe(history);
     expect(history).toHaveLength(1);
+  });
+
+  it("formats export-history detail labels consistently", () => {
+    expect(getExportHistoryDetailLabel([])).toBe("Export history: 0 records");
+    expect(getExportHistoryDetailLabel([{ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" }])).toBe("Export history: 1 record");
   });
 
   it("formats latest-export status consistently", () => {

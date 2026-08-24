@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getLatestExportStatusLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLatestExportStatusLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -170,6 +170,7 @@ export default function HomeScreen() {
   const [memory, setMemory] = useState<Memory | null>(null);
   const [history, setHistory] = useState<Memory[]>([]);
   const [exportHistory, setExportHistory] = useState<ExportHistoryEntry[]>([]);
+  const [exportHistoryVisible, setExportHistoryVisible] = useState(false);
   const latestExport = exportHistory[0] ?? null;
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
@@ -950,7 +951,10 @@ export default function HomeScreen() {
                 <View style={styles.rowBetween}><Text style={styles.sectionTitle}>Recent exports</Text><Text style={styles.livePill}>LOCAL ONLY</Text></View>
                 {exportHistory.slice(0, 3).map((entry) => <View key={`${entry.exportedAt}-${entry.format}`} style={styles.mindRow}><View style={styles.flexOne}><Text style={styles.mindName}>{formatExportHistoryLabel(entry)}</Text><Text style={styles.mindDescription}>Shared {formatSavedAt(entry.exportedAt)}</Text></View></View>)}
                 <Text style={styles.sourceSummary}>Only format, item count, and time are saved. Archive contents are not stored in this history.</Text>
-                <SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} />
+                <View style={styles.actionRow}>
+                  <SecondaryButton label="View export history" accessibilityHint="Opens local export metadata including format, item count, and timestamp." onPress={() => setExportHistoryVisible(true)} />
+                  <SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} />
+                </View>
               </View>
             )}
             {archiveItems.length > 0 && (
@@ -1395,7 +1399,7 @@ export default function HomeScreen() {
               <Pressable accessibilityRole="button" accessibilityLabel="Close archive browser" onPress={() => setArchiveBrowserVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
             </View>
             <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">Showing {browserItems.length} matching items from a bounded window of {getArchiveBrowserItems(archiveItems).length}. {selectedBrowserItems.length} visible item{selectedBrowserItems.length === 1 ? " is" : "s are"} selected.</Text>
-            <Text style={styles.sourceSummary} accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. Export history is local-only.`}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No exports yet · local export history is empty"}</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. Open local export history.`} onPress={() => setExportHistoryVisible(true)} style={({ pressed }) => [styles.statusLink, pressed && styles.pressed]}><Text style={styles.sourceSummary}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No exports yet · local export history is empty"}</Text></Pressable>
             <TextInput value={browserQuery} onChangeText={setBrowserQuery} placeholder="Search titles" placeholderTextColor="#7D7099" accessibilityLabel="Search full archive titles" style={styles.input} returnKeyType="search" />
             <TextInput value={browserYear} onChangeText={(value) => setBrowserYear(value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Filter year" placeholderTextColor="#7D7099" accessibilityLabel="Filter full archive by year" keyboardType="number-pad" style={styles.input} />
             <View style={styles.rowWrap}>
@@ -1439,6 +1443,22 @@ export default function HomeScreen() {
               <SecondaryButton label="Share JSON" accessibilityHint="Shares the reviewed selected archive rows as a normalized JSON file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); }} />
               <SecondaryButton label="Share CSV" accessibilityHint="Shares the reviewed selected archive rows as a normalized CSV file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); }} />
             </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal visible={exportHistoryVisible} transparent animationType="slide" onRequestClose={() => setExportHistoryVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.detailCard} accessible accessibilityLabel={getExportHistoryDetailLabel(exportHistory)}>
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitle}>Export history</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Close export history" onPress={() => setExportHistoryVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
+            </View>
+            <Text style={styles.bodyText}>Only export format, item count, and timestamp are stored locally. Archive contents are never included in this history.</Text>
+            <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Local export history records">
+              {exportHistory.length === 0 && <Text style={styles.emptyStateText}>No local export history yet.</Text>}
+              {exportHistory.map((entry) => <View key={`${entry.exportedAt}-${entry.format}`} style={styles.mindRow}><View style={styles.flexOne}><Text style={styles.mindName}>{formatExportHistoryLabel(entry)}</Text><Text style={styles.mindDescription}>Shared {formatSavedAt(entry.exportedAt)}</Text></View></View>)}
+            </ScrollView>
+            {exportHistory.length > 0 && <SecondaryButton label="Clear export history" accessibilityHint="Asks for confirmation before removing local export metadata. Imported archive and Mind memory remain." onPress={confirmClearLocalExportHistory} />}
           </View>
         </View>
       </Modal>
@@ -1559,7 +1579,8 @@ const styles = StyleSheet.create({
   previewRowSelected: { backgroundColor: "#241842", borderRadius: 8, paddingHorizontal: 8 },
   previewCheck: { color: "#F4C95D", fontSize: 18, fontWeight: "800", width: 20 },
   previewSampleRow: { gap: 4, paddingTop: 4 },
-  sourceLink: { alignSelf: "flex-start", paddingVertical: 3 },
+   sourceLink: { alignSelf: "flex-start", paddingVertical: 3 },
+   statusLink: { alignSelf: "stretch", paddingVertical: 3 },
   sourceLinkText: { color: "#F4C95D", fontSize: 12, fontWeight: "800" },
   modalBackdrop: { flex: 1, backgroundColor: "rgba(16, 11, 36, 0.72)", justifyContent: "flex-end" },
   browserCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10, maxHeight: "88%" },
