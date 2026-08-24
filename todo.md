@@ -249,3 +249,6 @@
 - [x] Show selected preview count on the home recovery card
 - [x] Show matching preview count and sample rows on the home recovery card
 - [x] Add deterministic coverage for recovery-card context wording
+- [x] Preserve optional HTTPS source URLs in normalized archive records
+- [x] Include source URLs in JSON and CSV exports when available
+- [x] Add deterministic coverage for source-URL validation and formatting

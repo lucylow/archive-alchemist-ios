@@ -4,8 +4,8 @@ import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArch
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
-    expect(parseArchiveManifest(JSON.stringify([{ name: " A video ", publishedYear: "2023", viewCount: 1200 }]), "export.json")).toEqual([
-      { title: "A video", year: 2023, views: "1200" },
+    expect(parseArchiveManifest(JSON.stringify([{ name: " A video ", publishedYear: "2023", viewCount: 1200, url: "https://example.com/video" }]), "export.json")).toEqual([
+      { title: "A video", year: 2023, views: "1200", sourceUrl: "https://example.com/video" },
     ]);
   });
 
@@ -49,8 +49,13 @@ describe("parseArchiveManifest", () => {
     expect(getArchivePreviewContextLabel([{ title: "Video", year: 2024, views: "1K" }], 1)).toBe("1 preview item · 1 selected for export");
   });
 
-  it("serializes normalized archive data as quoted CSV", () => {
-    expect(serializeArchiveCsv([{ title: 'A "quoted" video', year: 2024, views: "1K" }])).toBe('title,year,views\n"A ""quoted"" video","2024","1K"\n');
+  it("rejects insecure or malformed source URLs from persisted records", () => {
+    expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1K", sourceUrl: "http://example.com" })).toBe(false);
+    expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1K", sourceUrl: "https://example.com/video" })).toBe(true);
+  });
+
+  it("serializes normalized archive data as quoted CSV with source URLs", () => {
+    expect(serializeArchiveCsv([{ title: 'A "quoted" video', year: 2024, views: "1K", sourceUrl: "https://example.com/a,b" }])).toBe('title,year,views,sourceUrl\n"A ""quoted"" video","2024","1K","https://example.com/a,b"\n');
   });
 
   it("serializes a normalized archive manifest deterministically", () => {

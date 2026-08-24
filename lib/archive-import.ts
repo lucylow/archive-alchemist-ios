@@ -5,6 +5,13 @@ export type ArchiveItem = {
   title: string;
   year: number;
   views: string;
+  sourceUrl?: string;
+};
+
+const normalizeSourceUrl = (value: unknown) => {
+  if (typeof value !== "string") return undefined;
+  const url = value.trim().slice(0, 2048);
+  return /^https:\/\/[^\s]+$/i.test(url) ? url : undefined;
 };
 
 const normalizeTitle = (value: unknown) => typeof value === "string" ? value.trim().slice(0, 160) : "";
@@ -32,15 +39,15 @@ export const getArchivePreviewLabel = (items: ArchiveItem[], fileName: string | 
   `${items.length} item${items.length === 1 ? "" : "s"} ready from ${fileName}`;
 
 export const formatArchivePreviewRow = (item: ArchiveItem) =>
-  `${item.title} · ${item.year} · ${item.views} views`;
+  `${item.title} · ${item.year} · ${item.views} views${item.sourceUrl ? ` · ${item.sourceUrl}` : ""}`;
 
 export const serializeArchiveManifest = (items: ArchiveItem[]) => `${JSON.stringify(items, null, 2)}\n`;
 
 export const serializeArchiveCsv = (items: ArchiveItem[]) => {
   const quote = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
   return [
-    "title,year,views",
-    ...items.map((item) => [quote(item.title), quote(item.year), quote(item.views)].join(",")),
+    "title,year,views,sourceUrl",
+    ...items.map((item) => [quote(item.title), quote(item.year), quote(item.views), quote(item.sourceUrl ?? "")].join(",")),
     "",
   ].join("\n");
 };
@@ -91,7 +98,8 @@ export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   const year = candidate.year;
   return typeof candidate.title === "string" && candidate.title.trim().length > 0 && candidate.title.length <= 160
     && typeof year === "number" && Number.isInteger(year) && year >= 1900 && year <= 2200
-    && typeof candidate.views === "string" && candidate.views.length <= 32;
+    && typeof candidate.views === "string" && candidate.views.length <= 32
+    && (candidate.sourceUrl === undefined || (typeof candidate.sourceUrl === "string" && /^https:\/\/[^\s]+$/i.test(candidate.sourceUrl) && candidate.sourceUrl.length <= 2048));
 };
 
 const normalizeItem = (value: unknown): ArchiveItem | null => {
@@ -103,6 +111,7 @@ const normalizeItem = (value: unknown): ArchiveItem | null => {
     title,
     year: normalizeYear(candidate.year ?? candidate.publishedYear ?? candidate.date),
     views: normalizeViews(candidate.views ?? candidate.viewCount ?? candidate.plays),
+    sourceUrl: normalizeSourceUrl(candidate.sourceUrl ?? candidate.url ?? candidate.link),
   };
 };
 
