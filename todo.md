@@ -158,3 +158,5 @@
 
 - [x] Add deterministic tests for normalized release preflight configuration failures
 
+- [x] Replace deprecated loading-indicator shadow props with platform-safe box shadow styling
+
