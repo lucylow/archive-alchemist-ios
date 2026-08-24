@@ -277,11 +277,13 @@ export default function HomeScreen() {
         } else if (platformsValue) {
           await discardStoredValue(PLATFORMS_KEY);
         }
-        if (recoveredInvalidStorage) {
+        if (active && recoveredInvalidStorage) {
           setNotice("Some saved local memory was reset because it was invalid or too large. Your current session is still available.");
         }
       } catch {
-        setNotice("Saved local preferences could not be read. Your current session is still available.");
+        if (active) {
+          setNotice("Saved local preferences could not be read. Your current session is still available.");
+        }
       } finally {
         if (hydrationTimeout) clearTimeout(hydrationTimeout);
         hydrationTimeout = null;

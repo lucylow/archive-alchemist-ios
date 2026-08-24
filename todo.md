@@ -190,3 +190,5 @@
 - [x] Add deterministic coverage for hydration timeout cleanup
 - [x] Suppress late Mind-memory save state updates after screen unmount
 - [x] Add deterministic coverage for save lifecycle invalidation
+- [x] Suppress late hydration recovery notices after screen unmount
+- [x] Add deterministic coverage for hydration notice lifecycle invalidation
