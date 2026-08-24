@@ -20,6 +20,8 @@ const normalizeViews = (value: unknown) => {
   return text || "—";
 };
 
+export const clearArchiveItems = (): ArchiveItem[] => [];
+
 export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<ArchiveItem>;

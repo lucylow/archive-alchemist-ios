@@ -208,3 +208,5 @@
 - [x] Persist imported archive items in bounded local storage
 - [x] Restore imported archive items during startup hydration with safe recovery
 - [x] Add deterministic coverage for imported archive persistence and invalid-storage handling
+- [x] Add a user-confirmed action to clear imported archive items without clearing Mind memory
+- [x] Add deterministic coverage for imported-archive clear-state behavior

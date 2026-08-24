@@ -14,7 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
+import { clearArchiveItems, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -160,6 +160,7 @@ export default function HomeScreen() {
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
   const resetRequestGate = useRef(createSaveRequestGate()).current;
+  const archiveResetRequestGate = useRef(createSaveRequestGate()).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
     if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -490,6 +491,31 @@ export default function HomeScreen() {
     }
   };
 
+  const clearImportedArchive = async () => {
+    if (!archiveResetRequestGate.tryStart()) return;
+    try {
+      await AsyncStorage.removeItem(ARCHIVE_KEY);
+      if (!screenActiveRef.current) return;
+      setArchiveItems(clearArchiveItems());
+      setNotice("Imported archive cleared. Mind memory is still available.");
+    } catch {
+      if (screenActiveRef.current) setNotice("Imported archive could not be cleared. Try again from this device.");
+    } finally {
+      archiveResetRequestGate.finish();
+    }
+  };
+
+  const confirmClearImportedArchive = () => {
+    Alert.alert(
+      "Clear imported archive?",
+      "This removes the imported archive items from this device. Your Mind memory and preferences will remain.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Clear archive", style: "destructive", onPress: clearImportedArchive },
+      ],
+    );
+  };
+
   const confirmResetMemory = () => {
     Alert.alert(
       "Clear local Mind memory?",
@@ -665,6 +691,13 @@ export default function HomeScreen() {
                   ? `Last workflow: ${memory.title} across ${memory.platforms.length} platform${memory.platforms.length === 1 ? "" : "s"}.`
                   : "Your first workflow will be remembered locally on this device."}
               </Text>
+              {archiveItems.length > 0 && (
+                <SecondaryButton
+                  label="Clear imported archive"
+                  accessibilityHint="Opens a confirmation dialog before removing imported archive items from this device. Mind memory remains available."
+                  onPress={confirmClearImportedArchive}
+                />
+              )}
               {memory && <Text style={styles.goldText}>Saved {formatSavedAt(memory.savedAt)} · {memory.followUp}</Text>}
               {memory && <Text style={styles.sourceSummary}>Sources: {memory.platforms.join(", ")}</Text>}
               {memory && (
