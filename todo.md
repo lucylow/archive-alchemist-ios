@@ -177,3 +177,6 @@
 - [x] Make strict App Store submission preflight report actionable configuration errors
 - [x] Add deterministic tests for strict and advisory submission-preflight behavior
 
+- [x] Validate release assets are regular PNG files, including the primary iOS icon
+- [x] Add regression coverage for invalid release asset file types and signatures
+

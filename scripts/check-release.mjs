@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
@@ -13,6 +13,8 @@ const requiredFiles = [
   "assets/images/android-icon-background.png",
   "assets/images/android-icon-monochrome.png",
 ];
+const assetFiles = requiredFiles.slice(3);
+const pngSignature = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 const failures = [];
 const reportFailures = () => {
@@ -63,9 +65,19 @@ for (const forbidden of ["expo-audio", "expo-video", "expo-notifications", "POST
   }
 }
 
-for (const relativePath of requiredFiles.slice(4)) {
-  const size = statSync(resolve(root, relativePath)).size;
-  if (size > 1024 * 1024) failures.push(`${relativePath} is larger than 1 MB (${size} bytes)`);
+for (const relativePath of assetFiles) {
+  const absolutePath = resolve(root, relativePath);
+  const stats = lstatSync(absolutePath);
+  if (!stats.isFile()) {
+    failures.push(`${relativePath} is not a regular file`);
+    continue;
+  }
+
+  const signature = readFileSync(absolutePath).subarray(0, pngSignature.length);
+  const hasPngSignature =
+    signature.length === pngSignature.length && pngSignature.every((byte, index) => signature[index] === byte);
+  if (!hasPngSignature) failures.push(`${relativePath} is not a valid PNG file`);
+  if (stats.size > 1024 * 1024) failures.push(`${relativePath} is larger than 1 MB (${stats.size} bytes)`);
 }
 
 reportFailures();

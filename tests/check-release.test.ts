@@ -16,6 +16,12 @@ const requiredFiles = [
   "assets/images/android-icon-background.png",
   "assets/images/android-icon-monochrome.png",
 ];
+const pngSignature = Buffer.from("89504e470d0a1a0a", "hex");
+
+function fixtureContent(relativePath: string, content: string) {
+  if (content !== "placeholder") return content;
+  return relativePath.endsWith(".png") ? pngSignature : content;
+}
 
 function createFixture(directory: string, production: Record<string, unknown>) {
   const appConfig = [
@@ -38,7 +44,7 @@ function createFixture(directory: string, production: Record<string, unknown>) {
     const absolutePath = join(directory, relativePath);
     const parent = absolutePath.slice(0, absolutePath.lastIndexOf("/"));
     if (parent) mkdirSync(parent, { recursive: true });
-    writeFileSync(absolutePath, relativePath === "app.config.ts" ? appConfig : relativePath === "eas.json" ? JSON.stringify(easConfig) : "placeholder");
+    writeFileSync(absolutePath, fixtureContent(relativePath, relativePath === "app.config.ts" ? appConfig : relativePath === "eas.json" ? JSON.stringify(easConfig) : "placeholder"));
   }
 }
 
@@ -73,7 +79,7 @@ describe("release preflight failures", () => {
         const absolutePath = join(directory, relativePath);
         const parent = absolutePath.slice(0, absolutePath.lastIndexOf("/"));
         if (parent) mkdirSync(parent, { recursive: true });
-        writeFileSync(absolutePath, relativePath === "eas.json" ? "{ invalid" : "placeholder");
+        writeFileSync(absolutePath, fixtureContent(relativePath, relativePath === "eas.json" ? "{ invalid" : "placeholder"));
       }
 
       const result = runPreflight(directory);
@@ -92,6 +98,33 @@ describe("release preflight failures", () => {
       const result = runPreflight(directory);
       expect(result.status).toBe(1);
       expect(result.output).toContain('production profile must use "store" distribution');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects an invalid PNG signature", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      writeFileSync(join(directory, "assets/images/icon.png"), "not a png");
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("assets/images/icon.png is not a valid PNG file");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a branding asset that is not a regular file", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      rmSync(join(directory, "assets/images/icon.png"));
+      mkdirSync(join(directory, "assets/images/icon.png"));
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("assets/images/icon.png is not a regular file");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
