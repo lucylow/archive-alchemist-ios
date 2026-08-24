@@ -316,3 +316,6 @@
 - [x] Add a format-aware preset for the last export shortcut
 - [x] Keep the preset transient and avoid persisting archive contents or row selections
 - [x] Add deterministic coverage for format-preset wording
+- [x] Add a one-tap export action for the temporary recommended format
+- [x] Preserve selected rows and review state while starting the recommended export
+- [x] Add deterministic coverage for recommended-format action wording

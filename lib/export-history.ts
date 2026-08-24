@@ -31,3 +31,4 @@ export const getLatestExportStatusLabel = (entry: ExportHistoryEntry | null) => 
 export const getExportHistoryDetailLabel = (entries: ExportHistoryEntry[]) => `Export history: ${entries.length} record${entries.length === 1 ? "" : "s"}`;
 export const getLastExportShortcutLabel = (entry: ExportHistoryEntry | null) => entry ? `Review last ${entry.format.toUpperCase()} export · ${entry.itemCount} item${entry.itemCount === 1 ? "" : "s"}` : "Open archive browser";
 export const getLastExportFormatPresetLabel = (entry: ExportHistoryEntry | null) => entry ? `Recommended format from the last export: ${entry.format.toUpperCase()}. This preference is temporary.` : "No temporary format preference";
+export const getRecommendedExportActionLabel = (entry: ExportHistoryEntry | null) => entry ? `Share ${entry.format.toUpperCase()} now` : "Share recommended format";

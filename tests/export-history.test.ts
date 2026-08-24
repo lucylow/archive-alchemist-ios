@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -35,6 +35,11 @@ describe("export history", () => {
     expect(getLastExportShortcutLabel(null)).toBe("Open archive browser");
     expect(getLastExportShortcutLabel({ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last JSON export · 1 item");
     expect(getLastExportShortcutLabel({ format: "csv", itemCount: 4, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last CSV export · 4 items");
+  });
+
+  it("formats recommended-export action labels consistently", () => {
+    expect(getRecommendedExportActionLabel(null)).toBe("Share recommended format");
+    expect(getRecommendedExportActionLabel({ format: "json", itemCount: 2, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Share JSON now");
   });
 
   it("formats temporary last-export format presets consistently", () => {
