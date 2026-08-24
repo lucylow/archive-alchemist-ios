@@ -17,7 +17,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -814,6 +814,7 @@ export default function HomeScreen() {
                     <Text style={styles.sourceSummary}>{getArchivePreviewContextLabel(pendingArchiveItems, selectedPreviewKeys.length)}.</Text>
                     {pendingArchiveItems.slice(0, 2).map((item) => (
                       <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
+                        {item.thumbnailUrl ? <Image source={{ uri: item.thumbnailUrl }} contentFit="cover" accessibilityLabel={`Thumbnail for ${item.title}`} onError={() => setNotice(getArchiveThumbnailFallbackLabel(item.title))} style={styles.archiveThumbnail} /> : <Text accessibilityRole="text" style={styles.thumbnailFallback}>{getArchiveThumbnailFallbackLabel(item.title)}</Text>}
                         <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
                         <Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} accessibilityHint="Opens archive metadata and available source actions." onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
                       </View>
@@ -1395,4 +1396,5 @@ const styles = StyleSheet.create({
   detailTitle: { color: "#F8F4FF", fontSize: 24, fontWeight: "800", lineHeight: 30 },
   archiveThumbnail: { width: 56, height: 40, borderRadius: 8, backgroundColor: "#100B24" },
   detailThumbnail: { width: "100%", height: 160, borderRadius: 14, backgroundColor: "#100B24" },
+  thumbnailFallback: { color: "#AAA0C7", fontSize: 12, fontStyle: "italic" },
 });

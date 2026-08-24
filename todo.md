@@ -265,3 +265,6 @@
 - [x] Include thumbnails in JSON and CSV exports when available
 - [x] Add safe thumbnail loading with an accessible fallback state
 - [x] Add deterministic coverage for thumbnail URL validation and formatting
+- [x] Render validated thumbnail URLs in pending archive preview rows
+- [x] Provide accessible fallback copy when a pending thumbnail cannot load
+- [x] Add deterministic coverage for pending-thumbnail eligibility and fallback wording

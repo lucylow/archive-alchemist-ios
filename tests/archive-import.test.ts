@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -53,6 +53,10 @@ describe("parseArchiveManifest", () => {
     expect(isSafeArchiveSourceUrl("https://example.com/video")).toBe(true);
     expect(isSafeArchiveSourceUrl("http://example.com/video")).toBe(false);
     expect(isSafeArchiveSourceUrl("javascript:alert(1)")).toBe(false);
+  });
+
+  it("formats an accessible thumbnail fallback label", () => {
+    expect(getArchiveThumbnailFallbackLabel("Video")).toBe("Thumbnail unavailable for Video");
   });
 
   it("accepts only secure HTTPS thumbnail URLs", () => {

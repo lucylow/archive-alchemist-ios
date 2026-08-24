@@ -46,6 +46,7 @@ export const formatArchivePreviewRow = (item: ArchiveItem) =>
   `${item.title} · ${item.year} · ${item.views} views${item.sourceUrl ? ` · ${item.sourceUrl}` : ""}`;
 
 export const getArchiveDetailSummary = (item: ArchiveItem) => `${item.title}. Published ${item.year}. ${item.views} views.${item.sourceUrl ? ` Source link available.` : " No source link available."}`;
+export const getArchiveThumbnailFallbackLabel = (title: string) => `Thumbnail unavailable for ${title}`;
 
 export const serializeArchiveManifest = (items: ArchiveItem[]) => `${JSON.stringify(items, null, 2)}\n`;
 
