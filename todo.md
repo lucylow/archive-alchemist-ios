@@ -168,3 +168,5 @@
 
 - [x] Normalize cached user date fields after JSON deserialization
 
+- [x] Bound cached-user identity string fields during normalization
+

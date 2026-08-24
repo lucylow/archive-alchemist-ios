@@ -30,4 +30,19 @@ describe("cached user normalization", () => {
     expect(normalizeCachedUser({ id: 2, openId: "", lastSignedIn: Date.now() })).toBeNull();
     expect(normalizeCachedUser({ id: 2, openId: "user-2", lastSignedIn: "not-a-date" })).toBeNull();
   });
+
+  it("rejects oversized required identifiers and drops oversized optional metadata", () => {
+    expect(normalizeCachedUser({ id: 2, openId: "x".repeat(257), lastSignedIn: Date.now() })).toBeNull();
+
+    const user = normalizeCachedUser({
+      id: 2,
+      openId: "user-2",
+      name: "x".repeat(201),
+      email: "x".repeat(321),
+      loginMethod: "x".repeat(65),
+      lastSignedIn: Date.now(),
+    });
+
+    expect(user).toMatchObject({ name: null, email: null, loginMethod: null });
+  });
 });
