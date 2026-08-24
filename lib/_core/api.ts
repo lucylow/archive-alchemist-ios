@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import { normalizeClientApiError } from "@/shared/api-errors";
 import * as Auth from "./auth";
 import { normalizeCachedUser, type CachedUser } from "./user-cache";
-import { isSafeOAuthSessionToken } from "@/shared/oauth";
+import { isSafeOAuthCode, isSafeOAuthSessionToken, isSafeOAuthState } from "@/shared/oauth";
 
 export async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {
@@ -56,6 +56,9 @@ export async function exchangeOAuthCode(
   code: string,
   state: string,
 ): Promise<{ sessionToken: string; user: CachedUser }> {
+  if (!isSafeOAuthCode(code) || !isSafeOAuthState(state)) {
+    throw new Error("Authentication request contained invalid OAuth parameters");
+  }
   const params = new URLSearchParams({ code, state });
   const endpoint = `/api/oauth/mobile?${params.toString()}`;
   const result = await apiCall<{ app_session_id: unknown; user: unknown }>(endpoint);

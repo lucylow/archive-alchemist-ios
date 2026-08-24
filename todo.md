@@ -210,3 +210,6 @@
 - [x] Cancel OAuth callback redirect timers and late state updates on unmount
 - [x] Add deterministic coverage for OAuth callback lifecycle invalidation
 
+- [x] Bound OAuth authorization code and state parameters before exchange
+- [x] Add deterministic coverage for oversized or whitespace-padded OAuth parameters
+

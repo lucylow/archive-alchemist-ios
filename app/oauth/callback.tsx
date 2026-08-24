@@ -1,7 +1,7 @@
 import { ThemedView } from "@/components/themed-view";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
-import { isSafeOAuthSessionToken, isSafeOAuthUserPayload } from "@/shared/oauth";
+import { isSafeOAuthCode, isSafeOAuthSessionToken, isSafeOAuthState, isSafeOAuthUserPayload } from "@/shared/oauth";
 import { normalizeCachedUser } from "@/lib/_core/user-cache";
 import { createOAuthCallbackGate } from "@/lib/oauth-callback";
 import * as Linking from "expo-linking";
@@ -161,6 +161,9 @@ export default function OAuthCallback() {
         }
 
         // Exchange code for session token
+        if (!isSafeOAuthCode(code) || !isSafeOAuthState(state)) {
+          throw new Error("Authentication request contained invalid OAuth parameters");
+        }
         const result = await Api.exchangeOAuthCode(code, state);
 
         if (result.sessionToken) {
