@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
-import { SESSION_TOKEN_KEY, USER_INFO_KEY } from "@/constants/oauth";
+import { SESSION_TOKEN_KEY, USER_INFO_KEY } from "../../constants/oauth";
 import {
   readStorageValue,
   removeStorageValue,
@@ -48,8 +48,25 @@ export async function getUserInfo(): Promise<User | null> {
   }
 
   try {
-    return normalizeCachedUser(JSON.parse(info));
+    const normalized = normalizeCachedUser(JSON.parse(info));
+    if (!normalized) {
+      await removeStorageValue(() => {
+        if (Platform.OS === "web") {
+          window.localStorage.removeItem(USER_INFO_KEY);
+          return Promise.resolve();
+        }
+        return SecureStore.deleteItemAsync(USER_INFO_KEY);
+      });
+    }
+    return normalized;
   } catch {
+    await removeStorageValue(() => {
+      if (Platform.OS === "web") {
+        window.localStorage.removeItem(USER_INFO_KEY);
+        return Promise.resolve();
+      }
+      return SecureStore.deleteItemAsync(USER_INFO_KEY);
+    });
     return null;
   }
 }

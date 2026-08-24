@@ -213,3 +213,6 @@
 - [x] Bound OAuth authorization code and state parameters before exchange
 - [x] Add deterministic coverage for oversized or whitespace-padded OAuth parameters
 
+- [x] Remove malformed cached-user entries after normalization failure
+- [x] Add deterministic coverage for invalid cached-user cleanup behavior
+
