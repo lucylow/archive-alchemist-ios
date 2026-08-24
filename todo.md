@@ -277,3 +277,6 @@
 - [x] Add title search and year filtering inside the full archive browser
 - [x] Add newest-year and highest-view sorting inside the full archive browser
 - [x] Add deterministic coverage for full-browser filtering and sorting
+- [x] Add row selection to the full archive browser
+- [x] Export selected full-browser records as JSON or CSV
+- [x] Add deterministic coverage for full-browser selection and export behavior

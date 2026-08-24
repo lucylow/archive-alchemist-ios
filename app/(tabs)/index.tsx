@@ -155,6 +155,7 @@ export default function HomeScreen() {
   const [browserQuery, setBrowserQuery] = useState("");
   const [browserYear, setBrowserYear] = useState("");
   const [browserSort, setBrowserSort] = useState<ArchiveSort>("newest");
+  const [selectedBrowserKeys, setSelectedBrowserKeys] = useState<string[]>([]);
   const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -173,6 +174,7 @@ export default function HomeScreen() {
     [archiveItems],
   );
   const browserItems = useMemo(() => sortArchiveItems(filterArchiveItems(getArchiveBrowserItems(archiveItems), browserQuery, browserYear), browserSort), [archiveItems, browserQuery, browserSort, browserYear]);
+  const selectedBrowserItems = useMemo(() => getSelectedArchiveItems(browserItems, selectedBrowserKeys), [browserItems, selectedBrowserKeys]);
   const loadingPulse = useRef(new Animated.Value(0)).current;
   const mindsRequestGate = useRef(createMindsRequestGate()).current;
   const saveRequestGate = useRef(createSaveRequestGate()).current;
@@ -638,6 +640,18 @@ export default function HomeScreen() {
       { text: "Cancel", style: "cancel" },
       { text: "JSON", onPress: () => { void shareImportedArchive("json", selectedPreviewItems, "selected-preview"); } },
       { text: "CSV", onPress: () => { void shareImportedArchive("csv", selectedPreviewItems, "selected-preview"); } },
+    ]);
+  };
+
+  const exportBrowserResults = () => {
+    if (selectedBrowserItems.length === 0) {
+      setNotice("Select at least one visible archive item to export.");
+      return;
+    }
+    Alert.alert("Export selected archive rows", `${selectedBrowserItems.length} selected item${selectedBrowserItems.length === 1 ? "" : "s"} will be shared.`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "JSON", onPress: () => { void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); } },
+      { text: "CSV", onPress: () => { void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); } },
     ]);
   };
 
@@ -1299,13 +1313,21 @@ export default function HomeScreen() {
               <Pressable accessibilityRole="button" accessibilityLabel="Sort full archive by newest year" accessibilityState={{ selected: browserSort === "newest" }} onPress={() => setBrowserSort("newest")} style={({ pressed }) => [styles.filterChip, browserSort === "newest" && styles.filterChipActive, pressed && styles.pressed]}><Text style={styles.filterChipText}>Newest</Text></Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Sort full archive by most views" accessibilityState={{ selected: browserSort === "views" }} onPress={() => setBrowserSort("views")} style={({ pressed }) => [styles.filterChip, browserSort === "views" && styles.filterChipActive, pressed && styles.pressed]}><Text style={styles.filterChipText}>Most views</Text></Pressable>
             </View>
+            <View style={styles.actionRow}>
+              <SecondaryButton label={selectedBrowserItems.length > 0 ? `${selectedBrowserItems.length} selected` : "Select visible"} accessibilityHint="Selects or deselects all currently visible filtered archive rows." onPress={() => setSelectedBrowserKeys((current) => toggleArchiveSelection(current, browserItems))} />
+              <SecondaryButton label="Export selected" accessibilityHint="Shares the selected full-browser archive rows as JSON or CSV." onPress={exportBrowserResults} />
+              <SecondaryButton label="Clear selection" accessibilityHint="Clears all full-browser row selections." onPress={() => setSelectedBrowserKeys([])} />
+            </View>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent}>
-              {browserItems.map((item) => (
-                <View key={getArchiveItemKey(item)} style={styles.browserRow}>
+              {browserItems.map((item) => {
+                const key = getArchiveItemKey(item);
+                const selected = selectedBrowserKeys.includes(key);
+                return <View key={key} style={styles.browserRow}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel={`Select ${item.title}`} onPress={() => setSelectedBrowserKeys((current) => current.includes(key) ? current.filter((value) => value !== key) : [...current, key])} style={({ pressed }) => [styles.browserCheck, selected && styles.browserCheckSelected, pressed && styles.pressed]}><Text style={styles.previewCheck}>{selected ? "✓" : "○"}</Text></Pressable>
                   {renderArchiveThumbnail(item)}
                   <View style={styles.flexOne}><Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text><View style={styles.rowWrap}><Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}</View></View>
-                </View>
-              ))}
+                </View>;
+              })}
             </ScrollView>
           </View>
         </View>
@@ -1434,6 +1456,8 @@ const styles = StyleSheet.create({
   browserList: { flexGrow: 0 },
   browserListContent: { gap: 10, paddingBottom: 12 },
   browserRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
+  browserCheck: { alignItems: "center", justifyContent: "center", minWidth: 28, minHeight: 36, borderRadius: 8 },
+  browserCheckSelected: { backgroundColor: "#241842" },
   rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   filterChip: { borderColor: "#3B2C62", borderWidth: 1, borderRadius: 999, paddingVertical: 8, paddingHorizontal: 12 },
   filterChipActive: { backgroundColor: "#F4C95D", borderColor: "#F4C95D" },

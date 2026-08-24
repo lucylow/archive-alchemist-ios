@@ -91,6 +91,17 @@ describe("parseArchiveManifest", () => {
     expect(serializeArchiveManifest([{ title: "Video", year: 2024, views: "1K" }])).toBe('[\n  {\n    "title": "Video",\n    "year": 2024,\n    "views": "1K"\n  }\n]\n');
   });
 
+  it("selects visible full-browser rows and serializes the selected subset", () => {
+    const source = Array.from({ length: MAX_ARCHIVE_BROWSER_ITEMS + 2 }, (_, index) => ({ title: `Item ${index}`, year: 2024 - (index % 3), views: String(index) }));
+    const visible = getArchiveBrowserItems(source).slice(0, 2);
+    const keys = visible.map(getArchiveItemKey);
+    const selected = getSelectedArchiveItems(visible, [keys[1]]);
+    expect(selected).toEqual([visible[1]]);
+    expect(serializeArchiveManifest(selected)).toContain('"title": "Item 1"');
+    expect(serializeArchiveCsv(selected)).toContain('"Item 1"');
+    expect(source).toHaveLength(MAX_ARCHIVE_BROWSER_ITEMS + 2);
+  });
+
   it("sorts archive items by newest year and views without mutation", () => {
     const items = [
       { title: "Older", year: 2022, views: "90" },
