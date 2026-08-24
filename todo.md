@@ -189,3 +189,6 @@
 - [x] Validate the iOS production version and numeric build number in release preflight
 - [x] Add regression coverage for missing or malformed iOS build metadata
 
+- [x] Require non-placeholder generated logo metadata in release preflight
+- [x] Add regression coverage for empty or placeholder logo URLs
+

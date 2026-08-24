@@ -29,6 +29,7 @@ function createFixture(directory: string, production: Record<string, unknown>) {
     "com.archivealchemist.mobile",
     'version: "1.0.0"',
     'buildNumber: "1"',
+    'logoUrl: "/manus-storage/archive-alchemist-icon.png"',
     "NSPrivacyAccessedAPICategoryUserDefaults",
     'NSPrivacyAccessedAPITypeReasons: ["CA92.1"]',
     'ITSAppUsesNonExemptEncryption": false',
@@ -93,6 +94,36 @@ describe("release preflight failures", () => {
       expect(result.status).toBe(1);
       expect(result.output).toContain("eas.json is not valid JSON");
       expect(result.output).not.toContain("SyntaxError");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects an empty logo URL", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const appConfigPath = join(directory, "app.config.ts");
+      const appConfig = readFileSync(appConfigPath, "utf8").replace('logoUrl: "/manus-storage/archive-alchemist-icon.png"', 'logoUrl: ""');
+      writeFileSync(appConfigPath, appConfig);
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("app.config.ts must declare a non-placeholder generated logoUrl");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a placeholder logo URL", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const appConfigPath = join(directory, "app.config.ts");
+      const appConfig = readFileSync(appConfigPath, "utf8").replace('logoUrl: "/manus-storage/archive-alchemist-icon.png"', 'logoUrl: "TO_BE_REPLACED"');
+      writeFileSync(appConfigPath, appConfig);
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("app.config.ts must declare a non-placeholder generated logoUrl");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

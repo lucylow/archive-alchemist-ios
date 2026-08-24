@@ -62,6 +62,10 @@ for (const expected of [
 ]) {
   if (!appConfig.includes(expected)) failures.push(`app.config.ts does not contain ${expected}`);
 }
+const logoUrlMatch = appConfig.match(/logoUrl:\s*["']([^"']*)["']/);
+if (!logoUrlMatch || !logoUrlMatch[1].trim() || /placeholder|to_be_replaced/i.test(logoUrlMatch[1])) {
+  failures.push("app.config.ts must declare a non-placeholder generated logoUrl");
+}
 if (!/version:\s*["']\d+\.\d+\.\d+["']/.test(appConfig)) {
   failures.push("app.config.ts must declare a semantic version such as version: \"1.0.0\"");
 }
