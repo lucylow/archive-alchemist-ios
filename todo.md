@@ -313,3 +313,6 @@
 - [x] Add a last-export shortcut from local export history
 - [x] Restore only bounded browser context without storing archive contents
 - [x] Add deterministic coverage for last-export context wording
+- [x] Add a format-aware preset for the last export shortcut
+- [x] Keep the preset transient and avoid persisting archive contents or row selections
+- [x] Add deterministic coverage for format-preset wording
