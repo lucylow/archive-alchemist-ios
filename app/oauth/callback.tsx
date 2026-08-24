@@ -53,9 +53,10 @@ export default function OAuthCallback() {
           } else if (params.user) {
           }
 
+          if (!active) return;
           setStatus("success");
-          setTimeout(() => {
-            router.replace("/(tabs)");
+          redirectTimer = setTimeout(() => {
+            if (active) router.replace("/(tabs)");
           }, 1000);
           return;
         }
@@ -124,9 +125,10 @@ export default function OAuthCallback() {
           await Auth.setSessionToken(sessionToken);
           // User info is already in the OAuth callback response
           // No need to fetch from API
+          if (!active) return;
           setStatus("success");
-          setTimeout(() => {
-            router.replace("/(tabs)");
+          redirectTimer = setTimeout(() => {
+            if (active) router.replace("/(tabs)");
           }, 1000);
           return;
         }

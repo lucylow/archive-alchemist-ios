@@ -180,3 +180,5 @@
 - [x] Add deterministic coverage for OAuth redirect timer cleanup
 - [x] Suppress late OAuth error-state updates after callback unmount
 - [x] Add deterministic coverage for OAuth callback lifecycle invalidation
+- [x] Route every OAuth success redirect through the cleanup-safe timer reference
+- [x] Add deterministic coverage for all OAuth redirect branches
