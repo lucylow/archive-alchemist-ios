@@ -188,3 +188,5 @@
 - [x] Add deterministic coverage for reset lifecycle invalidation
 - [x] Cancel the local hydration timeout after unmount or storage resolution
 - [x] Add deterministic coverage for hydration timeout cleanup
+- [x] Suppress late Mind-memory save state updates after screen unmount
+- [x] Add deterministic coverage for save lifecycle invalidation

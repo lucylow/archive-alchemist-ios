@@ -384,8 +384,9 @@ export default function HomeScreen() {
       mindsInsight: mindsInsight ?? undefined,
     };
     try {
-      setIsSaving(true);
+      if (screenActiveRef.current) setIsSaving(true);
       await AsyncStorage.setItem(MEMORY_KEY, JSON.stringify(record));
+      if (!screenActiveRef.current) return { saved: false, historySaved: false };
       const nextHistory = [record, ...history.filter((item) => item.savedAt !== record.savedAt)].slice(0, 5);
       let historySaved = true;
       try {
@@ -393,16 +394,19 @@ export default function HomeScreen() {
       } catch {
         historySaved = false;
       }
+      if (!screenActiveRef.current) return { saved: false, historySaved: false };
       setMemory(record);
       setHistory(nextHistory);
       haptic.success();
       return { saved: true, historySaved };
     } catch {
-      setNotice("Mind memory could not be saved. Your workflow is still available for this session.");
+      if (screenActiveRef.current) {
+        setNotice("Mind memory could not be saved. Your workflow is still available for this session.");
+      }
       return { saved: false, historySaved: false };
     } finally {
       saveRequestGate.finish();
-      setIsSaving(false);
+      if (screenActiveRef.current) setIsSaving(false);
     }
   };
 
