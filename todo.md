@@ -255,3 +255,6 @@
 - [x] Add tappable HTTPS source links to archive preview rows
 - [x] Keep source-link failures user-facing and metadata-only
 - [x] Add deterministic coverage for safe source-link eligibility
+- [x] Add tappable HTTPS source links to confirmed archive records
+- [x] Keep confirmed source-link failures user-facing and metadata-only
+- [x] Add deterministic coverage for confirmed archive link eligibility

@@ -836,6 +836,18 @@ export default function HomeScreen() {
                 </View>
               </View>
             )}
+            {archiveItems.length > 0 && (
+              <View style={styles.panel} accessible accessibilityLabel={`Imported archive: ${archiveItems.length} item${archiveItems.length === 1 ? "" : "s"}`}>
+                <Text style={styles.sectionTitle}>Imported archive</Text>
+                {archiveItems.slice(0, 3).map((item) => (
+                  <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
+                    <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
+                    {item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
+                  </View>
+                ))}
+                {archiveItems.length > 3 && <Text style={styles.sourceSummary}>Showing 3 of {archiveItems.length} imported items.</Text>}
+              </View>
+            )}
             <View style={styles.statsRow}>
               <Stat label="Archive items" value={archiveItems.length > 0 ? String(archiveItems.length) : "Demo"} />
               <Stat label="Dormant gold" value={archiveItems.length > 0 ? String(Math.min(archiveItems.length, 37)) : "Demo"} />
