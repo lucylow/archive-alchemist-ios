@@ -216,6 +216,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     let active = true;
+    let hydrationTimeout: ReturnType<typeof setTimeout> | null = null;
     const hydrate = async () => {
       let recoveredInvalidStorage = false;
       const discardStoredValue = async (key: string) => {
@@ -230,7 +231,7 @@ export default function HomeScreen() {
           AsyncStorage.getItem(PLATFORMS_KEY),
         ]);
         const storageTimeout = new Promise<[string | null, string | null, string | null]>((resolve) => {
-          setTimeout(() => resolve([null, null, null]), 1500);
+          hydrationTimeout = setTimeout(() => resolve([null, null, null]), 1500);
         });
         const [memoryValue, historyValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
@@ -282,12 +283,16 @@ export default function HomeScreen() {
       } catch {
         setNotice("Saved local preferences could not be read. Your current session is still available.");
       } finally {
+        if (hydrationTimeout) clearTimeout(hydrationTimeout);
+        hydrationTimeout = null;
         if (active) setIsHydrated(true);
       }
     };
-    hydrate();
+    void hydrate();
     return () => {
       active = false;
+      if (hydrationTimeout) clearTimeout(hydrationTimeout);
+      hydrationTimeout = null;
     };
   }, []);
 

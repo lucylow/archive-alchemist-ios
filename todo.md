@@ -186,3 +186,5 @@
 - [x] Add deterministic coverage for platform persistence lifecycle cleanup
 - [x] Prevent local-memory reset from updating state after screen unmount
 - [x] Add deterministic coverage for reset lifecycle invalidation
+- [x] Cancel the local hydration timeout after unmount or storage resolution
+- [x] Add deterministic coverage for hydration timeout cleanup
