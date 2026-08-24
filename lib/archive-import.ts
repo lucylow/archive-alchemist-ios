@@ -37,6 +37,22 @@ export const filterArchiveItems = (items: ArchiveItem[], query: string, year: st
   );
 };
 
+export type ArchiveSort = "newest" | "views";
+
+const viewCount = (value: string) => {
+  const normalized = value.trim().toLowerCase();
+  const amount = Number.parseFloat(normalized.replace(/[^0-9.]/g, "")) || 0;
+  if (normalized.includes("b")) return amount * 1_000_000_000;
+  if (normalized.includes("m")) return amount * 1_000_000;
+  if (normalized.includes("k")) return amount * 1_000;
+  return amount;
+};
+
+export const sortArchiveItems = (items: ArchiveItem[], sort: ArchiveSort) => [...items].sort((left, right) => {
+  if (sort === "newest") return right.year - left.year || left.title.localeCompare(right.title);
+  return viewCount(right.views) - viewCount(left.views) || left.title.localeCompare(right.title);
+});
+
 export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<ArchiveItem>;

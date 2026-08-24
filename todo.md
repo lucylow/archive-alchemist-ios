@@ -219,3 +219,6 @@
 - [x] Add search to imported archive preview browsing
 - [x] Add year filtering to imported archive preview browsing
 - [x] Add deterministic coverage for archive search and year filtering
+- [x] Add sort controls for imported archive preview rows
+- [x] Support sorting by newest year and highest views
+- [x] Add deterministic coverage for archive preview sorting

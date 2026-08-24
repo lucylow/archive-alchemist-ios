@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, sortArchiveItems } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -17,6 +17,17 @@ describe("parseArchiveManifest", () => {
     expect(parseArchiveManifest('title,year,views\n"A, B",2022,8.7K', "archive.csv")).toEqual([
       { title: "A, B", year: 2022, views: "8.7K" },
     ]);
+  });
+
+  it("sorts archive items by newest year and views without mutation", () => {
+    const items = [
+      { title: "Older", year: 2022, views: "90" },
+      { title: "Popular", year: 2023, views: "12.5K" },
+      { title: "Newest", year: 2024, views: "2K" },
+    ];
+    expect(sortArchiveItems(items, "newest").map((item) => item.title)).toEqual(["Newest", "Popular", "Older"]);
+    expect(sortArchiveItems(items, "views").map((item) => item.title)).toEqual(["Popular", "Newest", "Older"]);
+    expect(items[0].title).toBe("Older");
   });
 
   it("filters archive items by title and year", () => {

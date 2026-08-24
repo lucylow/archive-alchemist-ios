@@ -14,7 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -144,6 +144,7 @@ export default function HomeScreen() {
   const [pendingArchiveName, setPendingArchiveName] = useState<string | null>(null);
   const [previewQuery, setPreviewQuery] = useState("");
   const [previewYear, setPreviewYear] = useState("");
+  const [previewSort, setPreviewSort] = useState<ArchiveSort>("newest");
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -386,6 +387,7 @@ export default function HomeScreen() {
       setPendingArchiveName(asset.name);
       setPreviewQuery("");
       setPreviewYear("");
+      setPreviewSort("newest");
       setNotice(`${getArchivePreviewLabel(items, asset.name)}. Review and confirm before replacing the current archive.`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Archive import failed. Choose a JSON or CSV manifest and try again.");
@@ -394,7 +396,7 @@ export default function HomeScreen() {
     }
   };
 
-  const previewMatches = useMemo(() => filterArchiveItems(pendingArchiveItems, previewQuery, previewYear), [pendingArchiveItems, previewQuery, previewYear]);
+  const previewMatches = useMemo(() => sortArchiveItems(filterArchiveItems(pendingArchiveItems, previewQuery, previewYear), previewSort), [pendingArchiveItems, previewQuery, previewYear, previewSort]);
 
   const commitPendingArchive = () => {
     if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
@@ -421,6 +423,7 @@ export default function HomeScreen() {
     setPendingArchiveName(null);
     setPreviewQuery("");
     setPreviewYear("");
+    setPreviewSort("newest");
     setNotice("Archive preview discarded. Your current archive is unchanged.");
   };
 
@@ -538,6 +541,7 @@ export default function HomeScreen() {
       setPendingArchiveName(null);
       setPreviewQuery("");
       setPreviewYear("");
+      setPreviewSort("newest");
       setNotice("Imported archive cleared. Mind memory is still available.");
     } catch {
       if (screenActiveRef.current) setNotice("Imported archive could not be cleared. Try again from this device.");
@@ -816,6 +820,10 @@ export default function HomeScreen() {
                 <Text style={styles.bodyText}>{getArchivePreviewLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
                 <TextInput accessibilityLabel="Search imported archive preview" accessibilityHint="Filters preview rows by title." value={previewQuery} onChangeText={setPreviewQuery} placeholder="Search titles" placeholderTextColor="#9A91B6" style={styles.input} returnKeyType="search" />
                 <TextInput accessibilityLabel="Filter imported archive preview by year" accessibilityHint="Shows only preview rows from the exact year entered." value={previewYear} onChangeText={(value) => setPreviewYear(value.replace(/[^0-9]/g, "").slice(0, 4))} placeholder="Filter by year" placeholderTextColor="#9A91B6" style={styles.input} keyboardType="number-pad" />
+                <View style={styles.actionRow} accessibilityRole="radiogroup" accessibilityLabel="Sort imported archive preview">
+                  <SecondaryButton label={previewSort === "newest" ? "Newest first" : "Sort by newest"} accessibilityHint="Sorts preview rows by publication year, newest first." onPress={() => setPreviewSort("newest")} />
+                  <SecondaryButton label={previewSort === "views" ? "Highest views" : "Sort by views"} accessibilityHint="Sorts preview rows by highest view count first." onPress={() => setPreviewSort("views")} />
+                </View>
                 <View accessible accessibilityLabel={`Preview rows: ${previewMatches.slice(0, 3).map(formatArchivePreviewRow).join("; ") || "No matching rows"}`}>
                   {previewMatches.slice(0, 3).map((item) => (
                     <Text key={`${item.title}-${item.year}`} style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
