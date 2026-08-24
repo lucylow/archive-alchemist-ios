@@ -24,6 +24,41 @@ const synchronizedBrandingFiles = [
 const pngSignature = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 const failures = [];
+
+function getProductionApiConfigError(value) {
+  if (typeof value !== "string" || !value.trim()) {
+    return "Production builds require EXPO_PUBLIC_API_BASE_URL to be set to a deployed HTTPS API origin";
+  }
+  const candidate = value.trim();
+  if (candidate !== value) return "EXPO_PUBLIC_API_BASE_URL must not contain leading or trailing whitespace";
+
+  let url;
+  try {
+    url = new URL(candidate);
+  } catch {
+    return "EXPO_PUBLIC_API_BASE_URL must be a valid absolute URL";
+  }
+
+  const hostname = url.hostname.toLowerCase();
+  const octets = hostname.split(".").map(Number);
+  const isPrivateIpv4 =
+    octets.length === 4 &&
+    octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255) &&
+    (octets[0] === 10 || octets[0] === 127 || (octets[0] === 192 && octets[1] === 168) || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31));
+  const disallowedSuffixes = [".manus.computer", ".ngrok.io", ".ngrok-free.app", ".local", ".test", ".invalid"];
+
+  if (url.protocol !== "https:") return "EXPO_PUBLIC_API_BASE_URL must use HTTPS in production";
+  if (!hostname || hostname === "localhost" || hostname === "0.0.0.0" || hostname === "::1" || isPrivateIpv4) {
+    return "EXPO_PUBLIC_API_BASE_URL must not target localhost or a private network in production";
+  }
+  if (disallowedSuffixes.some((suffix) => hostname.endsWith(suffix)) || hostname.includes("sandbox")) {
+    return "EXPO_PUBLIC_API_BASE_URL must not target a sandbox, tunnel, or local development host in production";
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    return "EXPO_PUBLIC_API_BASE_URL must be an origin without credentials, query parameters, or fragments";
+  }
+  return null;
+}
 const reportFailures = () => {
   if (failures.length === 0) return;
   console.error("Release preflight failed:");
@@ -75,6 +110,10 @@ if (!buildNumberMatch || !/^[1-9]\d*$/.test(buildNumberMatch[1])) {
 }
 for (const profile of ["development", "preview", "production"]) {
   if (!easConfig.build?.[profile]) failures.push(`eas.json is missing the ${profile} build profile`);
+}
+if (process.env.EAS_BUILD_PROFILE === "production") {
+  const apiConfigError = getProductionApiConfigError(process.env.EXPO_PUBLIC_API_BASE_URL);
+  if (apiConfigError) failures.push(apiConfigError);
 }
 if (easConfig.build?.production?.distribution !== "store") {
   failures.push('eas.json production profile must use "store" distribution');

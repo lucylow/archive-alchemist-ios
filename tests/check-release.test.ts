@@ -56,9 +56,14 @@ function createFixture(directory: string, production: Record<string, unknown>) {
   }
 }
 
-function runPreflight(cwd: string) {
+function runPreflight(cwd: string, environment: Record<string, string | undefined> = {}) {
   try {
-    execFileSync(process.execPath, [scriptPath], { cwd, encoding: "utf8", stdio: "pipe" });
+    execFileSync(process.execPath, [scriptPath], {
+      cwd,
+      encoding: "utf8",
+      stdio: "pipe",
+      env: { ...process.env, ...environment },
+    });
     return { status: 0, output: "" };
   } catch (error) {
     const failure = error as { status?: number; stdout?: string; stderr?: string };
@@ -236,6 +241,47 @@ describe("release preflight failures", () => {
       const result = runPreflight(directory);
       expect(result.status).toBe(1);
       expect(result.output).toContain("production iOS build must set simulator to false");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a missing production API endpoint", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const result = runPreflight(directory, { EAS_BUILD_PROFILE: "production", EXPO_PUBLIC_API_BASE_URL: "" });
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("Production builds require EXPO_PUBLIC_API_BASE_URL");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts a deployed HTTPS production API endpoint", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const result = runPreflight(directory, {
+        EAS_BUILD_PROFILE: "production",
+        EXPO_PUBLIC_API_BASE_URL: "https://api.archivealchemist.com",
+      });
+      expect(result.status).toBe(0);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects a sandbox production API endpoint", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      const result = runPreflight(directory, {
+        EAS_BUILD_PROFILE: "production",
+        EXPO_PUBLIC_API_BASE_URL: "https://3000-demo-sandbox.manus.computer",
+      });
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("must not target a sandbox");
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }

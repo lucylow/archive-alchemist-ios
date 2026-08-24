@@ -229,3 +229,6 @@
 - [x] Cover OAuth launch success and failure return values for retry-state recovery
 - [x] Ensure malformed or unavailable OAuth configuration never leaves retry UI stuck
 
+- [x] Prevent production Expo builds from using development or sandbox API endpoints
+- [x] Add deterministic release-preflight coverage for unsafe production API configuration
+
