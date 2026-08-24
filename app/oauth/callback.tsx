@@ -6,6 +6,7 @@ import * as Auth from "@/lib/_core/auth";
 import { isSafeOAuthCode, isSafeOAuthSessionToken, isSafeOAuthState, isSafeOAuthUserPayload } from "@/shared/oauth";
 import { normalizeCachedUser } from "@/lib/_core/user-cache";
 import { createOAuthCallbackGate } from "@/lib/oauth-callback";
+import { readReduceMotionSetting } from "@/lib/reduce-motion";
 import * as Linking from "expo-linking";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -31,7 +32,7 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     let mounted = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+    void readReduceMotionSetting(() => AccessibilityInfo.isReduceMotionEnabled()).then((enabled) => {
       if (mounted) setReduceMotion(enabled);
     });
     const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);

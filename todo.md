@@ -251,3 +251,5 @@
 - [x] Add deterministic coverage for invalid production submission profile settings
 - [x] Handle rejected Reduce Motion setting reads without an unhandled startup promise
 - [x] Add deterministic coverage for Reduce Motion read failure fallback
+- [x] Use the safe Reduce Motion reader in the OAuth callback startup flow
+- [x] Add deterministic coverage for OAuth accessibility-read failure handling
