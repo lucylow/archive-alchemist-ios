@@ -17,7 +17,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -151,6 +151,7 @@ export default function HomeScreen() {
   const [previewSort, setPreviewSort] = useState<ArchiveSort>("newest");
   const [selectedPreviewKeys, setSelectedPreviewKeys] = useState<string[]>([]);
   const [archiveDetail, setArchiveDetail] = useState<ArchiveItem | null>(null);
+  const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
   const [memory, setMemory] = useState<Memory | null>(null);
@@ -455,6 +456,12 @@ export default function HomeScreen() {
         { text: "Use archive", onPress: commitPendingArchive },
       ],
     );
+  };
+
+  const renderArchiveThumbnail = (item: ArchiveItem, large = false) => {
+    if (!item.thumbnailUrl) return <Text accessibilityRole="text" style={styles.thumbnailFallback}>{getArchiveThumbnailFallbackLabel(item.title)}</Text>;
+    if (failedThumbnailUrls.includes(item.thumbnailUrl)) return <Pressable accessibilityRole="button" accessibilityLabel={getArchiveThumbnailRetryLabel(item.title)} accessibilityHint="Tries loading this thumbnail again." onPress={() => setFailedThumbnailUrls((current) => current.filter((url) => url !== item.thumbnailUrl))} style={({ pressed }) => [styles.thumbnailFallbackAction, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Retry thumbnail</Text></Pressable>;
+    return <Image source={{ uri: item.thumbnailUrl }} contentFit="cover" accessibilityLabel={`Thumbnail for ${item.title}`} onError={() => setFailedThumbnailUrls((current) => current.includes(item.thumbnailUrl!) ? current : [...current, item.thumbnailUrl!])} style={large ? styles.detailThumbnail : styles.archiveThumbnail} />;
   };
 
   const openArchiveSource = async (sourceUrl: string) => {
@@ -844,7 +851,7 @@ export default function HomeScreen() {
                 <Text style={styles.sectionTitle}>Imported archive</Text>
                 {archiveItems.slice(0, 3).map((item) => (
                   <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
-                    {item.thumbnailUrl && <Image source={{ uri: item.thumbnailUrl }} contentFit="cover" accessibilityLabel={`Thumbnail for ${item.title}`} onError={() => setNotice("An archive thumbnail could not be loaded; the record is still available.")} style={styles.archiveThumbnail} />}
+                    {renderArchiveThumbnail(item)}
                     <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
                     <Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} accessibilityHint="Opens archive metadata and available source actions." onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
                   </View>
@@ -1280,7 +1287,7 @@ export default function HomeScreen() {
                 <Text style={styles.sectionTitle}>Archive detail</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Close archive detail" onPress={() => setArchiveDetail(null)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
               </View>
-              {archiveDetail.thumbnailUrl && <Image source={{ uri: archiveDetail.thumbnailUrl }} contentFit="cover" accessibilityLabel={`Thumbnail for ${archiveDetail.title}`} onError={() => setNotice("An archive thumbnail could not be loaded; the record is still available.")} style={styles.detailThumbnail} />}
+              {renderArchiveThumbnail(archiveDetail, true)}
               <Text style={styles.detailTitle}>{archiveDetail.title}</Text>
               <Text style={styles.bodyText}>Published {archiveDetail.year}</Text>
               <Text style={styles.bodyText}>{archiveDetail.views} views</Text>
@@ -1397,4 +1404,5 @@ const styles = StyleSheet.create({
   archiveThumbnail: { width: 56, height: 40, borderRadius: 8, backgroundColor: "#100B24" },
   detailThumbnail: { width: "100%", height: 160, borderRadius: 14, backgroundColor: "#100B24" },
   thumbnailFallback: { color: "#AAA0C7", fontSize: 12, fontStyle: "italic" },
+  thumbnailFallbackAction: { alignSelf: "flex-start", paddingVertical: 4 },
 });

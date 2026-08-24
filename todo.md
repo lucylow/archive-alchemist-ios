@@ -268,3 +268,6 @@
 - [x] Render validated thumbnail URLs in pending archive preview rows
 - [x] Provide accessible fallback copy when a pending thumbnail cannot load
 - [x] Add deterministic coverage for pending-thumbnail eligibility and fallback wording
+- [x] Track failed thumbnail URLs for retryable load states
+- [x] Add an accessible Retry thumbnail action without reloading unrelated rows
+- [x] Add deterministic coverage for thumbnail retry state labeling

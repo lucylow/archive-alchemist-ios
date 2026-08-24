@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -55,8 +55,9 @@ describe("parseArchiveManifest", () => {
     expect(isSafeArchiveSourceUrl("javascript:alert(1)")).toBe(false);
   });
 
-  it("formats an accessible thumbnail fallback label", () => {
+  it("formats accessible thumbnail fallback and retry labels", () => {
     expect(getArchiveThumbnailFallbackLabel("Video")).toBe("Thumbnail unavailable for Video");
+    expect(getArchiveThumbnailRetryLabel("Video")).toBe("Retry thumbnail for Video");
   });
 
   it("accepts only secure HTTPS thumbnail URLs", () => {
