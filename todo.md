@@ -192,3 +192,5 @@
 - [x] Add deterministic coverage for save lifecycle invalidation
 - [x] Suppress late hydration recovery notices after screen unmount
 - [x] Add deterministic coverage for hydration notice lifecycle invalidation
+- [x] Skip invalid-storage cleanup writes after hydration screen unmount
+- [x] Add deterministic coverage for hydration cleanup-write invalidation

@@ -221,6 +221,7 @@ export default function HomeScreen() {
       let recoveredInvalidStorage = false;
       const discardStoredValue = async (key: string) => {
         recoveredInvalidStorage = true;
+        if (!active) return;
         await AsyncStorage.removeItem(key);
       };
 
