@@ -241,3 +241,6 @@
 - [x] Make production route allowlist validation deterministic for nested and alternate route file extensions
 - [x] Add regression coverage for unexpected nested route extensions
 
+- [x] Detect sensitive private files in production release inputs
+- [x] Add deterministic release-preflight coverage for forbidden private artifacts
+

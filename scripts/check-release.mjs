@@ -16,6 +16,11 @@ const requiredFiles = [
 ];
 const assetFiles = requiredFiles.slice(3);
 const forbiddenProductionPaths = ["app/dev"];
+const sensitiveRootFilePatterns = [
+  /^\.env(?:\.(?:local|development|preview|production))?$/i,
+  /\.(?:pem|p8|key|mobileprovision|cer)$/i,
+  /^credentials(?:\..*)?\.json$/i,
+];
 const approvedRouteFiles = new Set([
   "app/_layout.tsx",
   "app/(tabs)/_layout.tsx",
@@ -98,6 +103,11 @@ reportFailures();
 for (const relativePath of forbiddenProductionPaths) {
   if (existsSync(resolve(root, relativePath))) {
     failures.push(`Production build must not include development-only route path ${relativePath}`);
+  }
+}
+for (const entry of readdirSync(root, { withFileTypes: true })) {
+  if (entry.isFile() && sensitiveRootFilePatterns.some((pattern) => pattern.test(entry.name))) {
+    failures.push(`Sensitive root file ${entry.name} must be removed before release`);
   }
 }
 for (const routeFile of collectRouteFiles(resolve(root, "app")).sort()) {

@@ -258,6 +258,21 @@ describe("release preflight failures", () => {
     }
   });
 
+  it("rejects sensitive root release files", () => {
+    const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
+    try {
+      createFixture(directory, { distribution: "store", ios: { simulator: false } });
+      writeFileSync(join(directory, ".env.production"), "EXPO_PUBLIC_API_BASE_URL=https://api.example.com");
+      writeFileSync(join(directory, "signing.p8"), "private-key");
+      const result = runPreflight(directory);
+      expect(result.status).toBe(1);
+      expect(result.output).toContain("Sensitive root file .env.production must be removed before release");
+      expect(result.output).toContain("Sensitive root file signing.p8 must be removed before release");
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it("rejects an unexpected Expo Router production route file", () => {
     const directory = mkdtempSync(join(tmpdir(), "archive-alchemist-release-"));
     try {
