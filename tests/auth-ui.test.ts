@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { getAuthStatusCopy } from "../lib/auth-ui";
+import { getAuthRetryLabel, getAuthStatusCopy } from "../lib/auth-ui";
+
+describe("authentication retry copy", () => {
+  it("uses an actionable idle label and a distinct busy label", () => {
+    expect(getAuthRetryLabel(false)).toBe("Try again");
+    expect(getAuthRetryLabel(true)).toBe("Opening sign-in…");
+  });
+});
 
 describe("authentication status copy", () => {
   it("describes secure processing without exposing implementation details", () => {

@@ -6,6 +6,10 @@ export type AuthStatusCopy = {
   tone: "neutral" | "success" | "error";
 };
 
+export function getAuthRetryLabel(isRetrying: boolean): string {
+  return isRetrying ? "Opening sign-in…" : "Try again";
+}
+
 export function getAuthStatusCopy(status: AuthUiStatus, errorMessage?: string | null): AuthStatusCopy {
   if (status === "processing") {
     return {

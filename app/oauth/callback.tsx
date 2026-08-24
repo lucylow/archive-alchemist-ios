@@ -1,6 +1,6 @@
 import { ThemedView } from "@/components/themed-view";
 import { getLoginUrl, startOAuthLogin } from "@/constants/oauth";
-import { getAuthStatusCopy } from "@/lib/auth-ui";
+import { getAuthRetryLabel, getAuthStatusCopy } from "@/lib/auth-ui";
 import * as Api from "@/lib/_core/api";
 import * as Auth from "@/lib/_core/auth";
 import { isSafeOAuthCode, isSafeOAuthSessionToken, isSafeOAuthState, isSafeOAuthUserPayload } from "@/shared/oauth";
@@ -24,8 +24,10 @@ export default function OAuthCallback() {
   const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const callbackGate = useRef(createOAuthCallbackGate()).current;
   const loadingPulse = useRef(new Animated.Value(0)).current;
+  const retryInFlight = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -236,20 +238,28 @@ export default function OAuthCallback() {
 
   const copy = getAuthStatusCopy(status, errorMessage);
   const retryLogin = async () => {
+    if (retryInFlight.current) return;
+    retryInFlight.current = true;
     const retryId = callbackGate.begin();
+    setIsRetrying(true);
     setStatus("processing");
     setErrorMessage(null);
-    if (!getLoginUrl()) {
-      if (callbackGate.isCurrent(retryId)) {
-        setStatus("error");
-        setErrorMessage("Sign-in is not configured for this build. Please contact the app owner.");
+    try {
+      if (!getLoginUrl()) {
+        if (callbackGate.isCurrent(retryId)) {
+          setStatus("error");
+          setErrorMessage("Sign-in is not configured for this build. Please contact the app owner.");
+        }
+        return;
       }
-      return;
-    }
-    const started = await startOAuthLogin();
-    if (!started && callbackGate.isCurrent(retryId)) {
-      setStatus("error");
-      setErrorMessage("The sign-in window could not be opened. Check your connection and try again.");
+      const started = await startOAuthLogin();
+      if (!started && callbackGate.isCurrent(retryId)) {
+        setStatus("error");
+        setErrorMessage("The sign-in window could not be opened. Check your connection and try again.");
+      }
+    } finally {
+      retryInFlight.current = false;
+      if (callbackGate.isCurrent(retryId)) setIsRetrying(false);
     }
   };
 
@@ -279,10 +289,13 @@ export default function OAuthCallback() {
               accessibilityRole="button"
               accessibilityLabel="Try authentication again"
               accessibilityHint="Reopens the secure sign-in flow"
+              accessibilityState={{ busy: isRetrying, disabled: isRetrying }}
+              disabled={isRetrying}
               onPress={() => void retryLogin()}
-              style={({ pressed }) => [styles.retryButton, pressed && styles.retryButtonPressed]}
+              style={({ pressed }) => [styles.retryButton, isRetrying && styles.retryButtonBusy, pressed && !isRetrying && styles.retryButtonPressed]}
             >
-              <Text style={styles.retryText}>Try again</Text>
+              {isRetrying && <ActivityIndicator color="#100B24" size="small" />}
+              <Text style={styles.retryText}>{getAuthRetryLabel(isRetrying)}</Text>
             </Pressable>
           )}
         </View>
@@ -304,5 +317,6 @@ const styles = StyleSheet.create({
   errorMark: { color: "#FF9D9D", fontSize: 20, fontWeight: "900" },
   retryButton: { minWidth: 160, alignItems: "center", paddingHorizontal: 20, paddingVertical: 13, marginTop: 8, borderRadius: 16, backgroundColor: "#F4C95D" },
   retryButtonPressed: { opacity: 0.78, transform: [{ scale: 0.98 }] },
+  retryButtonBusy: { opacity: 0.72 },
   retryText: { color: "#100B24", fontSize: 15, fontWeight: "800" },
 });

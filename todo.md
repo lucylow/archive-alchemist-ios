@@ -223,3 +223,6 @@
 - [x] Add retryable authentication error UI with actionable messaging
 - [x] Add deterministic coverage for authentication loading and error-state behavior
 
+- [x] Prevent duplicate OAuth retry launches while the sign-in window is opening
+- [x] Add deterministic coverage for retry-action busy-state messaging
+
