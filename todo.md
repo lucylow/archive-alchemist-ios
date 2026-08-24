@@ -322,3 +322,6 @@
 - [x] Add precise visible-versus-selected count feedback to export review
 - [x] Clarify when the review list is capped while all selected rows still export
 - [x] Add deterministic coverage for bounded review count wording
+- [x] Add an expandable selected-row inspection window before export
+- [x] Preserve full selection and cap expanded inspection to a safe bound
+- [x] Add deterministic coverage for expanded review-window wording

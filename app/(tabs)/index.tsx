@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -163,6 +163,7 @@ export default function HomeScreen() {
   const [browserSort, setBrowserSort] = useState<ArchiveSort>("newest");
   const [selectedBrowserKeys, setSelectedBrowserKeys] = useState<string[]>([]);
   const [selectedBrowserReviewVisible, setSelectedBrowserReviewVisible] = useState(false);
+  const [reviewWindowExpanded, setReviewWindowExpanded] = useState(false);
   const [isExportingArchive, setIsExportingArchive] = useState(false);
   const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
@@ -637,6 +638,7 @@ export default function HomeScreen() {
     setBrowserYear("");
     setBrowserSort("newest");
     setSelectedBrowserKeys([]);
+    setReviewWindowExpanded(false);
     setPreferredExportFormat(latestExport?.format ?? null);
     if (screenActiveRef.current) setNotice(latestExport ? `${getLastExportShortcutLabel(latestExport)}. Recommended format: ${latestExport.format.toUpperCase()}. Showing the bounded archive browser; no archive contents are stored in export history.` : "Opening the bounded archive browser.");
   };
@@ -1461,10 +1463,11 @@ export default function HomeScreen() {
             <Text style={styles.bodyText} accessibilityLiveRegion="polite">{isExportingArchive ? "Preparing your archive export…" : getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
             {preferredExportFormat && <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getLastExportFormatPresetLabel(latestExport)}</Text>}
             <Text style={styles.sourceSummary} accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. This review contains archive rows, while export history stores metadata only.`}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No previous exports · metadata history is empty"}</Text>
-            <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getExportReviewWindowLabel(selectedBrowserItems.length, selectedBrowserItems.length)}</Text>
+            <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getExportReviewWindowLabel(selectedBrowserItems.length, Math.min(selectedBrowserItems.length, reviewWindowExpanded ? 100 : 20), reviewWindowExpanded ? 100 : 20)}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
-              {selectedBrowserItems.slice(0, 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
+              {selectedBrowserItems.slice(0, reviewWindowExpanded ? 100 : 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
             </ScrollView>
+            {getExportReviewWindowToggleLabel(selectedBrowserItems.length, reviewWindowExpanded) && <SecondaryButton label={getExportReviewWindowToggleLabel(selectedBrowserItems.length, reviewWindowExpanded)} accessibilityHint="Expands or collapses the bounded selected-row inspection window without changing which rows will export." onPress={() => setReviewWindowExpanded((current) => !current)} />}
             <View style={styles.actionRow}>
               {preferredExportFormat && <SecondaryButton label={getRecommendedExportActionLabel(latestExport)} accessibilityHint="Shares the selected archive rows using the temporary format recommendation from the last export." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={exportRecommendedFormat} />}
               <SecondaryButton label={preferredExportFormat === "json" ? "Share JSON · recommended" : "Share JSON"} accessibilityHint="Shares the reviewed selected archive rows as a normalized JSON file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); }} />
