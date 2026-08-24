@@ -25,6 +25,9 @@ export const clearArchiveItems = (): ArchiveItem[] => [];
 export const getArchivePreviewLabel = (items: ArchiveItem[], filename: string) =>
   `${items.length} item${items.length === 1 ? "" : "s"} ready from ${filename}`;
 
+export const formatArchivePreviewRow = (item: ArchiveItem) =>
+  `${item.title} · ${item.year} · ${item.views} views`;
+
 export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<ArchiveItem>;

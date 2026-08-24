@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
+import { clearArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -17,6 +17,10 @@ describe("parseArchiveManifest", () => {
     expect(parseArchiveManifest('title,year,views\n"A, B",2022,8.7K', "archive.csv")).toEqual([
       { title: "A, B", year: 2022, views: "8.7K" },
     ]);
+  });
+
+  it("formats a readable archive preview row", () => {
+    expect(formatArchivePreviewRow({ title: "A, B", year: 2022, views: "8.7K" })).toBe("A, B · 2022 · 8.7K views");
   });
 
   it("formats a concise import preview label", () => {

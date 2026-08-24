@@ -213,3 +213,6 @@
 - [x] Preview imported archive items before replacing the current archive
 - [x] Require explicit confirmation before committing a new imported archive
 - [x] Add deterministic coverage for import preview state and replacement behavior
+- [x] Show year and views for sample rows in the import preview
+- [x] Add an accessible combined summary for previewed archive rows
+- [x] Add deterministic coverage for archive preview row formatting

@@ -14,7 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
+import { clearArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -804,7 +804,11 @@ export default function HomeScreen() {
               <View style={styles.panel} accessible accessibilityLiveRegion="polite">
                 <Text style={styles.sectionTitle}>Import preview</Text>
                 <Text style={styles.bodyText}>{getArchivePreviewLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
-                <Text style={styles.mindDescription}>{pendingArchiveItems.slice(0, 3).map((item) => item.title).join(" · ")}</Text>
+                <View accessible accessibilityLabel={`Preview rows: ${pendingArchiveItems.slice(0, 3).map(formatArchivePreviewRow).join("; ")}`}>
+                  {pendingArchiveItems.slice(0, 3).map((item) => (
+                    <Text key={`${item.title}-${item.year}`} style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
+                  ))}
+                </View>
                 <View style={styles.actionRow}>
                   <SecondaryButton label="Use this archive" accessibilityHint="Replaces the current imported archive with this reviewed preview." onPress={confirmPendingArchive} />
                   <SecondaryButton label="Discard preview" accessibilityHint="Discards this preview and keeps the current imported archive unchanged." onPress={discardPendingArchive} />
