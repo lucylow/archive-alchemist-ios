@@ -172,3 +172,5 @@
 - [x] Add deterministic coverage for fresh-dig transient workflow state
 - [x] Safely handle rejected non-blocking Minds quota refreshes
 - [x] Add deterministic coverage for ignored quota-refresh failures
+- [x] Suppress late Minds-memory persistence commits after request cancellation or navigation
+- [x] Add deterministic coverage for late insight persistence invalidation

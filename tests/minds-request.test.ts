@@ -30,6 +30,13 @@ describe("canStartMindsRequest", () => {
     expect(gate.isCurrent(nextRequest)).toBe(true);
   });
 
+  it("keeps late persistence invalid after cancellation", () => {
+    const gate = createMindsRequestGate();
+    const request = gate.begin();
+    gate.cancel();
+    expect(gate.isCurrent(request)).toBe(false);
+  });
+
   it("keeps repeated cancellation invalidation-safe", () => {
     const gate = createMindsRequestGate();
     const request = gate.begin();
