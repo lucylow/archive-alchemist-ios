@@ -30,6 +30,15 @@ export const formatArchivePreviewRow = (item: ArchiveItem) =>
 
 export const serializeArchiveManifest = (items: ArchiveItem[]) => `${JSON.stringify(items, null, 2)}\n`;
 
+export const serializeArchiveCsv = (items: ArchiveItem[]) => {
+  const quote = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+  return [
+    "title,year,views",
+    ...items.map((item) => [quote(item.title), quote(item.year), quote(item.views)].join(",")),
+    "",
+  ].join("\n");
+};
+
 export const filterArchiveItems = (items: ArchiveItem[], query: string, year: string) => {
   const normalizedQuery = query.trim().toLowerCase();
   const normalizedYear = year.trim();

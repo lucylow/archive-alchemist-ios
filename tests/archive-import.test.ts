@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveManifest, sortArchiveItems } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -17,6 +17,10 @@ describe("parseArchiveManifest", () => {
     expect(parseArchiveManifest('title,year,views\n"A, B",2022,8.7K', "archive.csv")).toEqual([
       { title: "A, B", year: 2022, views: "8.7K" },
     ]);
+  });
+
+  it("serializes normalized archive data as quoted CSV", () => {
+    expect(serializeArchiveCsv([{ title: 'A "quoted" video', year: 2024, views: "1K" }])).toBe('title,year,views\n"A ""quoted"" video","2024","1K"\n');
   });
 
   it("serializes a normalized archive manifest deterministically", () => {

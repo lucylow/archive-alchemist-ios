@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, serializeArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchivePreviewLabel, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -533,20 +533,31 @@ export default function HomeScreen() {
     }
   };
 
-  const exportImportedArchive = async () => {
+  const shareImportedArchive = async (format: "json" | "csv") => {
     if (archiveItems.length === 0) return;
     try {
       if (!(await Sharing.isAvailableAsync())) {
         if (screenActiveRef.current) setNotice("Sharing is not available on this device.");
         return;
       }
-      const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-export.json`;
-      await FileSystem.writeAsStringAsync(fileUri, serializeArchiveManifest(archiveItems), { encoding: FileSystem.EncodingType.UTF8 });
-      await Sharing.shareAsync(fileUri, { mimeType: "application/json", dialogTitle: "Share Archive Alchemist export" });
-      if (screenActiveRef.current) setNotice("Archive export is ready to share.");
+      const extension = format === "json" ? "json" : "csv";
+      const mimeType = format === "json" ? "application/json" : "text/csv";
+      const contents = format === "json" ? serializeArchiveManifest(archiveItems) : serializeArchiveCsv(archiveItems);
+      const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-export.${extension}`;
+      await FileSystem.writeAsStringAsync(fileUri, contents, { encoding: FileSystem.EncodingType.UTF8 });
+      await Sharing.shareAsync(fileUri, { mimeType, dialogTitle: `Share Archive Alchemist ${format.toUpperCase()} export` });
+      if (screenActiveRef.current) setNotice(`Archive ${format.toUpperCase()} export is ready to share.`);
     } catch {
       if (screenActiveRef.current) setNotice("Archive export could not be prepared. Try again from this device.");
     }
+  };
+
+  const exportImportedArchive = () => {
+    Alert.alert("Export archive", "Choose a normalized format to share.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "JSON", onPress: () => { void shareImportedArchive("json"); } },
+      { text: "CSV", onPress: () => { void shareImportedArchive("csv"); } },
+    ]);
   };
 
   const clearImportedArchive = async () => {

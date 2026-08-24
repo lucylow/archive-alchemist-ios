@@ -225,3 +225,6 @@
 - [x] Add export of normalized imported archive data
 - [x] Provide a share-sheet action for the exported archive manifest
 - [x] Add deterministic coverage for archive export formatting
+- [x] Add CSV serialization for normalized imported archive data
+- [x] Let users choose JSON or CSV from the archive export action
+- [x] Add deterministic coverage for CSV quoting and export formatting
