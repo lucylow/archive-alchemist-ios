@@ -22,8 +22,10 @@ const normalizeViews = (value: unknown) => {
 
 export const clearArchiveItems = (): ArchiveItem[] => [];
 
-export const getArchivePreviewLabel = (items: ArchiveItem[], filename: string) =>
-  `${items.length} item${items.length === 1 ? "" : "s"} ready from ${filename}`;
+export const getArchivePreviewRestoredNotice = (items: ArchiveItem[], fileName: string) => `Restored ${items.length} archive item${items.length === 1 ? "" : "s"} from ${fileName}. Review the preview before using this archive.`;
+
+export const getArchivePreviewLabel = (items: ArchiveItem[], fileName: string | null) =>
+  `${items.length} item${items.length === 1 ? "" : "s"} ready from ${fileName}`;
 
 export const formatArchivePreviewRow = (item: ArchiveItem) =>
   `${item.title} · ${item.year} · ${item.views} views`;

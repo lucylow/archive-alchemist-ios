@@ -240,3 +240,6 @@
 - [x] Persist selected preview row keys within bounded local storage
 - [x] Restore and reconcile preview selections safely during startup hydration
 - [x] Add deterministic coverage for persisted selection recovery and invalid data
+- [x] Announce when a pending archive preview is restored after startup
+- [x] Preserve higher-priority invalid-storage recovery notices over preview-restored messaging
+- [x] Add deterministic coverage for restored-preview notice selection

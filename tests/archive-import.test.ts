@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -35,6 +35,10 @@ describe("parseArchiveManifest", () => {
     const secondKey = getArchiveItemKey(second);
     expect(toggleArchiveSelection([firstKey], [second])).toEqual([firstKey, secondKey]);
     expect(toggleArchiveSelection([firstKey, secondKey], [second])).toEqual([firstKey]);
+  });
+
+  it("formats a restored-preview notice with the source name and count", () => {
+    expect(getArchivePreviewRestoredNotice([{ title: "Video", year: 2024, views: "1K" }], "saved.json")).toBe("Restored 1 archive item from saved.json. Review the preview before using this archive.");
   });
 
   it("serializes normalized archive data as quoted CSV", () => {

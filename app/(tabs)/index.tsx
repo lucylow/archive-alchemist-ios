@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -243,6 +243,7 @@ export default function HomeScreen() {
     let hydrationTimeout: ReturnType<typeof setTimeout> | null = null;
     const hydrate = async () => {
       let recoveredInvalidStorage = false;
+      let restoredArchivePreview = false;
       const discardStoredValue = async (key: string) => {
         recoveredInvalidStorage = true;
         if (!active) return;
@@ -311,6 +312,7 @@ export default function HomeScreen() {
               setPendingArchiveItems(restoredPreview.items);
               setPendingArchiveName(restoredPreview.name);
               setSelectedPreviewKeys(restoredPreview.selectedKeys.slice(0, 5000));
+              restoredArchivePreview = true;
             } else {
               await discardStoredValue(ARCHIVE_PREVIEW_KEY);
             }
@@ -336,6 +338,10 @@ export default function HomeScreen() {
         }
         if (active && recoveredInvalidStorage) {
           setNotice("Some saved local memory was reset because it was invalid or too large. Your current session is still available.");
+        } else if (active && restoredArchivePreview) {
+          const restoredName = JSON.parse(previewValue ?? "{}").name as string;
+          const restoredItems = JSON.parse(previewValue ?? "{}").items as ArchiveItem[];
+          setNotice(getArchivePreviewRestoredNotice(restoredItems, restoredName));
         }
       } catch {
         if (active) {
