@@ -20,7 +20,16 @@ const normalizeViews = (value: unknown) => {
   return text || "—";
 };
 
-const normalizeItem = (value: unknown, index: number): ArchiveItem | null => {
+export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<ArchiveItem>;
+  const year = candidate.year;
+  return typeof candidate.title === "string" && candidate.title.trim().length > 0 && candidate.title.length <= 160
+    && typeof year === "number" && Number.isInteger(year) && year >= 1900 && year <= 2200
+    && typeof candidate.views === "string" && candidate.views.length <= 32;
+};
+
+const normalizeItem = (value: unknown): ArchiveItem | null => {
   if (!value || typeof value !== "object") return null;
   const candidate = value as Record<string, unknown>;
   const title = normalizeTitle(candidate.title ?? candidate.name ?? candidate.headline);
@@ -82,7 +91,7 @@ export function parseArchiveManifest(text: string, filename = "archive.json"): A
   const values = Array.isArray(raw) ? raw : raw && typeof raw === "object" && Array.isArray((raw as { items?: unknown }).items)
     ? (raw as { items: unknown[] }).items
     : [];
-  const items = values.slice(0, MAX_ARCHIVE_ITEMS).map(normalizeItem).filter((item): item is ArchiveItem => item !== null);
+  const items = values.slice(0, MAX_ARCHIVE_ITEMS).map(normalizeItem).filter((item): item is ArchiveItem => item !== null && isValidArchiveItem(item));
   if (items.length === 0) throw new Error("No archive items were found. Include title, year, and optional views columns.");
   return items;
 }

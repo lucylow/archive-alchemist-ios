@@ -14,7 +14,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
+import { isValidArchiveItem, parseArchiveManifest, type ArchiveItem } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -22,6 +22,7 @@ import {
   MAX_HISTORY_STORAGE_LENGTH,
   MAX_MEMORY_STORAGE_LENGTH,
   MAX_PLATFORMS_STORAGE_LENGTH,
+  MAX_ARCHIVE_STORAGE_LENGTH,
 } from "@/shared/storage-bounds";
 
 type Phase = "home" | "connect" | "scan" | "discoveries" | "repurpose" | "results";
@@ -32,6 +33,7 @@ type Memory = Omit<PersistedMindMemory, "platforms"> & { platforms: Platform[] }
 const MEMORY_KEY = "archive-alchemist-mind-memory";
 const HISTORY_KEY = "archive-alchemist-mind-history";
 const PLATFORMS_KEY = "archive-alchemist-selected-platforms";
+const ARCHIVE_KEY = "archive-alchemist-imported-items";
 const platforms: Platform[] = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"];
 const discoveries = [
   { title: "How to Edit Like a Pro", year: 2023, score: 94, views: "12.4K", icon: "🎬" },
@@ -242,11 +244,12 @@ export default function HomeScreen() {
           AsyncStorage.getItem(MEMORY_KEY),
           AsyncStorage.getItem(HISTORY_KEY),
           AsyncStorage.getItem(PLATFORMS_KEY),
+          AsyncStorage.getItem(ARCHIVE_KEY),
         ]);
-        const storageTimeout = new Promise<[string | null, string | null, string | null]>((resolve) => {
-          hydrationTimeout = setTimeout(() => resolve([null, null, null]), 1500);
+        const storageTimeout = new Promise<[string | null, string | null, string | null, string | null]>((resolve) => {
+          hydrationTimeout = setTimeout(() => resolve([null, null, null, null]), 1500);
         });
-        const [memoryValue, historyValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
+        const [memoryValue, historyValue, platformsValue, archiveValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
@@ -275,6 +278,20 @@ export default function HomeScreen() {
           }
         } else if (historyValue) {
           await discardStoredValue(HISTORY_KEY);
+        }
+        if (archiveValue && isWithinStorageLimit(archiveValue, MAX_ARCHIVE_STORAGE_LENGTH)) {
+          try {
+            const restoredArchive = JSON.parse(archiveValue) as ArchiveItem[];
+            if (Array.isArray(restoredArchive) && restoredArchive.length > 0 && restoredArchive.length <= 5000 && restoredArchive.every(isValidArchiveItem)) {
+              setArchiveItems(restoredArchive);
+            } else {
+              await discardStoredValue(ARCHIVE_KEY);
+            }
+          } catch {
+            await discardStoredValue(ARCHIVE_KEY);
+          }
+        } else if (archiveValue) {
+          await discardStoredValue(ARCHIVE_KEY);
         }
         if (platformsValue && isWithinStorageLimit(platformsValue, MAX_PLATFORMS_STORAGE_LENGTH)) {
           try {
@@ -321,6 +338,13 @@ export default function HomeScreen() {
       active = false;
     };
   }, [isHydrated, selectedPlatforms]);
+
+  useEffect(() => {
+    if (!isHydrated || archiveItems.length === 0) return;
+    AsyncStorage.setItem(ARCHIVE_KEY, JSON.stringify(archiveItems)).catch(() => {
+      if (screenActiveRef.current) setNotice("Imported archive items could not be saved, but this session is still available.");
+    });
+  }, [archiveItems, isHydrated]);
 
   useEffect(() => {
     if (phase !== "scan") return;

@@ -205,3 +205,6 @@
 - [x] Add a real local archive import entry point for JSON/CSV manifests
 - [x] Add deterministic coverage for archive manifest parsing and size limits
 - [x] Replace hardcoded archive overview metrics with imported archive metrics when available
+- [x] Persist imported archive items in bounded local storage
+- [x] Restore imported archive items during startup hydration with safe recovery
+- [x] Add deterministic coverage for imported archive persistence and invalid-storage handling

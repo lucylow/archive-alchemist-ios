@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
+import { isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -17,6 +17,12 @@ describe("parseArchiveManifest", () => {
     expect(parseArchiveManifest('title,year,views\n"A, B",2022,8.7K', "archive.csv")).toEqual([
       { title: "A, B", year: 2022, views: "8.7K" },
     ]);
+  });
+
+  it("validates persisted archive records conservatively", () => {
+    expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1.2K" })).toBe(true);
+    expect(isValidArchiveItem({ title: "", year: 2024, views: "1.2K" })).toBe(false);
+    expect(isValidArchiveItem({ title: "Video", year: "2024", views: "1.2K" })).toBe(false);
   });
 
   it("rejects malformed, empty, and oversized files", () => {
