@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Platform as RNPlatform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { withTimeout } from "@/lib/_core/with-timeout";
 import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
 import { canAutoPost } from "@/lib/workflow";
@@ -218,10 +219,11 @@ export default function HomeScreen() {
           AsyncStorage.getItem(HISTORY_KEY),
           AsyncStorage.getItem(PLATFORMS_KEY),
         ]);
-        const storageTimeout = new Promise<[string | null, string | null, string | null]>((resolve) => {
-          setTimeout(() => resolve([null, null, null]), 1500);
-        });
-        const [memoryValue, historyValue, platformsValue] = await Promise.race([storageRead, storageTimeout]);
+        const [memoryValue, historyValue, platformsValue] = await withTimeout(
+          storageRead,
+          [null, null, null] as [string | null, string | null, string | null],
+          1500,
+        );
         if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;

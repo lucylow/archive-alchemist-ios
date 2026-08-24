@@ -192,3 +192,6 @@
 - [x] Require non-placeholder generated logo metadata in release preflight
 - [x] Add regression coverage for empty or placeholder logo URLs
 
+- [x] Cancel the bounded local hydration timeout when storage resolves first
+- [x] Add deterministic coverage for timeout resolution, success cleanup, and storage rejection
+
