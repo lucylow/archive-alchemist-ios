@@ -195,6 +195,7 @@ export default function HomeScreen() {
   const resetRequestGate = useRef(createSaveRequestGate()).current;
   const archiveResetRequestGate = useRef(createSaveRequestGate()).current;
   const archiveExportRequestGate = useRef(createSaveRequestGate()).current;
+  const archiveExportRequestIdRef = useRef(0);
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
     if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -623,6 +624,8 @@ export default function HomeScreen() {
       return;
     }
     if (!archiveExportRequestGate.tryStart()) return;
+    const requestId = archiveExportRequestIdRef.current + 1;
+    archiveExportRequestIdRef.current = requestId;
     if (screenActiveRef.current) setIsExportingArchive(true);
     try {
       if (!(await Sharing.isAvailableAsync())) {
@@ -634,13 +637,14 @@ export default function HomeScreen() {
       const contents = format === "json" ? serializeArchiveManifest(items) : serializeArchiveCsv(items);
       const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-${exportLabel}-${items.length}.${extension}`;
       await FileSystem.writeAsStringAsync(fileUri, contents, { encoding: FileSystem.EncodingType.UTF8 });
+      if (archiveExportRequestIdRef.current !== requestId) return;
       await Sharing.shareAsync(fileUri, { mimeType, dialogTitle: `Share Archive Alchemist ${format.toUpperCase()} export` });
       if (screenActiveRef.current) setNotice(`Archive ${format.toUpperCase()} export is ready to share.`);
     } catch {
-      if (screenActiveRef.current) setNotice("Archive export could not be prepared. Your selection is preserved; try sharing again.");
+      if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) setNotice("Archive export could not be prepared. Your selection is preserved; try sharing again.");
     } finally {
       archiveExportRequestGate.finish();
-      if (screenActiveRef.current) setIsExportingArchive(false);
+      if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) setIsExportingArchive(false);
     }
   };
 
@@ -662,6 +666,16 @@ export default function HomeScreen() {
       { text: "JSON", onPress: () => { void shareImportedArchive("json", selectedPreviewItems, "selected-preview"); } },
       { text: "CSV", onPress: () => { void shareImportedArchive("csv", selectedPreviewItems, "selected-preview"); } },
     ]);
+  };
+
+  const cancelArchiveExport = () => {
+    if (!isExportingArchive) return;
+    archiveExportRequestIdRef.current += 1;
+    archiveExportRequestGate.finish();
+    if (screenActiveRef.current) {
+      setIsExportingArchive(false);
+      setNotice("Archive export cancelled. Your selection is preserved.");
+    }
   };
 
   const exportBrowserResults = () => {
@@ -1355,7 +1369,7 @@ export default function HomeScreen() {
           <View style={styles.detailCard} accessible accessibilityLabel={`Review ${selectedBrowserItems.length} selected archive item${selectedBrowserItems.length === 1 ? "" : "s"} before export`}>
             <View style={styles.rowBetween}>
               <Text style={styles.sectionTitle}>Review export</Text>
-              <Pressable accessibilityRole="button" accessibilityLabel="Cancel archive export review" onPress={() => setSelectedBrowserReviewVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Cancel</Text></Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel={isExportingArchive ? "Cancel archive export" : "Close archive export review"} onPress={isExportingArchive ? cancelArchiveExport : () => setSelectedBrowserReviewVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>{isExportingArchive ? "Cancel export" : "Cancel"}</Text></Pressable>
             </View>
             <Text style={styles.bodyText} accessibilityLiveRegion="polite">{isExportingArchive ? "Preparing your archive export…" : getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">

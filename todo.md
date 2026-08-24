@@ -295,3 +295,6 @@
 - [x] Make export busy-state cleanup safe when the screen unmounts
 - [x] Prevent stale export completion notices after navigation or unmount
 - [x] Add deterministic coverage for export lifecycle invalidation
+- [x] Add a cancellable export-preparation flow for large selections
+- [x] Preserve the current selection and show a cancellation notice
+- [x] Add deterministic coverage for export cancellation state
