@@ -122,16 +122,20 @@ function PrimaryButton({ label, onPress, disabled = false, accessibilityHint, ac
   );
 }
 
-function SecondaryButton({ label, onPress, accessibilityHint }: { label: string; onPress: () => void; accessibilityHint?: string }) {
+function SecondaryButton({ label, onPress, accessibilityHint, disabled = false, accessibilityState }: { label: string; onPress: () => void; accessibilityHint?: string; disabled?: boolean; accessibilityState?: { busy?: boolean } }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled, ...accessibilityState }}
+      disabled={disabled}
       onPress={() => {
-        haptic.light();
-        onPress();
+        if (!disabled) {
+          haptic.light();
+          onPress();
+        }
       }}
-      style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed, disabled && styles.disabled]}
     >
       <Text style={styles.secondaryButtonText}>{label}</Text>
     </Pressable>
@@ -157,6 +161,7 @@ export default function HomeScreen() {
   const [browserSort, setBrowserSort] = useState<ArchiveSort>("newest");
   const [selectedBrowserKeys, setSelectedBrowserKeys] = useState<string[]>([]);
   const [selectedBrowserReviewVisible, setSelectedBrowserReviewVisible] = useState(false);
+  const [isExportingArchive, setIsExportingArchive] = useState(false);
   const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -189,6 +194,7 @@ export default function HomeScreen() {
   const saveRequestGate = useRef(createSaveRequestGate()).current;
   const resetRequestGate = useRef(createSaveRequestGate()).current;
   const archiveResetRequestGate = useRef(createSaveRequestGate()).current;
+  const archiveExportRequestGate = useRef(createSaveRequestGate()).current;
   const persistInsightToMemory = async (insight: MindsDiscoveryResponse, requestId: number) => {
     if (!memory || !mindsRequestGate.isCurrent(requestId)) return;
     const { memory: updatedMemory, history: nextHistory } = mergeMindsInsight(memory, history, insight);
@@ -615,6 +621,8 @@ export default function HomeScreen() {
       if (screenActiveRef.current) setNotice("There are no matching archive items to export.");
       return;
     }
+    if (!archiveExportRequestGate.tryStart()) return;
+    if (screenActiveRef.current) setIsExportingArchive(true);
     try {
       if (!(await Sharing.isAvailableAsync())) {
         if (screenActiveRef.current) setNotice("Sharing is not available on this device.");
@@ -629,6 +637,9 @@ export default function HomeScreen() {
       if (screenActiveRef.current) setNotice(`Archive ${format.toUpperCase()} export is ready to share.`);
     } catch {
       if (screenActiveRef.current) setNotice("Archive export could not be prepared. Your selection is preserved; try sharing again.");
+    } finally {
+      archiveExportRequestGate.finish();
+      if (screenActiveRef.current) setIsExportingArchive(false);
     }
   };
 
@@ -1320,7 +1331,7 @@ export default function HomeScreen() {
             </View>
             <View style={styles.actionRow}>
               <SecondaryButton label={selectedBrowserItems.length > 0 ? `${selectedBrowserItems.length} selected` : "Select visible"} accessibilityHint="Selects or deselects all currently visible filtered archive rows." onPress={() => setSelectedBrowserKeys((current) => toggleArchiveSelection(current, browserItems))} />
-              <SecondaryButton label="Export selected" accessibilityHint="Shares the selected full-browser archive rows as JSON or CSV." onPress={exportBrowserResults} />
+              <SecondaryButton label={isExportingArchive ? "Preparing export…" : "Export selected"} accessibilityHint="Shares the selected full-browser archive rows as JSON or CSV." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={exportBrowserResults} />
               <SecondaryButton label="Clear selection" accessibilityHint="Clears all full-browser row selections." onPress={() => setSelectedBrowserKeys([])} />
             </View>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent}>
@@ -1345,14 +1356,14 @@ export default function HomeScreen() {
               <Text style={styles.sectionTitle}>Review export</Text>
               <Pressable accessibilityRole="button" accessibilityLabel="Cancel archive export review" onPress={() => setSelectedBrowserReviewVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Cancel</Text></Pressable>
             </View>
-            <Text style={styles.bodyText}>{getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
+            <Text style={styles.bodyText} accessibilityLiveRegion="polite">{isExportingArchive ? "Preparing your archive export…" : getArchiveExportReviewLabel(selectedBrowserItems.length)}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
               {selectedBrowserItems.slice(0, 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
               {selectedBrowserItems.length > 20 && <Text style={styles.sourceSummary}>Showing the first 20 selected rows.</Text>}
             </ScrollView>
             <View style={styles.actionRow}>
-              <SecondaryButton label="Share JSON" accessibilityHint="Shares the reviewed selected archive rows as a normalized JSON file." onPress={() => { setSelectedBrowserReviewVisible(false); void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); }} />
-              <SecondaryButton label="Share CSV" accessibilityHint="Shares the reviewed selected archive rows as a normalized CSV file." onPress={() => { setSelectedBrowserReviewVisible(false); void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); }} />
+              <SecondaryButton label="Share JSON" accessibilityHint="Shares the reviewed selected archive rows as a normalized JSON file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); }} />
+              <SecondaryButton label="Share CSV" accessibilityHint="Shares the reviewed selected archive rows as a normalized CSV file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); }} />
             </View>
           </View>
         </View>

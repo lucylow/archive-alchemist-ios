@@ -289,3 +289,6 @@
 - [x] Add thumbnail previews to selected export-review rows
 - [x] Add clearer retry-oriented feedback for export preparation failures
 - [x] Add deterministic coverage for export-review media fallback wording
+- [x] Add explicit export-preparation busy state to archive sharing
+- [x] Prevent duplicate export taps while a share file is being prepared
+- [x] Add deterministic coverage for the export request gate

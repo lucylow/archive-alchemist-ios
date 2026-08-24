@@ -11,6 +11,15 @@ describe("save request gate", () => {
     expect(gate.tryStart()).toBe(false);
   });
 
+  it("blocks duplicate archive export preparation until sharing finishes", () => {
+    const exportGate = createSaveRequestGate();
+
+    expect(exportGate.tryStart()).toBe(true);
+    expect(exportGate.tryStart()).toBe(false);
+    exportGate.finish();
+    expect(exportGate.tryStart()).toBe(true);
+  });
+
   it("allows a new save after the previous save finishes", () => {
     const gate = createSaveRequestGate();
 
