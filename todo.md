@@ -200,3 +200,5 @@
 - [x] Add deterministic coverage for the reset action gate
 - [x] Suppress late Minds persistence failure notices after request invalidation
 - [x] Add deterministic coverage for stale Minds persistence error handling
+- [x] Cancel the Minds request lifecycle gate when the workflow screen unmounts
+- [x] Add deterministic coverage for unmount-level Minds callback invalidation

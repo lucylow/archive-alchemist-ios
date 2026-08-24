@@ -186,8 +186,9 @@ export default function HomeScreen() {
     screenActiveRef.current = true;
     return () => {
       screenActiveRef.current = false;
+      mindsRequestGate.cancel();
     };
-  }, []);
+  }, [mindsRequestGate]);
 
   useEffect(() => {
     let mounted = true;
