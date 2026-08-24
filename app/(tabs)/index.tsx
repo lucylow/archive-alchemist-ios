@@ -16,7 +16,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -795,6 +795,8 @@ export default function HomeScreen() {
                   <View style={styles.flexOne}>
                     <Text style={styles.sectionTitle}>Preview waiting</Text>
                     <Text style={styles.bodyText}>{getArchivePreviewResumeLabel(pendingArchiveItems, pendingArchiveName)}.</Text>
+                    <Text style={styles.sourceSummary}>{getArchivePreviewContextLabel(pendingArchiveItems, selectedPreviewKeys.length)}.</Text>
+                    <Text style={styles.mindDescription}>{pendingArchiveItems.slice(0, 2).map(formatArchivePreviewRow).join("; ")}</Text>
                   </View>
                   <SecondaryButton label="Review preview" accessibilityHint="Returns to the source archive screen to review and confirm this pending archive preview." onPress={() => setPhase("connect")} />
                 </View>

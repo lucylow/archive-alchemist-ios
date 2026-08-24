@@ -246,3 +246,6 @@
 - [x] Add a home-screen card for a restored pending archive preview
 - [x] Provide an accessible action to resume the preview workflow
 - [x] Add deterministic coverage for resume-preview card messaging
+- [x] Show selected preview count on the home recovery card
+- [x] Show matching preview count and sample rows on the home recovery card
+- [x] Add deterministic coverage for recovery-card context wording

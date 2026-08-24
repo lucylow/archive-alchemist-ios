@@ -26,6 +26,8 @@ export const getArchivePreviewRestoredNotice = (items: ArchiveItem[], fileName: 
 
 export const getArchivePreviewResumeLabel = (items: ArchiveItem[], fileName: string) => `Resume ${items.length} item${items.length === 1 ? "" : "s"} from ${fileName}`;
 
+export const getArchivePreviewContextLabel = (items: ArchiveItem[], selectedCount: number) => `${items.length} preview item${items.length === 1 ? "" : "s"} · ${selectedCount} selected for export`;
+
 export const getArchivePreviewLabel = (items: ArchiveItem[], fileName: string | null) =>
   `${items.length} item${items.length === 1 ? "" : "s"} ready from ${fileName}`;
 

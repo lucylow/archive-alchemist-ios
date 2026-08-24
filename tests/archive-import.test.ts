@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
@@ -43,6 +43,10 @@ describe("parseArchiveManifest", () => {
 
   it("formats the resume-preview card label with a count and source", () => {
     expect(getArchivePreviewResumeLabel([{ title: "Video", year: 2024, views: "1K" }], "saved.json")).toBe("Resume 1 item from saved.json");
+  });
+
+  it("formats recovery-card preview context with selected count", () => {
+    expect(getArchivePreviewContextLabel([{ title: "Video", year: 2024, views: "1K" }], 1)).toBe("1 preview item · 1 selected for export");
   });
 
   it("serializes normalized archive data as quoted CSV", () => {
