@@ -325,3 +325,6 @@
 - [x] Add an expandable selected-row inspection window before export
 - [x] Preserve full selection and cap expanded inspection to a safe bound
 - [x] Add deterministic coverage for expanded review-window wording
+- [x] Add a lightweight size estimate for the current selected export
+- [x] Keep the estimate derived in memory without persisting archive contents
+- [x] Add deterministic coverage for export-size estimate wording

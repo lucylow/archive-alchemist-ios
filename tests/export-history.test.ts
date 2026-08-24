@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, formatExportSizeEstimate, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, MAX_EXPORT_HISTORY, normalizeExportHistory } from "../lib/export-history";
 
 describe("export history", () => {
   it("keeps only valid metadata and excludes archive content", () => {
@@ -35,6 +35,13 @@ describe("export history", () => {
     expect(getLastExportShortcutLabel(null)).toBe("Open archive browser");
     expect(getLastExportShortcutLabel({ format: "json", itemCount: 1, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last JSON export · 1 item");
     expect(getLastExportShortcutLabel({ format: "csv", itemCount: 4, exportedAt: "2026-08-24T12:00:00.000Z" })).toBe("Review last CSV export · 4 items");
+  });
+
+  it("formats export-size estimates without exposing archive contents", () => {
+    expect(formatExportSizeEstimate(12)).toBe("12 B");
+    expect(formatExportSizeEstimate(2048)).toBe("2.0 KB");
+    expect(getExportSizeEstimateLabel(2048, 1024, "json")).toBe("Approximate JSON size: 2.0 KB. Calculated in memory; not saved.");
+    expect(getExportSizeEstimateLabel(2048, 1024, null)).toBe("Approximate sizes: JSON 2.0 KB · CSV 1.0 KB. Calculated in memory; not saved.");
   });
 
   it("formats expandable export-review toggle labels consistently", () => {

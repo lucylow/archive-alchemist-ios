@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -188,6 +188,8 @@ export default function HomeScreen() {
   );
   const browserItems = useMemo(() => sortArchiveItems(filterArchiveItems(getArchiveBrowserItems(archiveItems), browserQuery, browserYear), browserSort), [archiveItems, browserQuery, browserSort, browserYear]);
   const selectedBrowserItems = useMemo(() => getSelectedArchiveItems(browserItems, selectedBrowserKeys), [browserItems, selectedBrowserKeys]);
+  const selectedJsonSize = useMemo(() => serializeArchiveManifest(selectedBrowserItems).length, [selectedBrowserItems]);
+  const selectedCsvSize = useMemo(() => serializeArchiveCsv(selectedBrowserItems).length, [selectedBrowserItems]);
 
   useEffect(() => {
     setSelectedBrowserKeys((current) => {
@@ -1464,6 +1466,7 @@ export default function HomeScreen() {
             {preferredExportFormat && <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getLastExportFormatPresetLabel(latestExport)}</Text>}
             <Text style={styles.sourceSummary} accessibilityLabel={`${getLatestExportStatusLabel(latestExport)}. This review contains archive rows, while export history stores metadata only.`}>{latestExport ? `${getLatestExportStatusLabel(latestExport)} · ${formatSavedAt(latestExport.exportedAt)}` : "No previous exports · metadata history is empty"}</Text>
             <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getExportReviewWindowLabel(selectedBrowserItems.length, Math.min(selectedBrowserItems.length, reviewWindowExpanded ? 100 : 20), reviewWindowExpanded ? 100 : 20)}</Text>
+            <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{getExportSizeEstimateLabel(selectedJsonSize, selectedCsvSize, preferredExportFormat)}</Text>
             <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent} accessibilityLabel="Selected archive rows for export review">
               {selectedBrowserItems.slice(0, reviewWindowExpanded ? 100 : 20).map((item) => <View key={getArchiveItemKey(item)} style={styles.reviewMediaRow}>{renderArchiveThumbnail(item)}<Text style={styles.reviewRow}>{formatArchivePreviewRow(item)}</Text></View>)}
             </ScrollView>
