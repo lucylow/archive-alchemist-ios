@@ -271,3 +271,6 @@
 - [x] Track failed thumbnail URLs for retryable load states
 - [x] Add an accessible Retry thumbnail action without reloading unrelated rows
 - [x] Add deterministic coverage for thumbnail retry state labeling
+- [x] Add a bounded full-archive browser for imported records
+- [x] Add accessible navigation between the overview and full archive list
+- [x] Add deterministic coverage for full-archive item-window behavior

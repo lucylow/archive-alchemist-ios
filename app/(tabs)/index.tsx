@@ -17,7 +17,7 @@ import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError 
 import { canStartMindsRequest, createMindsRequestGate, ignorePromiseRejection } from "@/lib/minds-request";
 import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
@@ -151,6 +151,7 @@ export default function HomeScreen() {
   const [previewSort, setPreviewSort] = useState<ArchiveSort>("newest");
   const [selectedPreviewKeys, setSelectedPreviewKeys] = useState<string[]>([]);
   const [archiveDetail, setArchiveDetail] = useState<ArchiveItem | null>(null);
+  const [archiveBrowserVisible, setArchiveBrowserVisible] = useState(false);
   const [failedThumbnailUrls, setFailedThumbnailUrls] = useState<string[]>([]);
   const [isImportingArchive, setIsImportingArchive] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -857,6 +858,7 @@ export default function HomeScreen() {
                   </View>
                 ))}
                 {archiveItems.length > 3 && <Text style={styles.sourceSummary}>Showing 3 of {archiveItems.length} imported items.</Text>}
+                <SecondaryButton label={`Browse archive (${archiveItems.length})`} accessibilityHint="Opens a bounded full list of imported archive records." onPress={() => setArchiveBrowserVisible(true)} />
               </View>
             )}
             <View style={styles.statsRow}>
@@ -1279,6 +1281,25 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+      <Modal visible={archiveBrowserVisible} transparent animationType="slide" onRequestClose={() => setArchiveBrowserVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.browserCard}>
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitle}>Archive browser</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Close archive browser" onPress={() => setArchiveBrowserVisible(false)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
+            </View>
+            <Text style={styles.sourceSummary}>Showing {getArchiveBrowserItems(archiveItems).length} of {archiveItems.length} imported items.</Text>
+            <ScrollView style={styles.browserList} contentContainerStyle={styles.browserListContent}>
+              {getArchiveBrowserItems(archiveItems).map((item) => (
+                <View key={getArchiveItemKey(item)} style={styles.browserRow}>
+                  {renderArchiveThumbnail(item)}
+                  <View style={styles.flexOne}><Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text><View style={styles.rowWrap}><Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}</View></View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={archiveDetail !== null} transparent animationType="slide" onRequestClose={() => setArchiveDetail(null)}>
         <View style={styles.modalBackdrop}>
           {archiveDetail && (
@@ -1399,6 +1420,11 @@ const styles = StyleSheet.create({
   sourceLink: { alignSelf: "flex-start", paddingVertical: 3 },
   sourceLinkText: { color: "#F4C95D", fontSize: 12, fontWeight: "800" },
   modalBackdrop: { flex: 1, backgroundColor: "rgba(16, 11, 36, 0.72)", justifyContent: "flex-end" },
+  browserCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10, maxHeight: "88%" },
+  browserList: { flexGrow: 0 },
+  browserListContent: { gap: 10, paddingBottom: 12 },
+  browserRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8, borderBottomColor: "#3B2C62", borderBottomWidth: 1 },
+  rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   detailCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10 },
   detailTitle: { color: "#F8F4FF", fontSize: 24, fontWeight: "800", lineHeight: 30 },
   archiveThumbnail: { width: 56, height: 40, borderRadius: 8, backgroundColor: "#100B24" },

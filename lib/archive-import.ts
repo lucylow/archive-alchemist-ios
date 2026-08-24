@@ -1,6 +1,8 @@
 export const MAX_ARCHIVE_IMPORT_BYTES = 512 * 1024;
 export const MAX_ARCHIVE_ITEMS = 5_000;
 
+export const MAX_ARCHIVE_BROWSER_ITEMS = 100;
+
 export type ArchiveItem = {
   title: string;
   year: number;
@@ -32,6 +34,7 @@ const normalizeViews = (value: unknown) => {
 };
 
 export const clearArchiveItems = (): ArchiveItem[] => [];
+export const getArchiveBrowserItems = (items: ArchiveItem[]) => items.slice(0, MAX_ARCHIVE_BROWSER_ITEMS);
 
 export const getArchivePreviewRestoredNotice = (items: ArchiveItem[], fileName: string) => `Restored ${items.length} archive item${items.length === 1 ? "" : "s"} from ${fileName}. Review the preview before using this archive.`;
 

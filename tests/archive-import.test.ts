@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, getArchiveBrowserItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_BROWSER_ITEMS, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+
+describe("archive browser window", () => {
+  it("caps large imports without mutating the source list", () => {
+    const items = Array.from({ length: MAX_ARCHIVE_BROWSER_ITEMS + 5 }, (_, index) => ({ title: `Item ${index}`, year: 2024, views: String(index) }));
+    expect(getArchiveBrowserItems(items)).toHaveLength(MAX_ARCHIVE_BROWSER_ITEMS);
+    expect(items).toHaveLength(MAX_ARCHIVE_BROWSER_ITEMS + 5);
+  });
+});
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
