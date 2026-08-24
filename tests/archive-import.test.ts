@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
+import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveDetailSummary, getArchiveItemKey, getArchivePreviewContextLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, isSafeArchiveSourceUrl, isSafeArchiveThumbnailUrl, isValidArchiveItem, MAX_ARCHIVE_IMPORT_BYTES, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection } from "../lib/archive-import";
 
 describe("parseArchiveManifest", () => {
   it("parses JSON arrays and normalizes common archive fields", () => {
-    expect(parseArchiveManifest(JSON.stringify([{ name: " A video ", publishedYear: "2023", viewCount: 1200, url: "https://example.com/video" }]), "export.json")).toEqual([
-      { title: "A video", year: 2023, views: "1200", sourceUrl: "https://example.com/video" },
+    expect(parseArchiveManifest(JSON.stringify([{ name: " A video ", publishedYear: "2023", viewCount: 1200, url: "https://example.com/video", thumbnail: "https://example.com/video.jpg" }]), "export.json")).toEqual([
+      { title: "A video", year: 2023, views: "1200", sourceUrl: "https://example.com/video", thumbnailUrl: "https://example.com/video.jpg" },
     ]);
   });
 
@@ -55,6 +55,11 @@ describe("parseArchiveManifest", () => {
     expect(isSafeArchiveSourceUrl("javascript:alert(1)")).toBe(false);
   });
 
+  it("accepts only secure HTTPS thumbnail URLs", () => {
+    expect(isSafeArchiveThumbnailUrl("https://example.com/video.jpg")).toBe(true);
+    expect(isSafeArchiveThumbnailUrl("http://example.com/video.jpg")).toBe(false);
+  });
+
   it("rejects insecure or malformed source URLs from persisted records", () => {
     expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1K", sourceUrl: "http://example.com" })).toBe(false);
     expect(isValidArchiveItem({ title: "Video", year: 2024, views: "1K", sourceUrl: "https://example.com/video" })).toBe(true);
@@ -66,7 +71,7 @@ describe("parseArchiveManifest", () => {
   });
 
   it("serializes normalized archive data as quoted CSV with source URLs", () => {
-    expect(serializeArchiveCsv([{ title: 'A "quoted" video', year: 2024, views: "1K", sourceUrl: "https://example.com/a,b" }])).toBe('title,year,views,sourceUrl\n"A ""quoted"" video","2024","1K","https://example.com/a,b"\n');
+    expect(serializeArchiveCsv([{ title: 'A "quoted" video', year: 2024, views: "1K", sourceUrl: "https://example.com/a,b" }])).toBe('title,year,views,sourceUrl,thumbnailUrl\n"A ""quoted"" video","2024","1K","https://example.com/a,b",""\n');
   });
 
   it("serializes a normalized archive manifest deterministically", () => {

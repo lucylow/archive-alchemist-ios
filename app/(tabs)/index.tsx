@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import * as DocumentPicker from "expo-document-picker";
 import * as Sharing from "expo-sharing";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Easing, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -842,6 +843,7 @@ export default function HomeScreen() {
                 <Text style={styles.sectionTitle}>Imported archive</Text>
                 {archiveItems.slice(0, 3).map((item) => (
                   <View key={getArchiveItemKey(item)} style={styles.previewSampleRow}>
+                    {item.thumbnailUrl && <Image source={{ uri: item.thumbnailUrl }} contentFit="cover" accessibilityLabel={`Thumbnail for ${item.title}`} onError={() => setNotice("An archive thumbnail could not be loaded; the record is still available.")} style={styles.archiveThumbnail} />}
                     <Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text>
                     <Pressable accessibilityRole="button" accessibilityLabel={`View details for ${item.title}`} accessibilityHint="Opens archive metadata and available source actions." onPress={() => setArchiveDetail(item)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Details</Text></Pressable>{item.sourceUrl && <Pressable accessibilityRole="link" accessibilityLabel={`Open source for ${item.title}`} accessibilityHint="Opens the secure archive source link." onPress={() => void openArchiveSource(item.sourceUrl!)} style={({ pressed }) => [styles.sourceLink, pressed && styles.pressed]}><Text style={styles.sourceLinkText}>Open source</Text></Pressable>}
                   </View>
@@ -1277,6 +1279,7 @@ export default function HomeScreen() {
                 <Text style={styles.sectionTitle}>Archive detail</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Close archive detail" onPress={() => setArchiveDetail(null)} style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}><Text style={styles.noticeDismissText}>Close</Text></Pressable>
               </View>
+              {archiveDetail.thumbnailUrl && <Image source={{ uri: archiveDetail.thumbnailUrl }} contentFit="cover" accessibilityLabel={`Thumbnail for ${archiveDetail.title}`} onError={() => setNotice("An archive thumbnail could not be loaded; the record is still available.")} style={styles.detailThumbnail} />}
               <Text style={styles.detailTitle}>{archiveDetail.title}</Text>
               <Text style={styles.bodyText}>Published {archiveDetail.year}</Text>
               <Text style={styles.bodyText}>{archiveDetail.views} views</Text>
@@ -1390,4 +1393,6 @@ const styles = StyleSheet.create({
   modalBackdrop: { flex: 1, backgroundColor: "rgba(16, 11, 36, 0.72)", justifyContent: "flex-end" },
   detailCard: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, gap: 10 },
   detailTitle: { color: "#F8F4FF", fontSize: 24, fontWeight: "800", lineHeight: 30 },
+  archiveThumbnail: { width: 56, height: 40, borderRadius: 8, backgroundColor: "#100B24" },
+  detailThumbnail: { width: "100%", height: 160, borderRadius: 14, backgroundColor: "#100B24" },
 });

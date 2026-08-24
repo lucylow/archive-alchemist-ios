@@ -6,9 +6,11 @@ export type ArchiveItem = {
   year: number;
   views: string;
   sourceUrl?: string;
+  thumbnailUrl?: string;
 };
 
 export const isSafeArchiveSourceUrl = (value: unknown): value is string => typeof value === "string" && value.length <= 2048 && /^https:\/\/[^\s]+$/i.test(value);
+export const isSafeArchiveThumbnailUrl = isSafeArchiveSourceUrl;
 
 const normalizeSourceUrl = (value: unknown) => {
   if (typeof value !== "string") return undefined;
@@ -50,8 +52,8 @@ export const serializeArchiveManifest = (items: ArchiveItem[]) => `${JSON.string
 export const serializeArchiveCsv = (items: ArchiveItem[]) => {
   const quote = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
   return [
-    "title,year,views,sourceUrl",
-    ...items.map((item) => [quote(item.title), quote(item.year), quote(item.views), quote(item.sourceUrl ?? "")].join(",")),
+    "title,year,views,sourceUrl,thumbnailUrl",
+    ...items.map((item) => [quote(item.title), quote(item.year), quote(item.views), quote(item.sourceUrl ?? ""), quote(item.thumbnailUrl ?? "")].join(",")),
     "",
   ].join("\n");
 };
@@ -103,7 +105,8 @@ export const isValidArchiveItem = (value: unknown): value is ArchiveItem => {
   return typeof candidate.title === "string" && candidate.title.trim().length > 0 && candidate.title.length <= 160
     && typeof year === "number" && Number.isInteger(year) && year >= 1900 && year <= 2200
     && typeof candidate.views === "string" && candidate.views.length <= 32
-    && (candidate.sourceUrl === undefined || isSafeArchiveSourceUrl(candidate.sourceUrl));
+    && (candidate.sourceUrl === undefined || isSafeArchiveSourceUrl(candidate.sourceUrl))
+    && (candidate.thumbnailUrl === undefined || isSafeArchiveThumbnailUrl(candidate.thumbnailUrl));
 };
 
 const normalizeItem = (value: unknown): ArchiveItem | null => {
@@ -116,6 +119,7 @@ const normalizeItem = (value: unknown): ArchiveItem | null => {
     year: normalizeYear(candidate.year ?? candidate.publishedYear ?? candidate.date),
     views: normalizeViews(candidate.views ?? candidate.viewCount ?? candidate.plays),
     sourceUrl: normalizeSourceUrl(candidate.sourceUrl ?? candidate.url ?? candidate.link),
+    thumbnailUrl: normalizeSourceUrl(candidate.thumbnailUrl ?? candidate.thumbnail ?? candidate.imageUrl ?? candidate.image),
   };
 };
 

@@ -261,3 +261,7 @@
 - [x] Add a focused detail view for confirmed archive records
 - [x] Provide accessible back navigation and source-link access in the detail view
 - [x] Add deterministic coverage for archive detail summary formatting
+- [x] Preserve optional HTTPS thumbnail URLs in normalized archive records
+- [x] Include thumbnails in JSON and CSV exports when available
+- [x] Add safe thumbnail loading with an accessible fallback state
+- [x] Add deterministic coverage for thumbnail URL validation and formatting
