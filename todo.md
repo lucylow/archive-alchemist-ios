@@ -160,3 +160,5 @@
 
 - [x] Route the remaining main-screen Reduce Motion read through the safe fallback helper
 - [x] Confirm the OAuth callback has no independent unguarded accessibility read; cover the shared fallback helper deterministically
+- [x] Derive estimated time saved from the selected output deliverables
+- [x] Add deterministic coverage for selected-output time-saved formatting

@@ -7,7 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { readReduceMotionSetting } from "@/lib/reduce-motion";
 import { haptic } from "@/lib/haptics";
 import { useAuth } from "@/hooks/use-auth";
-import { canAutoPost } from "@/lib/workflow";
+import { canAutoPost, estimateTimeSaved, formatTimeSaved } from "@/lib/workflow";
 import { mergeMindsInsight, type PersistedMindMemory } from "@/lib/mind-memory";
 import { getMindsErrorNotice, getMindsRequestStartNotice, shouldRetryMindsError } from "@/lib/minds-notices";
 import { canStartMindsRequest, createMindsRequestGate } from "@/lib/minds-request";
@@ -856,7 +856,7 @@ export default function HomeScreen() {
                 </View>
               );
             })}
-            <Text style={styles.goldText}>Estimated time saved: 4 hours 23 minutes</Text>
+            <Text style={styles.goldText}>Estimated time saved: {formatTimeSaved(estimateTimeSaved(selectedPlatforms))}</Text>
             {reviewMode && <Text style={styles.reviewHint}>{approvedOutputs.length} of {selectedOutputs.length} outputs approved</Text>}
             <PrimaryButton
               label={isSaving ? "Saving Mind memory…" : reviewMode && approvedOutputs.length < selectedOutputs.length ? `Approve ${selectedOutputs.length - approvedOutputs.length} more` : "Auto-Post"}
