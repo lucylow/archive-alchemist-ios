@@ -174,3 +174,6 @@
 
 - [x] Add regression coverage for EAS production store and simulator settings
 
+- [x] Make strict App Store submission preflight report actionable configuration errors
+- [x] Add deterministic tests for strict and advisory submission-preflight behavior
+
