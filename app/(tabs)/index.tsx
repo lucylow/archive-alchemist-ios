@@ -35,7 +35,8 @@ type Memory = Omit<PersistedMindMemory, "platforms"> & { platforms: Platform[] }
 const MEMORY_KEY = "archive-alchemist-mind-memory";
 const HISTORY_KEY = "archive-alchemist-mind-history";
 const PLATFORMS_KEY = "archive-alchemist-selected-platforms";
-const ARCHIVE_KEY = "archive-alchemist-imported-items";
+const ARCHIVE_KEY = "archive-items";
+const ARCHIVE_PREVIEW_KEY = "archive-preview";
 const platforms: Platform[] = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"];
 const discoveries = [
   { title: "How to Edit Like a Pro", year: 2023, score: 94, views: "12.4K", icon: "🎬" },
@@ -254,11 +255,12 @@ export default function HomeScreen() {
           AsyncStorage.getItem(HISTORY_KEY),
           AsyncStorage.getItem(PLATFORMS_KEY),
           AsyncStorage.getItem(ARCHIVE_KEY),
+          AsyncStorage.getItem(ARCHIVE_PREVIEW_KEY),
         ]);
-        const storageTimeout = new Promise<[string | null, string | null, string | null, string | null]>((resolve) => {
-          hydrationTimeout = setTimeout(() => resolve([null, null, null, null]), 1500);
+        const storageTimeout = new Promise<[string | null, string | null, string | null, string | null, string | null]>((resolve) => {
+          hydrationTimeout = setTimeout(() => resolve([null, null, null, null, null]), 1500);
         });
-        const [memoryValue, historyValue, platformsValue, archiveValue] = await Promise.race([storageRead, storageTimeout]);
+        const [memoryValue, historyValue, platformsValue, archiveValue, previewValue] = await Promise.race([storageRead, storageTimeout]);
         if (memoryValue && isWithinStorageLimit(memoryValue, MAX_MEMORY_STORAGE_LENGTH)) {
           try {
             const restoredMemory = JSON.parse(memoryValue) as Memory;
@@ -301,6 +303,22 @@ export default function HomeScreen() {
           }
         } else if (archiveValue) {
           await discardStoredValue(ARCHIVE_KEY);
+        }
+        if (previewValue && isWithinStorageLimit(previewValue, MAX_ARCHIVE_STORAGE_LENGTH)) {
+          try {
+            const restoredPreview = JSON.parse(previewValue) as { items?: unknown; name?: unknown; selectedKeys?: unknown };
+            if (restoredPreview && Array.isArray(restoredPreview.items) && restoredPreview.items.length > 0 && restoredPreview.items.length <= 5000 && restoredPreview.items.every(isValidArchiveItem) && typeof restoredPreview.name === "string" && restoredPreview.name.length <= 240 && Array.isArray(restoredPreview.selectedKeys) && restoredPreview.selectedKeys.every((key) => typeof key === "string" && key.length <= 240)) {
+              setPendingArchiveItems(restoredPreview.items);
+              setPendingArchiveName(restoredPreview.name);
+              setSelectedPreviewKeys(restoredPreview.selectedKeys.slice(0, 5000));
+            } else {
+              await discardStoredValue(ARCHIVE_PREVIEW_KEY);
+            }
+          } catch {
+            await discardStoredValue(ARCHIVE_PREVIEW_KEY);
+          }
+        } else if (previewValue) {
+          await discardStoredValue(ARCHIVE_PREVIEW_KEY);
         }
         if (platformsValue && isWithinStorageLimit(platformsValue, MAX_PLATFORMS_STORAGE_LENGTH)) {
           try {
@@ -347,6 +365,13 @@ export default function HomeScreen() {
       active = false;
     };
   }, [isHydrated, selectedPlatforms]);
+
+  useEffect(() => {
+    if (!isHydrated || pendingArchiveItems.length === 0 || !pendingArchiveName) return;
+    AsyncStorage.setItem(ARCHIVE_PREVIEW_KEY, JSON.stringify({ items: pendingArchiveItems, name: pendingArchiveName, selectedKeys: selectedPreviewKeys })).catch(() => {
+      if (screenActiveRef.current) setNotice("Archive preview selection could not be saved, but this session is still available.");
+    });
+  }, [isHydrated, pendingArchiveItems, pendingArchiveName, selectedPreviewKeys]);
 
   useEffect(() => {
     if (!isHydrated || archiveItems.length === 0) return;
@@ -406,6 +431,7 @@ export default function HomeScreen() {
   const commitPendingArchive = () => {
     if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
     setArchiveItems(pendingArchiveItems);
+    void AsyncStorage.removeItem(ARCHIVE_PREVIEW_KEY);
     setPendingArchiveItems([]);
     setNotice(`Imported ${pendingArchiveItems.length} archive item${pendingArchiveItems.length === 1 ? "" : "s"} from ${pendingArchiveName}.`);
     setPendingArchiveName(null);
@@ -426,6 +452,8 @@ export default function HomeScreen() {
   const discardPendingArchive = () => {
     setPendingArchiveItems([]);
     setPendingArchiveName(null);
+    setSelectedPreviewKeys([]);
+    void AsyncStorage.removeItem(ARCHIVE_PREVIEW_KEY);
     setPreviewQuery("");
     setPreviewYear("");
           setPreviewSort("newest");

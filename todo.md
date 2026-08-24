@@ -237,3 +237,6 @@
 - [x] Preserve selected archive rows while search, year, and sort controls change
 - [x] Reconcile selected keys when a preview is replaced or discarded
 - [x] Add deterministic coverage for selection reconciliation
+- [x] Persist selected preview row keys within bounded local storage
+- [x] Restore and reconcile preview selections safely during startup hydration
+- [x] Add deterministic coverage for persisted selection recovery and invalid data
