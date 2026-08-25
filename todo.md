@@ -385,3 +385,6 @@
 - [x] Clear copied-confirmation state when an export succeeds
 - [x] Clear copied-confirmation state when the failure notice is dismissed or retry context is cleared
 - [x] Add deterministic coverage for stale-confirmation reset behavior
+- [x] Add bounded automatic expiry for copied-diagnostics confirmation
+- [x] Cancel confirmation expiry timers safely on unmount and reset paths
+- [x] Add deterministic coverage for confirmation expiry lifecycle

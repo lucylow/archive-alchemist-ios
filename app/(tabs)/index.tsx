@@ -183,6 +183,12 @@ export default function HomeScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
   const screenActiveRef = useRef(true);
+  const diagnosticsExpiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetDiagnosticsCopied = () => {
+    if (diagnosticsExpiryTimerRef.current) clearTimeout(diagnosticsExpiryTimerRef.current);
+    diagnosticsExpiryTimerRef.current = null;
+    setDiagnosticsCopied(false);
+  };
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const activeDiscoveries = useMemo(
@@ -245,6 +251,8 @@ export default function HomeScreen() {
     screenActiveRef.current = true;
     return () => {
       screenActiveRef.current = false;
+      if (diagnosticsExpiryTimerRef.current) clearTimeout(diagnosticsExpiryTimerRef.current);
+      diagnosticsExpiryTimerRef.current = null;
       mindsRequestGate.cancel();
       archiveExportRequestGate.finish();
     };
@@ -712,7 +720,7 @@ export default function HomeScreen() {
     }
     if (!archiveExportRequestGate.tryStart()) return;
     setFailedExport(null);
-    setDiagnosticsCopied(false);
+    resetDiagnosticsCopied();
     const requestId = archiveExportRequestIdRef.current + 1;
     archiveExportRequestIdRef.current = requestId;
     if (screenActiveRef.current) setIsExportingArchive(true);
@@ -745,7 +753,7 @@ export default function HomeScreen() {
       }
       if (screenActiveRef.current) {
         setFailedExport(null);
-        setDiagnosticsCopied(false);
+        resetDiagnosticsCopied();
         setExportHistory(nextExportHistory);
         setNotice(historySaved ? `Archive ${format.toUpperCase()} export is ready to share.` : `Archive ${format.toUpperCase()} export is ready to share, but local export history could not be saved.`);
       }
@@ -764,7 +772,7 @@ export default function HomeScreen() {
     if (!failedExport) return;
     const { format, items, exportLabel } = failedExport;
     setFailedExport(null);
-    setDiagnosticsCopied(false);
+    resetDiagnosticsCopied();
     if (screenActiveRef.current) setNotice(null);
     void shareImportedArchive(format, items, exportLabel, false, true);
   };
@@ -772,22 +780,27 @@ export default function HomeScreen() {
   const copyExportDiagnostics = async () => {
     if (!failedExport) return;
     const diagnostics = getExportFailureDiagnosticLabel(failedExport.format, failedExport.failureStage);
-    setDiagnosticsCopied(false);
+    resetDiagnosticsCopied();
     try {
       await Clipboard.setStringAsync(diagnostics);
       if (screenActiveRef.current) {
         setDiagnosticsCopied(true);
+        if (diagnosticsExpiryTimerRef.current) clearTimeout(diagnosticsExpiryTimerRef.current);
+        diagnosticsExpiryTimerRef.current = setTimeout(() => {
+          if (screenActiveRef.current) setDiagnosticsCopied(false);
+          diagnosticsExpiryTimerRef.current = null;
+        }, 5000);
         setNotice("Privacy-safe export diagnostics copied. No archive content was included.");
       }
     } catch {
       if (screenActiveRef.current) {
-        setDiagnosticsCopied(false);
+        resetDiagnosticsCopied();
         setNotice("Diagnostics could not be copied. No archive content was exposed.");
       }
     }
   };
 
-  const dismissDiagnosticsCopied = () => setDiagnosticsCopied(false);
+  const dismissDiagnosticsCopied = resetDiagnosticsCopied;
 
   const exportImportedArchive = () => {
     Alert.alert("Export archive", "Choose a normalized format to share.", [

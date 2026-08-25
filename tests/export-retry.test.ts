@@ -51,13 +51,20 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("No archive content was exposed");
     expect(screenSource).toContain("const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);");
     expect(screenSource).toContain('accessibilityLiveRegion="polite">Copied safely');
-    expect(screenSource).toContain("const dismissDiagnosticsCopied = () => setDiagnosticsCopied(false);");
+    expect(screenSource).toContain("const dismissDiagnosticsCopied = resetDiagnosticsCopied;");
     expect(screenSource).toContain('label="Dismiss"');
     expect(screenSource).toContain("Hides the copied confirmation");
-    expect(screenSource).toContain("setFailedExport(null); setDiagnosticsCopied(false);");
-    expect(screenSource).toContain("setFailedExport(null);\n        setDiagnosticsCopied(false);");
+    expect(screenSource).toContain("setFailedExport(null);\n    resetDiagnosticsCopied();");
+    expect(screenSource).toContain("setFailedExport(null);\n        resetDiagnosticsCopied();");
     expect(screenSource).toContain("setNotice(null); setFailedExport(null); setDiagnosticsCopied(false);");
     expect(screenSource).toContain("Copies only the failure stage and format");
+  });
+
+  it("exposes bounded automatic confirmation expiry", () => {
+    expect(screenSource).toContain("diagnosticsExpiryTimerRef");
+    expect(screenSource).toContain("}, 5000);");
+    expect(screenSource).toContain("clearTimeout(diagnosticsExpiryTimerRef.current)");
+    expect(screenSource).toContain("diagnosticsExpiryTimerRef.current = null");
   });
 
   it("exposes an accessible retry action", () => {
