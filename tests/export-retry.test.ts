@@ -116,6 +116,14 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("resetDiagnosticsCopied();");
   });
 
+  it("covers clipboard recovery actions on every failed-export surface", () => {
+    expect(screenSource).toContain("{failedExport && <SecondaryButton label=\"Copy diagnostics\"");
+    expect(screenSource).toContain('failedExport?.exportLabel === "selected-preview" && <SecondaryButton label="Copy diagnostics"');
+    expect(screenSource).toContain('failedExport?.exportLabel === "selected-browser" && <SecondaryButton label="Copy diagnostics"');
+    expect(screenSource.match(/label=\"Copy diagnostics\"/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(screenSource.match(/void copyExportDiagnostics\(\)/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+
   it("exposes bounded automatic confirmation expiry", () => {
     expect(screenSource).toContain("diagnosticsExpiryTimerRef");
     expect(screenSource).toContain("const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion);");

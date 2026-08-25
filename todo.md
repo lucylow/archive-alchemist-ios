@@ -409,3 +409,6 @@
 - [x] Add privacy-safe context labels to clipboard success and failure feedback
 - [x] Preserve export format and surface context without archive content
 - [x] Add deterministic coverage for context-aware clipboard feedback
+- [x] Add UI-level clipboard success coverage for status, preview, and browser recovery surfaces
+- [x] Add UI-level clipboard rejection coverage with copied-state reset assertions
+- [x] Verify each recovery surface preserves retry and export context during clipboard failures
