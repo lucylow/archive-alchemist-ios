@@ -52,6 +52,21 @@ export const clampExportDiagnosticsConfirmationDuration = (value: number) => Mat
 export const getExportDiagnosticsConfirmationDuration = (reduceMotion: boolean, configuredDuration = EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS) => reduceMotion ? Math.max(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS, clampExportDiagnosticsConfirmationDuration(configuredDuration)) : clampExportDiagnosticsConfirmationDuration(configuredDuration);
 export const formatExportDiagnosticsDurationLabel = (duration: number) => `${Math.round(clampExportDiagnosticsConfirmationDuration(duration) / 1_000)} seconds`;
 export const parseExportDiagnosticsDurationPreference = (value: string | null) => value === null ? null : Number.isFinite(Number(value)) ? clampExportDiagnosticsConfirmationDuration(Number(value)) : null;
+export const loadExportDiagnosticsDurationPreference = async (getItem: (key: string) => Promise<string | null>, key: string, fallback = EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS) => {
+  try {
+    return parseExportDiagnosticsDurationPreference(await getItem(key)) ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+export const saveExportDiagnosticsDurationPreference = async (setItem: (key: string, value: string) => Promise<void>, key: string, duration: number) => {
+  try {
+    await setItem(key, String(clampExportDiagnosticsConfirmationDuration(duration)));
+    return true;
+  } catch {
+    return false;
+  }
+};
 export const getExportRetryAttemptLabel = (attempt: number, maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `Retry attempt ${Math.min(Math.max(1, attempt), maxAttempts)} of ${maxAttempts}`;
 export const getExportRetryLimitLabel = (format: "json" | "csv", maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `${format.toUpperCase()} export retry limit reached after ${maxAttempts} attempts. Start the export again to create a fresh retry window.`;
 export type ExportFailureStage = "availability" | "prepare" | "share";

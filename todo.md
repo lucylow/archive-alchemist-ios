@@ -424,3 +424,6 @@
 - [x] Add deterministic coverage for valid diagnostics duration restoration
 - [x] Add malformed-storage fallback coverage for the duration preference
 - [x] Add storage-failure coverage without exposing archive data or blocking the session
+- [x] Add mocked AsyncStorage coverage for valid Settings preference loading
+- [x] Add mocked AsyncStorage coverage for malformed and missing preference recovery
+- [x] Add mocked AsyncStorage coverage for save failures that remain non-blocking

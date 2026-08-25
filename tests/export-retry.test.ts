@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, parseExportDiagnosticsDurationPreference, getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS, MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS } from "../lib/export-history";
+import { clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, parseExportDiagnosticsDurationPreference, loadExportDiagnosticsDurationPreference, saveExportDiagnosticsDurationPreference, getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS, MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -132,17 +132,32 @@ describe("export retry recovery", () => {
     expect(getExportDiagnosticsConfirmationDuration(false, 8_000)).toBe(8_000);
     expect(getExportDiagnosticsConfirmationDuration(true, 3_000)).toBe(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS);
     expect(screenSource).toContain('const DIAGNOSTICS_DURATION_KEY = "archive-diagnostics-confirmation-duration";');
-    expect(screenSource).toContain("AsyncStorage.setItem(DIAGNOSTICS_DURATION_KEY");
+    expect(screenSource).toContain("saveExportDiagnosticsDurationPreference");
+    expect(screenSource).toContain("AsyncStorage.setItem(key, value)");
     expect(screenSource).toContain("setSettingsVisible(true)");
   });
 
-  it("recovers persisted duration values safely", () => {
+  it("recovers persisted duration values safely", async () => {
+    const getValid = async () => "8000";
+    const getMalformed = async () => "invalid";
+    const getRejected = async () => { throw new Error("storage unavailable"); };
+    const saved: string[] = [];
+    const setValid = async (_key: string, value: string) => { saved.push(value); };
+    const setRejected = async () => { throw new Error("storage unavailable"); };
+    await expect(loadExportDiagnosticsDurationPreference(getValid, "duration")).resolves.toBe(8_000);
+    await expect(loadExportDiagnosticsDurationPreference(getMalformed, "duration")).resolves.toBe(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+    await expect(loadExportDiagnosticsDurationPreference(getRejected, "duration")).resolves.toBe(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+    await expect(saveExportDiagnosticsDurationPreference(setValid, "duration", 99_000)).resolves.toBe(true);
+    await expect(saveExportDiagnosticsDurationPreference(setRejected, "duration", 8_000)).resolves.toBe(false);
+    expect(saved).toEqual([String(MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS)]);
+
     expect(parseExportDiagnosticsDurationPreference("8000")).toBe(8_000);
     expect(parseExportDiagnosticsDurationPreference("1000")).toBe(MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
     expect(parseExportDiagnosticsDurationPreference("99000")).toBe(MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
     expect(parseExportDiagnosticsDurationPreference("not-a-duration")).toBeNull();
     expect(parseExportDiagnosticsDurationPreference(null)).toBeNull();
-    expect(screenSource).toContain("parseExportDiagnosticsDurationPreference(value)");
+    expect(screenSource).toContain("loadExportDiagnosticsDurationPreference");
+    expect(screenSource).toContain("AsyncStorage.getItem(key)");
     expect(screenSource).toContain("Diagnostics confirmation preference could not be saved");
   });
 

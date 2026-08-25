@@ -20,7 +20,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, parseExportDiagnosticsDurationPreference, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, loadExportDiagnosticsDurationPreference, saveExportDiagnosticsDurationPreference, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -279,11 +279,9 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!isHydrated) return;
     let mounted = true;
-    void AsyncStorage.getItem(DIAGNOSTICS_DURATION_KEY).then((value) => {
-      if (!mounted || !value) return;
-      const parsed = parseExportDiagnosticsDurationPreference(value);
-      if (parsed !== null) setDiagnosticsDurationSetting(parsed);
-    }).catch(() => undefined);
+    void loadExportDiagnosticsDurationPreference((key) => AsyncStorage.getItem(key), DIAGNOSTICS_DURATION_KEY).then((duration) => {
+      if (mounted) setDiagnosticsDurationSetting(duration);
+    });
     return () => { mounted = false; };
   }, [isHydrated]);
 
@@ -291,8 +289,8 @@ export default function HomeScreen() {
     if (!isHydrated) return;
     const normalized = clampExportDiagnosticsConfirmationDuration(diagnosticsDurationSetting);
     if (normalized !== diagnosticsDurationSetting) setDiagnosticsDurationSetting(normalized);
-    AsyncStorage.setItem(DIAGNOSTICS_DURATION_KEY, String(normalized)).catch(() => {
-      if (screenActiveRef.current) setNotice("Diagnostics confirmation preference could not be saved, but this session is still available.");
+    void saveExportDiagnosticsDurationPreference((key, value) => AsyncStorage.setItem(key, value), DIAGNOSTICS_DURATION_KEY, normalized).then((saved) => {
+      if (!saved && screenActiveRef.current) setNotice("Diagnostics confirmation preference could not be saved, but this session is still available.");
     });
   }, [diagnosticsDurationSetting, isHydrated]);
 
