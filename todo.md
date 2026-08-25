@@ -343,3 +343,6 @@
 - [x] Add a transient recommended format to import-preview exports
 - [x] Preserve preview selection and keep the recommendation out of persisted archive data
 - [x] Add deterministic coverage for preview recommendation wording
+- [x] Add a visible transient format badge to import-preview export actions
+- [x] Keep the badge synchronized with the last-export recommendation and accessible
+- [x] Add deterministic coverage for preview format-badge wording

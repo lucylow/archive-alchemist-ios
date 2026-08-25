@@ -1145,6 +1145,7 @@ export default function HomeScreen() {
                     return <Pressable key={key} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel={formatArchivePreviewRow(item)} onPress={() => setSelectedPreviewKeys((current) => current.includes(key) ? current.filter((value) => value !== key) : [...current, key])} style={({ pressed }) => [styles.previewRow, selected && styles.previewRowSelected, pressed && styles.pressed]}><Text style={styles.previewCheck}>{selected ? "✓" : "○"}</Text><Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text></Pressable>;
                   })}
                 </View>
+                {preferredExportFormat && <View style={styles.previewFormatBadge} accessible accessibilityLabel={`${preferredExportFormat.toUpperCase()} is the temporary recommended preview export format from the last export.`}><Text style={styles.previewFormatBadgeText}>{preferredExportFormat.toUpperCase()} · RECOMMENDED</Text></View>}
                 <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{selectedPreviewItems.length > 0 ? getExportSizeEstimateLabel(selectedPreviewJsonSize, selectedPreviewCsvSize, null) : "Select preview rows to estimate export size. Estimates are calculated in memory; not saved."}</Text>
                 <View style={styles.actionRow}>
                   {preferredExportFormat && <SecondaryButton label={getRecommendedExportActionLabel(latestExport)} accessibilityHint="Shares the selected preview rows using the temporary format recommendation from the last export." onPress={exportRecommendedPreviewFormat} />}
@@ -1581,6 +1582,8 @@ const styles = StyleSheet.create({
   panel: { backgroundColor: "#1C1438", borderColor: "#3B2C62", borderWidth: 1, borderRadius: 18, padding: 16, gap: 12 },
   sectionTitle: { color: "#F8F4FF", fontSize: 17, fontWeight: "800" },
   livePill: { color: "#63D79A", fontSize: 10, fontWeight: "800", letterSpacing: 1 },
+  previewFormatBadge: { alignSelf: "flex-start", borderColor: "#F4C95D", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: "#2C1D55" },
+  previewFormatBadgeText: { color: "#F4C95D", fontSize: 10, fontWeight: "900", letterSpacing: 1 },
   statsRow: { flexDirection: "row", gap: 10 },
   stat: { flex: 1, backgroundColor: "#261B4B", borderRadius: 16, padding: 13, borderWidth: 1, borderColor: "#3B2C62" },
   statValue: { color: "#F4C95D", fontSize: 20, fontWeight: "800" },

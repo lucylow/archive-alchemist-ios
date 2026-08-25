@@ -9,6 +9,12 @@ describe("import preview export safeguards", () => {
     expect(screenSource).toContain("Estimates are calculated in memory; not saved.");
   });
 
+  it("exposes an accessible transient recommended-format badge", () => {
+    expect(screenSource).toContain("previewFormatBadge");
+    expect(screenSource).toContain("RECOMMENDED");
+    expect(screenSource).toContain("temporary recommended preview export format from the last export");
+  });
+
   it("exposes a transient recommended-format action without persisting preview contents", () => {
     expect(screenSource).toContain("exportRecommendedPreviewFormat");
     expect(screenSource).toContain('shareImportedArchive(preferredExportFormat, selectedPreviewItems, "selected-preview")');
