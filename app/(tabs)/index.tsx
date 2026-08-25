@@ -20,7 +20,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, parseExportDiagnosticsDurationPreference, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -281,8 +281,8 @@ export default function HomeScreen() {
     let mounted = true;
     void AsyncStorage.getItem(DIAGNOSTICS_DURATION_KEY).then((value) => {
       if (!mounted || !value) return;
-      const parsed = Number(value);
-      if (Number.isFinite(parsed)) setDiagnosticsDurationSetting(clampExportDiagnosticsConfirmationDuration(parsed));
+      const parsed = parseExportDiagnosticsDurationPreference(value);
+      if (parsed !== null) setDiagnosticsDurationSetting(parsed);
     }).catch(() => undefined);
     return () => { mounted = false; };
   }, [isHydrated]);

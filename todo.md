@@ -421,3 +421,6 @@
 - [x] Add visible selected-state styling to diagnostics duration controls
 - [x] Keep selected-state semantics accessible for screen readers
 - [x] Add deterministic coverage for active and inactive duration options
+- [x] Add deterministic coverage for valid diagnostics duration restoration
+- [x] Add malformed-storage fallback coverage for the duration preference
+- [x] Add storage-failure coverage without exposing archive data or blocking the session
