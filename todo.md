@@ -418,3 +418,6 @@
 - [x] Add a reset-to-default action for diagnostics confirmation duration
 - [x] Persist the default duration and keep Reduce Motion behavior unchanged
 - [x] Add deterministic coverage for reset wording and state restoration
+- [x] Add visible selected-state styling to diagnostics duration controls
+- [x] Keep selected-state semantics accessible for screen readers
+- [x] Add deterministic coverage for active and inactive duration options

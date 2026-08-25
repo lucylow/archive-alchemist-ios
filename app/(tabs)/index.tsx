@@ -126,13 +126,13 @@ function PrimaryButton({ label, onPress, disabled = false, accessibilityHint, ac
   );
 }
 
-function SecondaryButton({ label, onPress, accessibilityLabel, accessibilityHint, disabled = false, accessibilityState }: { label: string; onPress: () => void; accessibilityLabel?: string; accessibilityHint?: string; disabled?: boolean; accessibilityState?: { busy?: boolean } }) {
+function SecondaryButton({ label, onPress, accessibilityLabel, accessibilityHint, disabled = false, selected = false, accessibilityState }: { label: string; onPress: () => void; accessibilityLabel?: string; accessibilityHint?: string; disabled?: boolean; selected?: boolean; accessibilityState?: { busy?: boolean; selected?: boolean } }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled, ...accessibilityState }}
+      accessibilityState={{ disabled, selected, ...accessibilityState }}
       disabled={disabled}
       onPress={() => {
         if (!disabled) {
@@ -140,7 +140,7 @@ function SecondaryButton({ label, onPress, accessibilityLabel, accessibilityHint
           onPress();
         }
       }}
-      style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed, disabled && styles.disabled]}
+      style={({ pressed }) => [styles.secondaryButton, selected && styles.secondaryButtonSelected, pressed && styles.pressed, disabled && styles.disabled]}
     >
       <Text style={styles.secondaryButtonText}>{label}</Text>
     </Pressable>
@@ -1568,7 +1568,7 @@ export default function HomeScreen() {
             <Text style={styles.bodyText}>Diagnostics confirmation duration</Text>
             <Text style={styles.reviewHint}>Controls how long the “Copied safely” confirmation remains visible. Reduce Motion uses at least 10 seconds.</Text>
             <View style={styles.rowWrap}>
-              {[3_000, 5_000, 8_000].map((duration) => <SecondaryButton key={duration} label={formatExportDiagnosticsDurationLabel(duration)} accessibilityLabel={`Set diagnostics confirmation duration to ${formatExportDiagnosticsDurationLabel(duration)}`} accessibilityState={{ busy: diagnosticsDurationSetting === duration }} onPress={() => setDiagnosticsDurationSetting(duration)} />)}
+              {[3_000, 5_000, 8_000].map((duration) => <SecondaryButton key={duration} label={formatExportDiagnosticsDurationLabel(duration)} accessibilityLabel={`Set diagnostics confirmation duration to ${formatExportDiagnosticsDurationLabel(duration)}`} selected={diagnosticsDurationSetting === duration} accessibilityState={{ selected: diagnosticsDurationSetting === duration }} onPress={() => setDiagnosticsDurationSetting(duration)} />)}
             </View>
             <Text style={styles.reviewHint} accessibilityLiveRegion="polite">Current effective duration: {formatExportDiagnosticsDurationLabel(diagnosticsConfirmationDuration)}{reduceMotion ? " with Reduce Motion" : ""}.</Text>
             <SecondaryButton label="Reset to default" accessibilityHint="Restores the five-second diagnostics confirmation duration." onPress={() => { setDiagnosticsDurationSetting(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS); setNotice("Diagnostics confirmation duration reset to the five-second default."); }} />
@@ -1731,6 +1731,7 @@ const styles = StyleSheet.create({
   primaryButton: { minHeight: 50, borderRadius: 16, backgroundColor: "#F4C95D", alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
   primaryButtonText: { color: "#100B24", fontSize: 15, fontWeight: "800" },
   secondaryButton: { minHeight: 46, borderRadius: 16, borderWidth: 1, borderColor: "#6C5B9D", alignItems: "center", justifyContent: "center", paddingHorizontal: 15 },
+  secondaryButtonSelected: { backgroundColor: "#30234F", borderColor: "#F4C95D" },
   secondaryButtonText: { color: "#F8F4FF", fontSize: 14, fontWeight: "700" },
   buttonRow: { flexDirection: "row", gap: 10, flexWrap: "wrap" },
   pressed: { opacity: 0.78, transform: [{ scale: 0.98 }] },

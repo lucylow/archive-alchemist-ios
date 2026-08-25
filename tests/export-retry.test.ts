@@ -136,6 +136,12 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("setSettingsVisible(true)");
   });
 
+  it("exposes selected-state duration controls", () => {
+    expect(screenSource).toContain("selected={diagnosticsDurationSetting === duration}");
+    expect(screenSource).toContain("accessibilityState={{ selected: diagnosticsDurationSetting === duration }}");
+    expect(screenSource).toContain("secondaryButtonSelected");
+  });
+
   it("exposes reset-to-default diagnostics duration behavior", () => {
     expect(screenSource).toContain('label="Reset to default"');
     expect(screenSource).toContain("setDiagnosticsDurationSetting(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS)");
