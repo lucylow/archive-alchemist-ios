@@ -340,3 +340,6 @@
 - [x] Add UTF-8 accurate size estimates to import-preview exports
 - [x] Add the same deliberate large-export warning to preview exports
 - [x] Add deterministic coverage for preview-export warning behavior
+- [x] Add a transient recommended format to import-preview exports
+- [x] Preserve preview selection and keep the recommendation out of persisted archive data
+- [x] Add deterministic coverage for preview recommendation wording

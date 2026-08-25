@@ -745,6 +745,18 @@ export default function HomeScreen() {
     ]);
   };
 
+  const exportRecommendedPreviewFormat = () => {
+    if (!preferredExportFormat) {
+      if (screenActiveRef.current) setNotice("Choose JSON or CSV to start a preview export.");
+      return;
+    }
+    if (selectedPreviewItems.length === 0) {
+      if (screenActiveRef.current) setNotice("Select at least one matching archive item before using the recommended format.");
+      return;
+    }
+    void shareImportedArchive(preferredExportFormat, selectedPreviewItems, "selected-preview");
+  };
+
   const exportPreviewResults = () => {
     if (selectedPreviewItems.length === 0) {
       setNotice("Select at least one matching archive item to export.");
@@ -752,6 +764,7 @@ export default function HomeScreen() {
     }
     Alert.alert("Export selected preview rows", `${selectedPreviewItems.length} selected item${selectedPreviewItems.length === 1 ? "" : "s"} will be shared.`, [
       { text: "Cancel", style: "cancel" },
+      ...(preferredExportFormat ? [{ text: `${preferredExportFormat.toUpperCase()} · recommended`, onPress: exportRecommendedPreviewFormat }] : []),
       { text: "JSON", onPress: () => { void shareImportedArchive("json", selectedPreviewItems, "selected-preview"); } },
       { text: "CSV", onPress: () => { void shareImportedArchive("csv", selectedPreviewItems, "selected-preview"); } },
     ]);
@@ -1134,6 +1147,7 @@ export default function HomeScreen() {
                 </View>
                 <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{selectedPreviewItems.length > 0 ? getExportSizeEstimateLabel(selectedPreviewJsonSize, selectedPreviewCsvSize, null) : "Select preview rows to estimate export size. Estimates are calculated in memory; not saved."}</Text>
                 <View style={styles.actionRow}>
+                  {preferredExportFormat && <SecondaryButton label={getRecommendedExportActionLabel(latestExport)} accessibilityHint="Shares the selected preview rows using the temporary format recommendation from the last export." onPress={exportRecommendedPreviewFormat} />}
                   <SecondaryButton label={selectedPreviewItems.length > 0 ? `Export ${selectedPreviewItems.length} selected` : "Export selected"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls. Large exports show a cancel-or-continue warning before sharing." onPress={exportPreviewResults} />
                 </View>
                 <View style={styles.actionRow}>
