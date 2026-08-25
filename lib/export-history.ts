@@ -45,3 +45,6 @@ export const getLargeExportWarningLabel = (format: "json" | "csv", bytes: number
 export const MAX_EXPORT_RETRY_ATTEMPTS = 3;
 export const getExportRetryAttemptLabel = (attempt: number, maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `Retry attempt ${Math.min(Math.max(1, attempt), maxAttempts)} of ${maxAttempts}`;
 export const getExportRetryLimitLabel = (format: "json" | "csv", maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `${format.toUpperCase()} export retry limit reached after ${maxAttempts} attempts. Start the export again to create a fresh retry window.`;
+export type ExportFailureStage = "availability" | "prepare" | "share";
+export const getExportFailureStageLabel = (stage: ExportFailureStage) => stage === "availability" ? "Sharing service unavailable" : stage === "share" ? "Share sheet could not open" : "Export file preparation failed";
+export const getExportFailureDiagnosticLabel = (format: "json" | "csv", stage: ExportFailureStage) => `${format.toUpperCase()} export stopped at: ${getExportFailureStageLabel(stage)}. No archive content or raw error details are included.`;

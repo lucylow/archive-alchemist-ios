@@ -19,7 +19,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -173,7 +173,7 @@ export default function HomeScreen() {
   const [exportHistory, setExportHistory] = useState<ExportHistoryEntry[]>([]);
   const [exportHistoryVisible, setExportHistoryVisible] = useState(false);
   const [preferredExportFormat, setPreferredExportFormat] = useState<"json" | "csv" | null>(null);
-  const [failedExport, setFailedExport] = useState<{ format: "json" | "csv"; items: ArchiveItem[]; exportLabel: string; attempt: number } | null>(null);
+  const [failedExport, setFailedExport] = useState<{ format: "json" | "csv"; items: ArchiveItem[]; exportLabel: string; attempt: number; failureStage: ExportFailureStage } | null>(null);
   const latestExport = exportHistory[0] ?? null;
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
@@ -713,20 +713,24 @@ export default function HomeScreen() {
     const requestId = archiveExportRequestIdRef.current + 1;
     archiveExportRequestIdRef.current = requestId;
     if (screenActiveRef.current) setIsExportingArchive(true);
+    let failureStage: ExportFailureStage = "prepare";
     try {
+      failureStage = "availability";
       if (!(await Sharing.isAvailableAsync())) {
         if (screenActiveRef.current) {
-          setFailedExport({ format, items, exportLabel, attempt: nextAttempt });
-          setNotice("Sharing is not available on this device. Your selection is preserved; try again.");
+          setFailedExport({ format, items, exportLabel, attempt: nextAttempt, failureStage });
+          setNotice(`${getExportFailureDiagnosticLabel(format, failureStage)} Your selection is preserved; try again.`);
         }
         return;
       }
+      failureStage = "prepare";
       const extension = format === "json" ? "json" : "csv";
       const mimeType = format === "json" ? "application/json" : "text/csv";
       const contents = previewContents;
       const fileUri = `${FileSystem.cacheDirectory}archive-alchemist-${exportLabel}-${items.length}.${extension}`;
       await FileSystem.writeAsStringAsync(fileUri, contents, { encoding: FileSystem.EncodingType.UTF8 });
       if (archiveExportRequestIdRef.current !== requestId) return;
+      failureStage = "share";
       await Sharing.shareAsync(fileUri, { mimeType, dialogTitle: `Share Archive Alchemist ${format.toUpperCase()} export` });
       const completedExport: ExportHistoryEntry = { format, itemCount: items.length, exportedAt: new Date().toISOString() };
       const nextExportHistory = appendExportHistory(exportHistory, completedExport);
@@ -743,8 +747,8 @@ export default function HomeScreen() {
       }
     } catch {
       if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) {
-        setFailedExport({ format, items, exportLabel, attempt: nextAttempt });
-        setNotice(`Archive ${format.toUpperCase()} export could not be prepared. Your selection is preserved; retry when ready.`);
+        setFailedExport({ format, items, exportLabel, attempt: nextAttempt, failureStage });
+        setNotice(`${getExportFailureDiagnosticLabel(format, failureStage)} Your selection is preserved; retry when ready.`);
       }
     } finally {
       archiveExportRequestGate.finish();
@@ -963,6 +967,7 @@ export default function HomeScreen() {
                 <Text style={styles.noticeDismissText}>Dismiss</Text>
               </Pressable>
             </View>
+            {failedExport && <Text style={styles.noticeText} accessibilityRole="text">{getExportFailureDiagnosticLabel(failedExport.format, failedExport.failureStage)}</Text>}
             {failedExport && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed export using the preserved selected rows and format. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
             {failedExport && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} export`} accessibilityHint="Resets only the retry limit and starts the same export again without clearing your archive or selection." onPress={startFreshExport} />}
           </View>

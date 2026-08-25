@@ -367,3 +367,6 @@
 - [x] Add a direct fresh-export recovery action after the retry limit
 - [x] Preserve current archive context while resetting only retry state
 - [x] Add deterministic coverage for fresh-export recovery wording
+- [x] Add privacy-safe export failure stage diagnostics
+- [x] Show failure-stage guidance without archive content or raw errors
+- [x] Add deterministic coverage for diagnostic wording and privacy boundaries

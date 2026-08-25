@@ -6,7 +6,7 @@ const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)
 describe("export retry recovery", () => {
   it("retains the failed format and selected item context", () => {
     expect(screenSource).toContain("const [failedExport, setFailedExport]");
-    expect(screenSource).toContain("setFailedExport({ format, items, exportLabel, attempt: nextAttempt })");
+    expect(screenSource).toContain("setFailedExport({ format, items, exportLabel, attempt: nextAttempt, failureStage })");
     expect(screenSource).toContain("shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel)");
   });
 
@@ -31,6 +31,12 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("void shareImportedArchive(format, items, exportLabel, false, true)");
     expect(screenSource).toContain("Resets only the retry limit");
     expect(screenSource).toContain("Start fresh ${failedExport.format.toUpperCase()} export");
+  });
+
+  it("exposes privacy-safe failure-stage diagnostics", () => {
+    expect(screenSource).toContain("failureStage: ExportFailureStage");
+    expect(screenSource).toContain("getExportFailureDiagnosticLabel(format, failureStage)");
+    expect(screenSource).toContain("getExportFailureDiagnosticLabel");
   });
 
   it("exposes an accessible retry action", () => {
