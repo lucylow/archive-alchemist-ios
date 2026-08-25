@@ -355,3 +355,6 @@
 - [x] Add a retry action after failed export sharing
 - [x] Preserve the failed export format and selected-row context for retry
 - [x] Add deterministic coverage for retry-label and context wording
+- [x] Add a retry action inside the selected-row export review
+- [x] Preserve review visibility, selected rows, and failed export format during retry
+- [x] Add deterministic coverage for in-context retry wording

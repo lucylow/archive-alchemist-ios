@@ -10,6 +10,11 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel)");
   });
 
+  it("exposes an in-context retry action for the selected-browser review", () => {
+    expect(screenSource).toContain('failedExport?.exportLabel === "selected-browser"');
+    expect(screenSource).toContain("without leaving this review or changing the selected rows");
+  });
+
   it("exposes an accessible retry action", () => {
     expect(screenSource).toContain("Retry ${failedExport.format.toUpperCase()} export");
     expect(screenSource).toContain("preserved selected rows and format");

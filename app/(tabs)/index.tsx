@@ -1514,6 +1514,7 @@ export default function HomeScreen() {
               <SecondaryButton label={preferredExportFormat === "json" ? "Share JSON · recommended" : "Share JSON"} accessibilityHint="Shares the reviewed selected archive rows as a normalized JSON file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("json", selectedBrowserItems, "selected-browser"); }} />
               <SecondaryButton label={preferredExportFormat === "csv" ? "Share CSV · recommended" : "Share CSV"} accessibilityHint="Shares the reviewed selected archive rows as a normalized CSV file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); }} />
             </View>
+            {failedExport?.exportLabel === "selected-browser" && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export`} accessibilityHint="Retries the failed export without leaving this review or changing the selected rows." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
           </View>
         </View>
       </Modal>
