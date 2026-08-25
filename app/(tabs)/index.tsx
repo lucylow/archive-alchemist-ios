@@ -20,7 +20,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, getDiagnosticsCopiedNotice, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -804,7 +804,7 @@ export default function HomeScreen() {
     } catch {
       if (screenActiveRef.current) {
         resetDiagnosticsCopied();
-        setNotice("Diagnostics could not be copied. No archive content was exposed.");
+        setNotice(getDiagnosticsCopyFailureNotice(RNPlatform.OS === "ios" || RNPlatform.OS === "android" || RNPlatform.OS === "web" ? RNPlatform.OS : "default"));
       }
     }
   };

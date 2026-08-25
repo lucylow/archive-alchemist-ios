@@ -400,3 +400,6 @@
 - [x] Add mocked iOS, Android, web, and fallback clipboard feedback coverage
 - [x] Verify platform feedback remains privacy-safe under each mocked platform
 - [x] Confirm screen wiring uses the platform-aware helper without native device access
+- [x] Simulate clipboard rejection and unavailable clipboard failures deterministically
+- [x] Verify failure feedback clears copied state and excludes raw errors or archive content
+- [x] Confirm recovery remains retryable after simulated clipboard failures

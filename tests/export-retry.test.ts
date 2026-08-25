@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { getDiagnosticsCopiedNotice, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
+import { getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -49,7 +49,7 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain('import * as Clipboard from "expo-clipboard"');
     expect(screenSource).toContain("const copyExportDiagnostics = async () => {");
     expect(screenSource).toContain("getDiagnosticsCopiedNotice");
-    expect(screenSource).toContain("No archive content was exposed");
+    expect(getDiagnosticsCopyFailureNotice("default")).toContain("No archive content was exposed");
     expect(screenSource).toContain("const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);");
     expect(screenSource).toContain('accessibilityLiveRegion="polite">Copied safely');
     expect(screenSource).toContain("const dismissDiagnosticsCopied = resetDiagnosticsCopied;");
@@ -84,6 +84,20 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("getDiagnosticsCopiedNotice");
     expect(screenSource).toContain('RNPlatform.OS === "ios"');
     expect(screenSource).toContain('RNPlatform.OS === "web"');
+  });
+
+  it("keeps clipboard failure feedback privacy-safe across platforms", () => {
+    for (const platform of ["ios", "android", "web", "default"] as const) {
+      const notice = getDiagnosticsCopyFailureNotice(platform);
+      expect(notice).toContain("No archive content was exposed");
+      expect(notice).not.toContain("title");
+      expect(notice).not.toContain("URL");
+      expect(notice).not.toContain("Error:");
+    }
+    expect(getDiagnosticsCopyFailureNotice("web")).toContain("browser clipboard");
+    expect(getDiagnosticsCopyFailureNotice("ios")).toContain("iOS clipboard");
+    expect(screenSource).toContain("getDiagnosticsCopyFailureNotice");
+    expect(screenSource).toContain("resetDiagnosticsCopied();");
   });
 
   it("exposes bounded automatic confirmation expiry", () => {
