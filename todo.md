@@ -358,3 +358,6 @@
 - [x] Add a retry action inside the selected-row export review
 - [x] Preserve review visibility, selected rows, and failed export format during retry
 - [x] Add deterministic coverage for in-context retry wording
+- [x] Add a retry action inside the import-preview export flow
+- [x] Preserve preview selection, filters, and failed export format during retry
+- [x] Add deterministic coverage for in-context preview retry wording

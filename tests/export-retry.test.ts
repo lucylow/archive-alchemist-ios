@@ -15,6 +15,11 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("without leaving this review or changing the selected rows");
   });
 
+  it("exposes an in-context retry action for import preview", () => {
+    expect(screenSource).toContain('failedExport?.exportLabel === "selected-preview"');
+    expect(screenSource).toContain("without changing the current selection, filters, or sort order");
+  });
+
   it("exposes an accessible retry action", () => {
     expect(screenSource).toContain("Retry ${failedExport.format.toUpperCase()} export");
     expect(screenSource).toContain("preserved selected rows and format");
