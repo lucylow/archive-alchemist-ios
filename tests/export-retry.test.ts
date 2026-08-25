@@ -39,6 +39,14 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("getExportFailureDiagnosticLabel");
   });
 
+  it("exposes privacy-safe copy diagnostics recovery", () => {
+    expect(screenSource).toContain('import * as Clipboard from "expo-clipboard"');
+    expect(screenSource).toContain("const copyExportDiagnostics = async () => {");
+    expect(screenSource).toContain("Privacy-safe export diagnostics copied");
+    expect(screenSource).toContain("No archive content was exposed");
+    expect(screenSource).toContain("Copies only the failure stage and format");
+  });
+
   it("exposes an accessible retry action", () => {
     expect(screenSource).toContain("Retry ${failedExport.format.toUpperCase()} export");
     expect(screenSource).toContain("preserved selected rows and format");

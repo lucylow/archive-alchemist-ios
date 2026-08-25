@@ -370,3 +370,6 @@
 - [x] Add privacy-safe export failure stage diagnostics
 - [x] Show failure-stage guidance without archive content or raw errors
 - [x] Add deterministic coverage for diagnostic wording and privacy boundaries
+- [x] Add a privacy-safe Copy diagnostics action for failed exports
+- [x] Handle clipboard success and failure without exposing archive content
+- [x] Add deterministic coverage for copied diagnostics wording
