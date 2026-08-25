@@ -337,3 +337,6 @@
 - [x] Measure export payloads using UTF-8 byte length rather than JavaScript character count
 - [x] Keep UTF-8 size calculations derived in memory without persistence changes
 - [x] Add deterministic coverage for Unicode export-size estimates
+- [x] Add UTF-8 accurate size estimates to import-preview exports
+- [x] Add the same deliberate large-export warning to preview exports
+- [x] Add deterministic coverage for preview-export warning behavior

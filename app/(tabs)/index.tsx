@@ -482,6 +482,8 @@ export default function HomeScreen() {
 
   const previewMatches = useMemo(() => sortArchiveItems(filterArchiveItems(pendingArchiveItems, previewQuery, previewYear), previewSort), [pendingArchiveItems, previewQuery, previewYear, previewSort]);
   const selectedPreviewItems = useMemo(() => getSelectedArchiveItems(previewMatches, selectedPreviewKeys), [previewMatches, selectedPreviewKeys]);
+  const selectedPreviewJsonSize = useMemo(() => getUtf8ByteLength(serializeArchiveManifest(selectedPreviewItems)), [selectedPreviewItems]);
+  const selectedPreviewCsvSize = useMemo(() => getUtf8ByteLength(serializeArchiveCsv(selectedPreviewItems)), [selectedPreviewItems]);
 
   const commitPendingArchive = () => {
     if (pendingArchiveItems.length === 0 || !pendingArchiveName) return;
@@ -1130,8 +1132,9 @@ export default function HomeScreen() {
                     return <Pressable key={key} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} accessibilityLabel={formatArchivePreviewRow(item)} onPress={() => setSelectedPreviewKeys((current) => current.includes(key) ? current.filter((value) => value !== key) : [...current, key])} style={({ pressed }) => [styles.previewRow, selected && styles.previewRowSelected, pressed && styles.pressed]}><Text style={styles.previewCheck}>{selected ? "✓" : "○"}</Text><Text style={styles.mindDescription}>{formatArchivePreviewRow(item)}</Text></Pressable>;
                   })}
                 </View>
+                <Text style={styles.sourceSummary} accessibilityLiveRegion="polite">{selectedPreviewItems.length > 0 ? getExportSizeEstimateLabel(selectedPreviewJsonSize, selectedPreviewCsvSize, null) : "Select preview rows to estimate export size. Estimates are calculated in memory; not saved."}</Text>
                 <View style={styles.actionRow}>
-                  <SecondaryButton label={selectedPreviewItems.length > 0 ? `Export ${selectedPreviewItems.length} selected` : "Export selected"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls." onPress={exportPreviewResults} />
+                  <SecondaryButton label={selectedPreviewItems.length > 0 ? `Export ${selectedPreviewItems.length} selected` : "Export selected"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls. Large exports show a cancel-or-continue warning before sharing." onPress={exportPreviewResults} />
                 </View>
                 <View style={styles.actionRow}>
                   <SecondaryButton label="Use this archive" accessibilityHint="Replaces the current imported archive with this reviewed preview." onPress={confirmPendingArchive} />
