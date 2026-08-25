@@ -56,3 +56,7 @@ export const getExportFailureRecoveryGuidance = (stage: ExportFailureStage) => s
 export type DiagnosticsClipboardPlatform = "ios" | "android" | "web" | "default";
 export const getDiagnosticsCopiedNotice = (platform: DiagnosticsClipboardPlatform) => platform === "web" ? "Diagnostics copied safely to the clipboard. No archive content was included." : platform === "ios" ? "Diagnostics copied safely on iPhone or iPad. No archive content was included." : platform === "android" ? "Diagnostics copied safely on Android. No archive content was included." : "Privacy-safe export diagnostics copied. No archive content was included.";
 export const getDiagnosticsCopyFailureNotice = (platform: DiagnosticsClipboardPlatform) => platform === "web" ? "The browser clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text." : platform === "ios" ? "The iOS clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text." : platform === "android" ? "The Android clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text." : "Diagnostics could not be copied. No archive content was exposed; try again.";
+export const getDiagnosticsCopyOutcome = (platform: DiagnosticsClipboardPlatform, copied: boolean) => ({
+  copied,
+  notice: copied ? getDiagnosticsCopiedNotice(platform) : getDiagnosticsCopyFailureNotice(platform),
+});

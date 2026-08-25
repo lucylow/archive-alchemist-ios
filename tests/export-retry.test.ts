@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
+import { getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -48,7 +48,7 @@ describe("export retry recovery", () => {
   it("exposes privacy-safe copy diagnostics recovery", () => {
     expect(screenSource).toContain('import * as Clipboard from "expo-clipboard"');
     expect(screenSource).toContain("const copyExportDiagnostics = async () => {");
-    expect(screenSource).toContain("getDiagnosticsCopiedNotice");
+    expect(screenSource).toContain("getDiagnosticsCopyOutcome");
     expect(getDiagnosticsCopyFailureNotice("default")).toContain("No archive content was exposed");
     expect(screenSource).toContain("const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);");
     expect(screenSource).toContain('accessibilityLiveRegion="polite">Copied safely');
@@ -81,9 +81,19 @@ describe("export retry recovery", () => {
       expect(notice).not.toContain("title");
       expect(notice).not.toContain("URL");
     }
-    expect(screenSource).toContain("getDiagnosticsCopiedNotice");
+    expect(screenSource).toContain("getDiagnosticsCopyOutcome");
     expect(screenSource).toContain('RNPlatform.OS === "ios"');
     expect(screenSource).toContain('RNPlatform.OS === "web"');
+  });
+
+  it("models clipboard success and rejection outcomes directly", () => {
+    const success = getDiagnosticsCopyOutcome("ios", true);
+    expect(success.copied).toBe(true);
+    expect(success.notice).toBe(getDiagnosticsCopiedNotice("ios"));
+    const failure = getDiagnosticsCopyOutcome("ios", false);
+    expect(failure.copied).toBe(false);
+    expect(failure.notice).toBe(getDiagnosticsCopyFailureNotice("ios"));
+    expect(failure.notice).toContain("No archive content was exposed");
   });
 
   it("keeps clipboard failure feedback privacy-safe across platforms", () => {
@@ -96,7 +106,8 @@ describe("export retry recovery", () => {
     }
     expect(getDiagnosticsCopyFailureNotice("web")).toContain("browser clipboard");
     expect(getDiagnosticsCopyFailureNotice("ios")).toContain("iOS clipboard");
-    expect(screenSource).toContain("getDiagnosticsCopyFailureNotice");
+    expect(screenSource).toContain("getDiagnosticsCopyOutcome");
+    expect(screenSource).toContain("setDiagnosticsCopied(outcome.copied);");
     expect(screenSource).toContain("resetDiagnosticsCopied();");
   });
 

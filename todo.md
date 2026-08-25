@@ -403,3 +403,6 @@
 - [x] Simulate clipboard rejection and unavailable clipboard failures deterministically
 - [x] Verify failure feedback clears copied state and excludes raw errors or archive content
 - [x] Confirm recovery remains retryable after simulated clipboard failures
+- [x] Extract a deterministic clipboard copy outcome helper for the UI handler
+- [x] Cover success, rejection, and copied-state reset behavior without native device access
+- [x] Keep extracted clipboard outcome logic privacy-safe and platform-aware
