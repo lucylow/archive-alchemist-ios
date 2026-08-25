@@ -136,6 +136,13 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("setSettingsVisible(true)");
   });
 
+  it("exposes reset-to-default diagnostics duration behavior", () => {
+    expect(screenSource).toContain('label="Reset to default"');
+    expect(screenSource).toContain("setDiagnosticsDurationSetting(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS)");
+    expect(screenSource).toContain("Diagnostics confirmation duration reset to the five-second default.");
+    expect(getExportDiagnosticsConfirmationDuration(true, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS)).toBe(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS);
+  });
+
   it("exposes bounded automatic confirmation expiry", () => {
     expect(screenSource).toContain("diagnosticsExpiryTimerRef");
     expect(screenSource).toContain("const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion, diagnosticsDurationSetting);");

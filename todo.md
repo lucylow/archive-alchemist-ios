@@ -415,3 +415,6 @@
 - [x] Add a persisted diagnostics confirmation duration setting
 - [x] Keep the setting bounded with a safe default and Reduce Motion behavior
 - [x] Add deterministic coverage for duration persistence, clamping, and reset behavior
+- [x] Add a reset-to-default action for diagnostics confirmation duration
+- [x] Persist the default duration and keep Reduce Motion behavior unchanged
+- [x] Add deterministic coverage for reset wording and state restoration
