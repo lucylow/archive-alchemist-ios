@@ -21,6 +21,11 @@ describe("import preview export safeguards", () => {
     expect(screenSource).toContain("temporary format recommendation from the last export");
   });
 
+  it("shows the same transient recommendation in the full browser", () => {
+    expect(screenSource).toContain("temporary recommended full-browser export format from the last export");
+    expect(screenSource).toContain("{preferredExportFormat.toUpperCase()} · RECOMMENDED");
+  });
+
   it("routes preview JSON and CSV shares through the common export handler", () => {
     expect(screenSource).toContain('shareImportedArchive("json", selectedPreviewItems, "selected-preview")');
     expect(screenSource).toContain('shareImportedArchive("csv", selectedPreviewItems, "selected-preview")');

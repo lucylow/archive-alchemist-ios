@@ -346,3 +346,6 @@
 - [x] Add a visible transient format badge to import-preview export actions
 - [x] Keep the badge synchronized with the last-export recommendation and accessible
 - [x] Add deterministic coverage for preview format-badge wording
+- [x] Add a compact transient format badge to the full archive browser
+- [x] Keep browser badge copy synchronized with the last-export recommendation and accessible
+- [x] Add deterministic coverage for full-browser format-badge wording
