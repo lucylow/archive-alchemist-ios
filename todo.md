@@ -382,3 +382,6 @@
 - [x] Add a dismissal action for copied-diagnostics confirmation
 - [x] Keep confirmation dismissal local to the current recovery surface
 - [x] Add deterministic coverage for dismissal wording and state reset
+- [x] Clear copied-confirmation state when an export succeeds
+- [x] Clear copied-confirmation state when the failure notice is dismissed or retry context is cleared
+- [x] Add deterministic coverage for stale-confirmation reset behavior

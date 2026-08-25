@@ -54,6 +54,9 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("const dismissDiagnosticsCopied = () => setDiagnosticsCopied(false);");
     expect(screenSource).toContain('label="Dismiss"');
     expect(screenSource).toContain("Hides the copied confirmation");
+    expect(screenSource).toContain("setFailedExport(null); setDiagnosticsCopied(false);");
+    expect(screenSource).toContain("setFailedExport(null);\n        setDiagnosticsCopied(false);");
+    expect(screenSource).toContain("setNotice(null); setFailedExport(null); setDiagnosticsCopied(false);");
     expect(screenSource).toContain("Copies only the failure stage and format");
   });
 

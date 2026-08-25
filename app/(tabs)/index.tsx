@@ -712,6 +712,7 @@ export default function HomeScreen() {
     }
     if (!archiveExportRequestGate.tryStart()) return;
     setFailedExport(null);
+    setDiagnosticsCopied(false);
     const requestId = archiveExportRequestIdRef.current + 1;
     archiveExportRequestIdRef.current = requestId;
     if (screenActiveRef.current) setIsExportingArchive(true);
@@ -744,6 +745,7 @@ export default function HomeScreen() {
       }
       if (screenActiveRef.current) {
         setFailedExport(null);
+        setDiagnosticsCopied(false);
         setExportHistory(nextExportHistory);
         setNotice(historySaved ? `Archive ${format.toUpperCase()} export is ready to share.` : `Archive ${format.toUpperCase()} export is ready to share, but local export history could not be saved.`);
       }
@@ -762,6 +764,7 @@ export default function HomeScreen() {
     if (!failedExport) return;
     const { format, items, exportLabel } = failedExport;
     setFailedExport(null);
+    setDiagnosticsCopied(false);
     if (screenActiveRef.current) setNotice(null);
     void shareImportedArchive(format, items, exportLabel, false, true);
   };
@@ -983,7 +986,7 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Dismiss status message"
                 accessibilityHint="Closes this workflow status message."
-                onPress={() => { setNotice(null); setFailedExport(null); }}
+                onPress={() => { setNotice(null); setFailedExport(null); setDiagnosticsCopied(false); }}
                 style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}
               >
                 <Text style={styles.noticeDismissText}>Dismiss</Text>
