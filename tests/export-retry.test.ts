@@ -68,14 +68,22 @@ describe("export retry recovery", () => {
   });
 
   it("uses privacy-safe platform-aware clipboard feedback", () => {
-    expect(getDiagnosticsCopiedNotice("ios")).toContain("iPhone or iPad");
-    expect(getDiagnosticsCopiedNotice("android")).toContain("Android");
-    expect(getDiagnosticsCopiedNotice("web")).toContain("clipboard");
-    expect(getDiagnosticsCopiedNotice("ios")).toContain("No archive content was included");
-    expect(getDiagnosticsCopiedNotice("ios")).not.toContain("title");
-    expect(getDiagnosticsCopiedNotice("ios")).not.toContain("URL");
+    const cases = [
+      ["ios", "iPhone or iPad"],
+      ["android", "Android"],
+      ["web", "clipboard"],
+      ["default", "Privacy-safe export diagnostics copied"],
+    ] as const;
+    for (const [platform, expectedText] of cases) {
+      const notice = getDiagnosticsCopiedNotice(platform);
+      expect(notice).toContain(expectedText);
+      expect(notice).toContain("No archive content was included");
+      expect(notice).not.toContain("title");
+      expect(notice).not.toContain("URL");
+    }
     expect(screenSource).toContain("getDiagnosticsCopiedNotice");
     expect(screenSource).toContain('RNPlatform.OS === "ios"');
+    expect(screenSource).toContain('RNPlatform.OS === "web"');
   });
 
   it("exposes bounded automatic confirmation expiry", () => {

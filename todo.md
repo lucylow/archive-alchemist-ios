@@ -397,3 +397,6 @@
 - [x] Add explicit platform-aware feedback after copying diagnostics
 - [x] Keep platform feedback privacy-safe and consistent across iOS and web
 - [x] Add deterministic coverage for platform feedback wording
+- [x] Add mocked iOS, Android, web, and fallback clipboard feedback coverage
+- [x] Verify platform feedback remains privacy-safe under each mocked platform
+- [x] Confirm screen wiring uses the platform-aware helper without native device access
