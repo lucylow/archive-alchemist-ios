@@ -26,6 +26,13 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("getExportRetryLimitLabel(format)");
   });
 
+  it("exposes fresh-export recovery after the retry limit", () => {
+    expect(screenSource).toContain("const startFreshExport = () => {");
+    expect(screenSource).toContain("void shareImportedArchive(format, items, exportLabel, false, true)");
+    expect(screenSource).toContain("Resets only the retry limit");
+    expect(screenSource).toContain("Start fresh ${failedExport.format.toUpperCase()} export");
+  });
+
   it("exposes an accessible retry action", () => {
     expect(screenSource).toContain("Retry ${failedExport.format.toUpperCase()} export");
     expect(screenSource).toContain("preserved selected rows and format");

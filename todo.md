@@ -364,3 +364,6 @@
 - [x] Add bounded retry-attempt state for failed archive shares
 - [x] Show retry attempt progress and a clear limit in recovery actions
 - [x] Add deterministic coverage for retry-attempt wording and reset behavior
+- [x] Add a direct fresh-export recovery action after the retry limit
+- [x] Preserve current archive context while resetting only retry state
+- [x] Add deterministic coverage for fresh-export recovery wording

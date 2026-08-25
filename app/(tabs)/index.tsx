@@ -688,8 +688,8 @@ export default function HomeScreen() {
     }
   };
 
-  const shareImportedArchive = async (format: "json" | "csv", items = archiveItems, exportLabel = "archive", warningConfirmed = false) => {
-    const isContinuingFailedExport = failedExport?.format === format && failedExport.exportLabel === exportLabel;
+  const shareImportedArchive = async (format: "json" | "csv", items = archiveItems, exportLabel = "archive", warningConfirmed = false, freshExport = false) => {
+    const isContinuingFailedExport = !freshExport && failedExport?.format === format && failedExport.exportLabel === exportLabel;
     const nextAttempt = isContinuingFailedExport ? failedExport.attempt + 1 : 1;
     if (isContinuingFailedExport && nextAttempt > MAX_EXPORT_RETRY_ATTEMPTS) {
       if (screenActiveRef.current) setNotice(getExportRetryLimitLabel(format));
@@ -750,6 +750,14 @@ export default function HomeScreen() {
       archiveExportRequestGate.finish();
       if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) setIsExportingArchive(false);
     }
+  };
+
+  const startFreshExport = () => {
+    if (!failedExport) return;
+    const { format, items, exportLabel } = failedExport;
+    setFailedExport(null);
+    if (screenActiveRef.current) setNotice(null);
+    void shareImportedArchive(format, items, exportLabel, false, true);
   };
 
   const exportImportedArchive = () => {
@@ -956,6 +964,7 @@ export default function HomeScreen() {
               </Pressable>
             </View>
             {failedExport && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed export using the preserved selected rows and format. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
+            {failedExport && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} export`} accessibilityHint="Resets only the retry limit and starts the same export again without clearing your archive or selection." onPress={startFreshExport} />}
           </View>
         )}
 
@@ -1168,6 +1177,7 @@ export default function HomeScreen() {
                   <SecondaryButton label={selectedPreviewItems.length > 0 ? `Export ${selectedPreviewItems.length} selected` : "Export selected"} accessibilityHint="Shares only the archive rows currently matching the search, year, and sort controls. Large exports show a cancel-or-continue warning before sharing." onPress={exportPreviewResults} />
                 </View>
                 {failedExport?.exportLabel === "selected-preview" && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} preview export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed preview export without changing the current selection, filters, or sort order. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
+                {failedExport?.exportLabel === "selected-preview" && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} preview export`} accessibilityHint="Resets only the retry limit and starts the same preview export again without changing selection or filters." onPress={startFreshExport} />}
                 <View style={styles.actionRow}>
                   <SecondaryButton label="Use this archive" accessibilityHint="Replaces the current imported archive with this reviewed preview." onPress={confirmPendingArchive} />
                   <SecondaryButton label="Discard preview" accessibilityHint="Discards this preview and keeps the current imported archive unchanged." onPress={discardPendingArchive} />
@@ -1522,6 +1532,7 @@ export default function HomeScreen() {
               <SecondaryButton label={preferredExportFormat === "csv" ? "Share CSV · recommended" : "Share CSV"} accessibilityHint="Shares the reviewed selected archive rows as a normalized CSV file." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive("csv", selectedBrowserItems, "selected-browser"); }} />
             </View>
             {failedExport?.exportLabel === "selected-browser" && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed export without leaving this review or changing the selected rows. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
+            {failedExport?.exportLabel === "selected-browser" && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} export`} accessibilityHint="Resets only the retry limit and starts the same export again without leaving this review or changing selected rows." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={startFreshExport} />}
           </View>
         </View>
       </Modal>
