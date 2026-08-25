@@ -49,6 +49,8 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("const copyExportDiagnostics = async () => {");
     expect(screenSource).toContain("Privacy-safe export diagnostics copied");
     expect(screenSource).toContain("No archive content was exposed");
+    expect(screenSource).toContain("const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);");
+    expect(screenSource).toContain('accessibilityLiveRegion="polite">Copied safely');
     expect(screenSource).toContain("Copies only the failure stage and format");
   });
 

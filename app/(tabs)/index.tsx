@@ -181,6 +181,7 @@ export default function HomeScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
   const screenActiveRef = useRef(true);
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
@@ -768,11 +769,18 @@ export default function HomeScreen() {
   const copyExportDiagnostics = async () => {
     if (!failedExport) return;
     const diagnostics = getExportFailureDiagnosticLabel(failedExport.format, failedExport.failureStage);
+    setDiagnosticsCopied(false);
     try {
       await Clipboard.setStringAsync(diagnostics);
-      if (screenActiveRef.current) setNotice("Privacy-safe export diagnostics copied. No archive content was included.");
+      if (screenActiveRef.current) {
+        setDiagnosticsCopied(true);
+        setNotice("Privacy-safe export diagnostics copied. No archive content was included.");
+      }
     } catch {
-      if (screenActiveRef.current) setNotice("Diagnostics could not be copied. No archive content was exposed.");
+      if (screenActiveRef.current) {
+        setDiagnosticsCopied(false);
+        setNotice("Diagnostics could not be copied. No archive content was exposed.");
+      }
     }
   };
 
@@ -982,6 +990,7 @@ export default function HomeScreen() {
             {failedExport && <Text style={styles.noticeText} accessibilityRole="text">{getExportFailureDiagnosticLabel(failedExport.format, failedExport.failureStage)}</Text>}
             {failedExport && <Text style={styles.noticeText} accessibilityRole="text">Next step: {getExportFailureRecoveryGuidance(failedExport.failureStage)}</Text>}
             {failedExport && <SecondaryButton label="Copy diagnostics" accessibilityHint="Copies only the failure stage and format. Archive titles, URLs, and raw errors are never copied." onPress={() => { void copyExportDiagnostics(); }} />}
+            {failedExport && diagnosticsCopied && <Text style={styles.reviewHint} accessibilityRole="text" accessibilityLiveRegion="polite">Copied safely</Text>}
             {failedExport && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed export using the preserved selected rows and format. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
             {failedExport && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} export`} accessibilityHint="Resets only the retry limit and starts the same export again without clearing your archive or selection." onPress={startFreshExport} />}
           </View>
@@ -1197,6 +1206,7 @@ export default function HomeScreen() {
                 </View>
                 {failedExport?.exportLabel === "selected-preview" && <Text style={styles.reviewHint} accessibilityRole="text">Next step: {getExportFailureRecoveryGuidance(failedExport.failureStage)}</Text>}
                 {failedExport?.exportLabel === "selected-preview" && <SecondaryButton label="Copy diagnostics" accessibilityHint="Copies only the failure stage and format. Archive titles, URLs, and raw errors are never copied." onPress={() => { void copyExportDiagnostics(); }} />}
+                {failedExport?.exportLabel === "selected-preview" && diagnosticsCopied && <Text style={styles.reviewHint} accessibilityRole="text" accessibilityLiveRegion="polite">Copied safely</Text>}
                 {failedExport?.exportLabel === "selected-preview" && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} preview export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed preview export without changing the current selection, filters, or sort order. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
                 {failedExport?.exportLabel === "selected-preview" && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} preview export`} accessibilityHint="Resets only the retry limit and starts the same preview export again without changing selection or filters." onPress={startFreshExport} />}
                 <View style={styles.actionRow}>
@@ -1554,6 +1564,7 @@ export default function HomeScreen() {
             </View>
             {failedExport?.exportLabel === "selected-browser" && <Text style={styles.reviewHint} accessibilityRole="text">Next step: {getExportFailureRecoveryGuidance(failedExport.failureStage)}</Text>}
             {failedExport?.exportLabel === "selected-browser" && <SecondaryButton label="Copy diagnostics" accessibilityHint="Copies only the failure stage and format. Archive titles, URLs, and raw errors are never copied." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void copyExportDiagnostics(); }} />}
+            {failedExport?.exportLabel === "selected-browser" && diagnosticsCopied && <Text style={styles.reviewHint} accessibilityRole="text" accessibilityLiveRegion="polite">Copied safely</Text>}
             {failedExport?.exportLabel === "selected-browser" && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export · ${getExportRetryAttemptLabel(failedExport.attempt)}`} accessibilityHint={`Retries the failed export without leaving this review or changing the selected rows. ${getExportRetryAttemptLabel(failedExport.attempt)}; maximum ${MAX_EXPORT_RETRY_ATTEMPTS} attempts.`} disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
             {failedExport?.exportLabel === "selected-browser" && failedExport.attempt >= MAX_EXPORT_RETRY_ATTEMPTS && <SecondaryButton label={`Start fresh ${failedExport.format.toUpperCase()} export`} accessibilityHint="Resets only the retry limit and starts the same export again without leaving this review or changing selected rows." disabled={isExportingArchive} accessibilityState={{ busy: isExportingArchive }} onPress={startFreshExport} />}
           </View>

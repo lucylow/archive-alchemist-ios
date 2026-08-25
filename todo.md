@@ -376,3 +376,6 @@
 - [x] Add stage-specific recovery guidance for failed exports
 - [x] Explain concrete next actions without exposing raw errors or archive content
 - [x] Add deterministic coverage for recovery-guidance wording
+- [x] Add compact success confirmation after diagnostics are copied
+- [x] Keep copied confirmation lifecycle-safe and privacy-safe
+- [x] Add deterministic coverage for copied-confirmation wording
