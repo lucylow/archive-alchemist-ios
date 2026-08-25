@@ -379,3 +379,6 @@
 - [x] Add compact success confirmation after diagnostics are copied
 - [x] Keep copied confirmation lifecycle-safe and privacy-safe
 - [x] Add deterministic coverage for copied-confirmation wording
+- [x] Add a dismissal action for copied-diagnostics confirmation
+- [x] Keep confirmation dismissal local to the current recovery surface
+- [x] Add deterministic coverage for dismissal wording and state reset

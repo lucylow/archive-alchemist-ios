@@ -51,6 +51,9 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("No archive content was exposed");
     expect(screenSource).toContain("const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);");
     expect(screenSource).toContain('accessibilityLiveRegion="polite">Copied safely');
+    expect(screenSource).toContain("const dismissDiagnosticsCopied = () => setDiagnosticsCopied(false);");
+    expect(screenSource).toContain('label="Dismiss"');
+    expect(screenSource).toContain("Hides the copied confirmation");
     expect(screenSource).toContain("Copies only the failure stage and format");
   });
 
