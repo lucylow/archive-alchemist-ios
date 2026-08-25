@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
+import { getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -72,7 +72,7 @@ describe("export retry recovery", () => {
       ["ios", "iPhone or iPad"],
       ["android", "Android"],
       ["web", "clipboard"],
-      ["default", "Privacy-safe export diagnostics copied"],
+      ["default", "JSON archive export diagnostics copied"],
     ] as const;
     for (const [platform, expectedText] of cases) {
       const notice = getDiagnosticsCopiedNotice(platform);
@@ -94,6 +94,11 @@ describe("export retry recovery", () => {
     expect(failure.copied).toBe(false);
     expect(failure.notice).toBe(getDiagnosticsCopyFailureNotice("ios"));
     expect(failure.notice).toContain("No archive content was exposed");
+    expect(getDiagnosticsExportContext("selected-preview")).toBe("preview");
+    expect(getDiagnosticsExportContext("selected-browser")).toBe("browser");
+    expect(getDiagnosticsExportContext("archive")).toBe("archive");
+    expect(getDiagnosticsCopyOutcome("web", true, "csv", "preview").notice).toContain("CSV selected import preview diagnostics copied");
+    expect(getDiagnosticsCopyOutcome("ios", false, "json", "browser").notice).toContain("JSON selected archive browser rows diagnostics");
   });
 
   it("keeps clipboard failure feedback privacy-safe across platforms", () => {

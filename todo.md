@@ -406,3 +406,6 @@
 - [x] Extract a deterministic clipboard copy outcome helper for the UI handler
 - [x] Cover success, rejection, and copied-state reset behavior without native device access
 - [x] Keep extracted clipboard outcome logic privacy-safe and platform-aware
+- [x] Add privacy-safe context labels to clipboard success and failure feedback
+- [x] Preserve export format and surface context without archive content
+- [x] Add deterministic coverage for context-aware clipboard feedback

@@ -54,9 +54,18 @@ export const getExportFailureStageLabel = (stage: ExportFailureStage) => stage =
 export const getExportFailureDiagnosticLabel = (format: "json" | "csv", stage: ExportFailureStage) => `${format.toUpperCase()} export stopped at: ${getExportFailureStageLabel(stage)}. No archive content or raw error details are included.`;
 export const getExportFailureRecoveryGuidance = (stage: ExportFailureStage) => stage === "availability" ? "Check that this device supports sharing, then try again." : stage === "share" ? "Close any open share sheet, confirm a destination is available, then try again." : "Check available device storage, then start a fresh export.";
 export type DiagnosticsClipboardPlatform = "ios" | "android" | "web" | "default";
-export const getDiagnosticsCopiedNotice = (platform: DiagnosticsClipboardPlatform) => platform === "web" ? "Diagnostics copied safely to the clipboard. No archive content was included." : platform === "ios" ? "Diagnostics copied safely on iPhone or iPad. No archive content was included." : platform === "android" ? "Diagnostics copied safely on Android. No archive content was included." : "Privacy-safe export diagnostics copied. No archive content was included.";
-export const getDiagnosticsCopyFailureNotice = (platform: DiagnosticsClipboardPlatform) => platform === "web" ? "The browser clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text." : platform === "ios" ? "The iOS clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text." : platform === "android" ? "The Android clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text." : "Diagnostics could not be copied. No archive content was exposed; try again.";
-export const getDiagnosticsCopyOutcome = (platform: DiagnosticsClipboardPlatform, copied: boolean) => ({
+export type DiagnosticsExportContext = "archive" | "preview" | "browser";
+export const getDiagnosticsExportContext = (exportLabel: string): DiagnosticsExportContext => exportLabel === "selected-preview" ? "preview" : exportLabel === "selected-browser" ? "browser" : "archive";
+export const getDiagnosticsExportContextLabel = (context: DiagnosticsExportContext) => context === "preview" ? "selected import preview" : context === "browser" ? "selected archive browser rows" : "archive export";
+export const getDiagnosticsCopiedNotice = (platform: DiagnosticsClipboardPlatform, format: "json" | "csv" = "json", context: DiagnosticsExportContext = "archive") => {
+  const prefix = `${format.toUpperCase()} ${getDiagnosticsExportContextLabel(context)} diagnostics copied`;
+  return platform === "web" ? `${prefix} safely to the clipboard. No archive content was included.` : platform === "ios" ? `${prefix} safely on iPhone or iPad. No archive content was included.` : platform === "android" ? `${prefix} safely on Android. No archive content was included.` : `${prefix} safely. No archive content was included.`;
+};
+export const getDiagnosticsCopyFailureNotice = (platform: DiagnosticsClipboardPlatform, format: "json" | "csv" = "json", context: DiagnosticsExportContext = "archive") => {
+  const prefix = `${format.toUpperCase()} ${getDiagnosticsExportContextLabel(context)} diagnostics`;
+  return platform === "web" ? `${prefix} could not be copied because the browser clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text.` : platform === "ios" ? `${prefix} could not be copied because the iOS clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text.` : platform === "android" ? `${prefix} could not be copied because the Android clipboard was unavailable. No archive content was exposed; try again or use the visible diagnostics text.` : `${prefix} could not be copied. No archive content was exposed; try again.`;
+};
+export const getDiagnosticsCopyOutcome = (platform: DiagnosticsClipboardPlatform, copied: boolean, format: "json" | "csv" = "json", context: DiagnosticsExportContext = "archive") => ({
   copied,
-  notice: copied ? getDiagnosticsCopiedNotice(platform) : getDiagnosticsCopyFailureNotice(platform),
+  notice: copied ? getDiagnosticsCopiedNotice(platform, format, context) : getDiagnosticsCopyFailureNotice(platform, format, context),
 });
