@@ -191,6 +191,7 @@ export default function HomeScreen() {
   };
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const diagnosticsConfirmationDuration = reduceMotion ? 10_000 : 5_000;
   const activeDiscoveries = useMemo(
     () => archiveItems.length > 0 ? archiveItems.map((item) => ({ ...item, score: 90, icon: "✦" })) : discoveries,
     [archiveItems],
@@ -257,6 +258,19 @@ export default function HomeScreen() {
       archiveExportRequestGate.finish();
     };
   }, [mindsRequestGate, archiveExportRequestGate]);
+
+  useEffect(() => {
+    if (!diagnosticsCopied) return;
+    if (diagnosticsExpiryTimerRef.current) clearTimeout(diagnosticsExpiryTimerRef.current);
+    diagnosticsExpiryTimerRef.current = setTimeout(() => {
+      if (screenActiveRef.current) setDiagnosticsCopied(false);
+      diagnosticsExpiryTimerRef.current = null;
+    }, diagnosticsConfirmationDuration);
+    return () => {
+      if (diagnosticsExpiryTimerRef.current) clearTimeout(diagnosticsExpiryTimerRef.current);
+      diagnosticsExpiryTimerRef.current = null;
+    };
+  }, [diagnosticsCopied, diagnosticsConfirmationDuration]);
 
   useEffect(() => {
     let mounted = true;
@@ -785,11 +799,6 @@ export default function HomeScreen() {
       await Clipboard.setStringAsync(diagnostics);
       if (screenActiveRef.current) {
         setDiagnosticsCopied(true);
-        if (diagnosticsExpiryTimerRef.current) clearTimeout(diagnosticsExpiryTimerRef.current);
-        diagnosticsExpiryTimerRef.current = setTimeout(() => {
-          if (screenActiveRef.current) setDiagnosticsCopied(false);
-          diagnosticsExpiryTimerRef.current = null;
-        }, 5000);
         setNotice("Privacy-safe export diagnostics copied. No archive content was included.");
       }
     } catch {

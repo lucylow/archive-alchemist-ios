@@ -388,3 +388,6 @@
 - [x] Add bounded automatic expiry for copied-diagnostics confirmation
 - [x] Cancel confirmation expiry timers safely on unmount and reset paths
 - [x] Add deterministic coverage for confirmation expiry lifecycle
+- [x] Make copied-confirmation expiry respect Reduce Motion preference
+- [x] Keep timer cleanup safe when accessibility preference changes
+- [x] Add deterministic coverage for accessibility-aware expiry behavior

@@ -62,8 +62,10 @@ describe("export retry recovery", () => {
 
   it("exposes bounded automatic confirmation expiry", () => {
     expect(screenSource).toContain("diagnosticsExpiryTimerRef");
-    expect(screenSource).toContain("}, 5000);");
+    expect(screenSource).toContain("const diagnosticsConfirmationDuration = reduceMotion ? 10_000 : 5_000;");
+    expect(screenSource).toContain("}, diagnosticsConfirmationDuration);");
     expect(screenSource).toContain("clearTimeout(diagnosticsExpiryTimerRef.current)");
+    expect(screenSource).toContain("[diagnosticsCopied, diagnosticsConfirmationDuration]");
     expect(screenSource).toContain("diagnosticsExpiryTimerRef.current = null");
   });
 
