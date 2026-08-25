@@ -361,3 +361,6 @@
 - [x] Add a retry action inside the import-preview export flow
 - [x] Preserve preview selection, filters, and failed export format during retry
 - [x] Add deterministic coverage for in-context preview retry wording
+- [x] Add bounded retry-attempt state for failed archive shares
+- [x] Show retry attempt progress and a clear limit in recovery actions
+- [x] Add deterministic coverage for retry-attempt wording and reset behavior
