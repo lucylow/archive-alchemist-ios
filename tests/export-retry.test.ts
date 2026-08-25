@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -60,9 +61,15 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("Copies only the failure stage and format");
   });
 
+  it("uses explicit accessibility-aware confirmation durations", () => {
+    expect(getExportDiagnosticsConfirmationDuration(false)).toBe(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+    expect(getExportDiagnosticsConfirmationDuration(true)).toBe(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS);
+    expect(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS).toBeGreaterThan(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+  });
+
   it("exposes bounded automatic confirmation expiry", () => {
     expect(screenSource).toContain("diagnosticsExpiryTimerRef");
-    expect(screenSource).toContain("const diagnosticsConfirmationDuration = reduceMotion ? 10_000 : 5_000;");
+    expect(screenSource).toContain("const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion);");
     expect(screenSource).toContain("}, diagnosticsConfirmationDuration);");
     expect(screenSource).toContain("clearTimeout(diagnosticsExpiryTimerRef.current)");
     expect(screenSource).toContain("[diagnosticsCopied, diagnosticsConfirmationDuration]");

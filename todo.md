@@ -391,3 +391,6 @@
 - [x] Make copied-confirmation expiry respect Reduce Motion preference
 - [x] Keep timer cleanup safe when accessibility preference changes
 - [x] Add deterministic coverage for accessibility-aware expiry behavior
+- [x] Centralize copied-confirmation timing policy
+- [x] Document normal and Reduce Motion confirmation durations in code
+- [x] Add deterministic coverage for both confirmation durations

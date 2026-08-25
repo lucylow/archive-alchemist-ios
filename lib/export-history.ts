@@ -43,6 +43,10 @@ export const getExportSizeEstimateLabel = (jsonBytes: number, csvBytes: number, 
 export const LARGE_EXPORT_WARNING_BYTES = 256 * 1024;
 export const getLargeExportWarningLabel = (format: "json" | "csv", bytes: number) => bytes >= LARGE_EXPORT_WARNING_BYTES ? `This ${format.toUpperCase()} export is approximately ${formatExportSizeEstimate(bytes)}. Preparing a large file may take longer, and the share sheet will open when it is ready.` : null;
 export const MAX_EXPORT_RETRY_ATTEMPTS = 3;
+/** Confirmation remains visible longer when Reduce Motion is enabled, giving users more time to notice non-animated feedback. */
+export const EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS = 5_000;
+export const EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS = 10_000;
+export const getExportDiagnosticsConfirmationDuration = (reduceMotion: boolean) => reduceMotion ? EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS : EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS;
 export const getExportRetryAttemptLabel = (attempt: number, maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `Retry attempt ${Math.min(Math.max(1, attempt), maxAttempts)} of ${maxAttempts}`;
 export const getExportRetryLimitLabel = (format: "json" | "csv", maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `${format.toUpperCase()} export retry limit reached after ${maxAttempts} attempts. Start the export again to create a fresh retry window.`;
 export type ExportFailureStage = "availability" | "prepare" | "share";
