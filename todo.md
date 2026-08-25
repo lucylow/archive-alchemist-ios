@@ -349,3 +349,9 @@
 - [x] Add a compact transient format badge to the full archive browser
 - [x] Keep browser badge copy synchronized with the last-export recommendation and accessible
 - [x] Add deterministic coverage for full-browser format-badge wording
+- [ ] Add a retry action after failed export sharing
+- [ ] Preserve the failed export format and selected-row context for retry
+- [ ] Add deterministic coverage for retry-label and context wording
+- [x] Add a retry action after failed export sharing
+- [x] Preserve the failed export format and selected-row context for retry
+- [x] Add deterministic coverage for retry-label and context wording

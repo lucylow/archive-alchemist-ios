@@ -173,6 +173,7 @@ export default function HomeScreen() {
   const [exportHistory, setExportHistory] = useState<ExportHistoryEntry[]>([]);
   const [exportHistoryVisible, setExportHistoryVisible] = useState(false);
   const [preferredExportFormat, setPreferredExportFormat] = useState<"json" | "csv" | null>(null);
+  const [failedExport, setFailedExport] = useState<{ format: "json" | "csv"; items: ArchiveItem[]; exportLabel: string } | null>(null);
   const latestExport = exportHistory[0] ?? null;
   const [reviewMode, setReviewMode] = useState(false);
   const [approvedOutputs, setApprovedOutputs] = useState<string[]>([]);
@@ -702,12 +703,16 @@ export default function HomeScreen() {
       return;
     }
     if (!archiveExportRequestGate.tryStart()) return;
+    setFailedExport(null);
     const requestId = archiveExportRequestIdRef.current + 1;
     archiveExportRequestIdRef.current = requestId;
     if (screenActiveRef.current) setIsExportingArchive(true);
     try {
       if (!(await Sharing.isAvailableAsync())) {
-        if (screenActiveRef.current) setNotice("Sharing is not available on this device.");
+        if (screenActiveRef.current) {
+          setFailedExport({ format, items, exportLabel });
+          setNotice("Sharing is not available on this device. Your selection is preserved; try again.");
+        }
         return;
       }
       const extension = format === "json" ? "json" : "csv";
@@ -726,11 +731,15 @@ export default function HomeScreen() {
         historySaved = false;
       }
       if (screenActiveRef.current) {
+        setFailedExport(null);
         setExportHistory(nextExportHistory);
         setNotice(historySaved ? `Archive ${format.toUpperCase()} export is ready to share.` : `Archive ${format.toUpperCase()} export is ready to share, but local export history could not be saved.`);
       }
     } catch {
-      if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) setNotice("Archive export could not be prepared. Your selection is preserved; try sharing again.");
+      if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) {
+        setFailedExport({ format, items, exportLabel });
+        setNotice(`Archive ${format.toUpperCase()} export could not be prepared. Your selection is preserved; retry when ready.`);
+      }
     } finally {
       archiveExportRequestGate.finish();
       if (archiveExportRequestIdRef.current === requestId && screenActiveRef.current) setIsExportingArchive(false);
@@ -934,12 +943,13 @@ export default function HomeScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Dismiss status message"
                 accessibilityHint="Closes this workflow status message."
-                onPress={() => setNotice(null)}
+                onPress={() => { setNotice(null); setFailedExport(null); }}
                 style={({ pressed }) => [styles.noticeDismiss, pressed && styles.pressed]}
               >
                 <Text style={styles.noticeDismissText}>Dismiss</Text>
               </Pressable>
             </View>
+            {failedExport && <SecondaryButton label={`Retry ${failedExport.format.toUpperCase()} export`} accessibilityHint="Retries the failed export using the preserved selected rows and format." onPress={() => { void shareImportedArchive(failedExport.format, failedExport.items, failedExport.exportLabel); }} />}
           </View>
         )}
 
