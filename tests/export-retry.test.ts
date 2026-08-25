@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
+import { getDiagnosticsCopiedNotice, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -48,7 +48,7 @@ describe("export retry recovery", () => {
   it("exposes privacy-safe copy diagnostics recovery", () => {
     expect(screenSource).toContain('import * as Clipboard from "expo-clipboard"');
     expect(screenSource).toContain("const copyExportDiagnostics = async () => {");
-    expect(screenSource).toContain("Privacy-safe export diagnostics copied");
+    expect(screenSource).toContain("getDiagnosticsCopiedNotice");
     expect(screenSource).toContain("No archive content was exposed");
     expect(screenSource).toContain("const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);");
     expect(screenSource).toContain('accessibilityLiveRegion="polite">Copied safely');
@@ -65,6 +65,17 @@ describe("export retry recovery", () => {
     expect(getExportDiagnosticsConfirmationDuration(false)).toBe(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
     expect(getExportDiagnosticsConfirmationDuration(true)).toBe(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS);
     expect(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS).toBeGreaterThan(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+  });
+
+  it("uses privacy-safe platform-aware clipboard feedback", () => {
+    expect(getDiagnosticsCopiedNotice("ios")).toContain("iPhone or iPad");
+    expect(getDiagnosticsCopiedNotice("android")).toContain("Android");
+    expect(getDiagnosticsCopiedNotice("web")).toContain("clipboard");
+    expect(getDiagnosticsCopiedNotice("ios")).toContain("No archive content was included");
+    expect(getDiagnosticsCopiedNotice("ios")).not.toContain("title");
+    expect(getDiagnosticsCopiedNotice("ios")).not.toContain("URL");
+    expect(screenSource).toContain("getDiagnosticsCopiedNotice");
+    expect(screenSource).toContain('RNPlatform.OS === "ios"');
   });
 
   it("exposes bounded automatic confirmation expiry", () => {

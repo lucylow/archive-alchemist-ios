@@ -394,3 +394,6 @@
 - [x] Centralize copied-confirmation timing policy
 - [x] Document normal and Reduce Motion confirmation durations in code
 - [x] Add deterministic coverage for both confirmation durations
+- [x] Add explicit platform-aware feedback after copying diagnostics
+- [x] Keep platform feedback privacy-safe and consistent across iOS and web
+- [x] Add deterministic coverage for platform feedback wording
