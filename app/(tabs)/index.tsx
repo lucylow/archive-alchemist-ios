@@ -20,7 +20,7 @@ import { createSaveRequestGate } from "@/lib/save-request";
 import { getAutoPostNotice } from "@/lib/save-notice";
 import { clearArchiveItems, filterArchiveItems, formatArchivePreviewRow, getArchiveBrowserItems, getArchiveDetailSummary, getArchiveExportReviewLabel, getArchiveItemKey, getArchivePreviewContextLabel, getArchiveThumbnailFallbackLabel, getArchiveThumbnailRetryLabel, getArchivePreviewLabel, getArchivePreviewRestoredNotice, getArchivePreviewResumeLabel, getSelectedArchiveItems, reconcileArchiveSelection, isSafeArchiveSourceUrl, isValidArchiveItem, parseArchiveManifest, serializeArchiveCsv, serializeArchiveManifest, sortArchiveItems, toggleArchiveSelection, type ArchiveItem, type ArchiveSort } from "@/lib/archive-import";
 import { trpc } from "@/lib/trpc";
-import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
+import { appendExportHistory, clearExportHistory, formatExportHistoryLabel, getExportHistoryDetailLabel, getExportReviewWindowLabel, getExportReviewWindowToggleLabel, getExportSizeEstimateLabel, getLargeExportWarningLabel, getUtf8ByteLength, getLastExportFormatPresetLabel, getLastExportShortcutLabel, getLatestExportStatusLabel, getRecommendedExportActionLabel, getExportRetryAttemptLabel, getExportRetryLimitLabel, getExportFailureDiagnosticLabel, getExportFailureRecoveryGuidance, getExportDiagnosticsConfirmationDuration, clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, MAX_EXPORT_RETRY_ATTEMPTS, normalizeExportHistory, type ExportFailureStage, type ExportHistoryEntry } from "@/lib/export-history";
 import type { MindsDiscoveryRequest, MindsDiscoveryResponse } from "@/shared/minds";
 import {
   isWithinStorageLimit,
@@ -41,6 +41,7 @@ const PLATFORMS_KEY = "archive-alchemist-selected-platforms";
 const ARCHIVE_KEY = "archive-items";
 const ARCHIVE_PREVIEW_KEY = "archive-preview";
 const EXPORT_HISTORY_KEY = "archive-export-history";
+const DIAGNOSTICS_DURATION_KEY = "archive-diagnostics-confirmation-duration";
 const platforms: Platform[] = ["YouTube", "Spotify", "Substack", "Twitter", "Instagram", "TikTok"];
 const discoveries = [
   { title: "How to Edit Like a Pro", year: 2023, score: 94, views: "12.4K", icon: "🎬" },
@@ -125,10 +126,11 @@ function PrimaryButton({ label, onPress, disabled = false, accessibilityHint, ac
   );
 }
 
-function SecondaryButton({ label, onPress, accessibilityHint, disabled = false, accessibilityState }: { label: string; onPress: () => void; accessibilityHint?: string; disabled?: boolean; accessibilityState?: { busy?: boolean } }) {
+function SecondaryButton({ label, onPress, accessibilityLabel, accessibilityHint, disabled = false, accessibilityState }: { label: string; onPress: () => void; accessibilityLabel?: string; accessibilityHint?: string; disabled?: boolean; accessibilityState?: { busy?: boolean } }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled, ...accessibilityState }}
       disabled={disabled}
@@ -182,6 +184,8 @@ export default function HomeScreen() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [diagnosticsCopied, setDiagnosticsCopied] = useState(false);
+  const [diagnosticsDurationSetting, setDiagnosticsDurationSetting] = useState(5_000);
+  const [settingsVisible, setSettingsVisible] = useState(false);
   const screenActiveRef = useRef(true);
   const diagnosticsExpiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetDiagnosticsCopied = () => {
@@ -191,7 +195,7 @@ export default function HomeScreen() {
   };
   const [mindsInsight, setMindsInsight] = useState<MindsDiscoveryResponse | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion);
+  const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion, diagnosticsDurationSetting);
   const activeDiscoveries = useMemo(
     () => archiveItems.length > 0 ? archiveItems.map((item) => ({ ...item, score: 90, icon: "✦" })) : discoveries,
     [archiveItems],
@@ -271,6 +275,26 @@ export default function HomeScreen() {
       diagnosticsExpiryTimerRef.current = null;
     };
   }, [diagnosticsCopied, diagnosticsConfirmationDuration]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    let mounted = true;
+    void AsyncStorage.getItem(DIAGNOSTICS_DURATION_KEY).then((value) => {
+      if (!mounted || !value) return;
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) setDiagnosticsDurationSetting(clampExportDiagnosticsConfirmationDuration(parsed));
+    }).catch(() => undefined);
+    return () => { mounted = false; };
+  }, [isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const normalized = clampExportDiagnosticsConfirmationDuration(diagnosticsDurationSetting);
+    if (normalized !== diagnosticsDurationSetting) setDiagnosticsDurationSetting(normalized);
+    AsyncStorage.setItem(DIAGNOSTICS_DURATION_KEY, String(normalized)).catch(() => {
+      if (screenActiveRef.current) setNotice("Diagnostics confirmation preference could not be saved, but this session is still available.");
+    });
+  }, [diagnosticsDurationSetting, isHydrated]);
 
   useEffect(() => {
     let mounted = true;
@@ -950,9 +974,9 @@ export default function HomeScreen() {
           <Text style={styles.headerTitle}>Creator memory, activated.</Text>
         </View>
       </View>
-      <View style={styles.mindBadge}>
-        <Text style={styles.mindBadgeText}>MIND</Text>
-      </View>
+      <Pressable accessibilityRole="button" accessibilityLabel="Open settings" accessibilityHint="Opens local preferences for diagnostics confirmation feedback." onPress={() => setSettingsVisible(true)} style={({ pressed }) => [styles.mindBadge, pressed && styles.pressed]}>
+        <Text style={styles.mindBadgeText}>SETTINGS</Text>
+      </Pressable>
     </View>
   );
 
@@ -1534,6 +1558,22 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+      <Modal visible={settingsVisible} transparent animationType="slide" onRequestClose={() => setSettingsVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.detailCard} accessible accessibilityLabel="Settings">
+            <View style={styles.rowBetween}>
+              <Text style={styles.sectionTitle}>Settings</Text>
+              <SecondaryButton label="Close" accessibilityHint="Closes settings without changing archive data." onPress={() => setSettingsVisible(false)} />
+            </View>
+            <Text style={styles.bodyText}>Diagnostics confirmation duration</Text>
+            <Text style={styles.reviewHint}>Controls how long the “Copied safely” confirmation remains visible. Reduce Motion uses at least 10 seconds.</Text>
+            <View style={styles.rowWrap}>
+              {[3_000, 5_000, 8_000].map((duration) => <SecondaryButton key={duration} label={formatExportDiagnosticsDurationLabel(duration)} accessibilityLabel={`Set diagnostics confirmation duration to ${formatExportDiagnosticsDurationLabel(duration)}`} accessibilityState={{ busy: diagnosticsDurationSetting === duration }} onPress={() => setDiagnosticsDurationSetting(duration)} />)}
+            </View>
+            <Text style={styles.reviewHint} accessibilityLiveRegion="polite">Current effective duration: {formatExportDiagnosticsDurationLabel(diagnosticsConfirmationDuration)}{reduceMotion ? " with Reduce Motion" : ""}.</Text>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={archiveBrowserVisible} transparent animationType="slide" onRequestClose={() => setArchiveBrowserVisible(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.browserCard}>

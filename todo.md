@@ -412,3 +412,6 @@
 - [x] Add UI-level clipboard success coverage for status, preview, and browser recovery surfaces
 - [x] Add UI-level clipboard rejection coverage with copied-state reset assertions
 - [x] Verify each recovery surface preserves retry and export context during clipboard failures
+- [x] Add a persisted diagnostics confirmation duration setting
+- [x] Keep the setting bounded with a safe default and Reduce Motion behavior
+- [x] Add deterministic coverage for duration persistence, clamping, and reset behavior

@@ -46,7 +46,11 @@ export const MAX_EXPORT_RETRY_ATTEMPTS = 3;
 /** Confirmation remains visible longer when Reduce Motion is enabled, giving users more time to notice non-animated feedback. */
 export const EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS = 5_000;
 export const EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS = 10_000;
-export const getExportDiagnosticsConfirmationDuration = (reduceMotion: boolean) => reduceMotion ? EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS : EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS;
+export const MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS = 3_000;
+export const MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS = 15_000;
+export const clampExportDiagnosticsConfirmationDuration = (value: number) => Math.min(MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, Math.max(MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, Number.isFinite(value) ? Math.round(value / 1_000) * 1_000 : EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS));
+export const getExportDiagnosticsConfirmationDuration = (reduceMotion: boolean, configuredDuration = EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS) => reduceMotion ? Math.max(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS, clampExportDiagnosticsConfirmationDuration(configuredDuration)) : clampExportDiagnosticsConfirmationDuration(configuredDuration);
+export const formatExportDiagnosticsDurationLabel = (duration: number) => `${Math.round(clampExportDiagnosticsConfirmationDuration(duration) / 1_000)} seconds`;
 export const getExportRetryAttemptLabel = (attempt: number, maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `Retry attempt ${Math.min(Math.max(1, attempt), maxAttempts)} of ${maxAttempts}`;
 export const getExportRetryLimitLabel = (format: "json" | "csv", maxAttempts = MAX_EXPORT_RETRY_ATTEMPTS) => `${format.toUpperCase()} export retry limit reached after ${maxAttempts} attempts. Start the export again to create a fresh retry window.`;
 export type ExportFailureStage = "availability" | "prepare" | "share";

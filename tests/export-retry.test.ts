@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS } from "../lib/export-history";
+import { clampExportDiagnosticsConfirmationDuration, formatExportDiagnosticsDurationLabel, getDiagnosticsCopiedNotice, getDiagnosticsCopyFailureNotice, getDiagnosticsCopyOutcome, getDiagnosticsExportContext, getExportDiagnosticsConfirmationDuration, EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS, MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS, MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS } from "../lib/export-history";
 import { describe, expect, it } from "vitest";
 
 const screenSource = readFileSync("/home/ubuntu/archive-alchemist-ios/app/(tabs)/index.tsx", "utf8");
@@ -124,9 +124,21 @@ describe("export retry recovery", () => {
     expect(screenSource.match(/void copyExportDiagnostics\(\)/g)?.length).toBeGreaterThanOrEqual(3);
   });
 
+  it("bounds and formats the persisted confirmation duration", () => {
+    expect(clampExportDiagnosticsConfirmationDuration(1_000)).toBe(MIN_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+    expect(clampExportDiagnosticsConfirmationDuration(99_000)).toBe(MAX_EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+    expect(clampExportDiagnosticsConfirmationDuration(Number.NaN)).toBe(EXPORT_DIAGNOSTICS_CONFIRMATION_DURATION_MS);
+    expect(formatExportDiagnosticsDurationLabel(8_000)).toBe("8 seconds");
+    expect(getExportDiagnosticsConfirmationDuration(false, 8_000)).toBe(8_000);
+    expect(getExportDiagnosticsConfirmationDuration(true, 3_000)).toBe(EXPORT_DIAGNOSTICS_REDUCED_MOTION_DURATION_MS);
+    expect(screenSource).toContain('const DIAGNOSTICS_DURATION_KEY = "archive-diagnostics-confirmation-duration";');
+    expect(screenSource).toContain("AsyncStorage.setItem(DIAGNOSTICS_DURATION_KEY");
+    expect(screenSource).toContain("setSettingsVisible(true)");
+  });
+
   it("exposes bounded automatic confirmation expiry", () => {
     expect(screenSource).toContain("diagnosticsExpiryTimerRef");
-    expect(screenSource).toContain("const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion);");
+    expect(screenSource).toContain("const diagnosticsConfirmationDuration = getExportDiagnosticsConfirmationDuration(reduceMotion, diagnosticsDurationSetting);");
     expect(screenSource).toContain("}, diagnosticsConfirmationDuration);");
     expect(screenSource).toContain("clearTimeout(diagnosticsExpiryTimerRef.current)");
     expect(screenSource).toContain("[diagnosticsCopied, diagnosticsConfirmationDuration]");
