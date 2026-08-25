@@ -48,3 +48,4 @@ export const getExportRetryLimitLabel = (format: "json" | "csv", maxAttempts = M
 export type ExportFailureStage = "availability" | "prepare" | "share";
 export const getExportFailureStageLabel = (stage: ExportFailureStage) => stage === "availability" ? "Sharing service unavailable" : stage === "share" ? "Share sheet could not open" : "Export file preparation failed";
 export const getExportFailureDiagnosticLabel = (format: "json" | "csv", stage: ExportFailureStage) => `${format.toUpperCase()} export stopped at: ${getExportFailureStageLabel(stage)}. No archive content or raw error details are included.`;
+export const getExportFailureRecoveryGuidance = (stage: ExportFailureStage) => stage === "availability" ? "Check that this device supports sharing, then try again." : stage === "share" ? "Close any open share sheet, confirm a destination is available, then try again." : "Check available device storage, then start a fresh export.";

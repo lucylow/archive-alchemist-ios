@@ -373,3 +373,6 @@
 - [x] Add a privacy-safe Copy diagnostics action for failed exports
 - [x] Handle clipboard success and failure without exposing archive content
 - [x] Add deterministic coverage for copied diagnostics wording
+- [x] Add stage-specific recovery guidance for failed exports
+- [x] Explain concrete next actions without exposing raw errors or archive content
+- [x] Add deterministic coverage for recovery-guidance wording

@@ -39,6 +39,11 @@ describe("export retry recovery", () => {
     expect(screenSource).toContain("getExportFailureDiagnosticLabel");
   });
 
+  it("exposes stage-specific recovery guidance", () => {
+    expect(screenSource).toContain("getExportFailureRecoveryGuidance");
+    expect(screenSource).toContain("Next step: {getExportFailureRecoveryGuidance(failedExport.failureStage)}");
+  });
+
   it("exposes privacy-safe copy diagnostics recovery", () => {
     expect(screenSource).toContain('import * as Clipboard from "expo-clipboard"');
     expect(screenSource).toContain("const copyExportDiagnostics = async () => {");
